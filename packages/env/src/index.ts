@@ -27,6 +27,12 @@ export const apiEnvSchema = dbEnvSchema.extend({
 	REDIS_URL: z.string().url().default('redis://localhost:6379'),
 	REDIS_HOST: z.string().default('localhost'),
 	REDIS_PORT: z.coerce.number().default(6379),
+
+	// Auth
+	BETTER_AUTH_SECRET: z.string().min(1),
+	BETTER_AUTH_URL: z.string().url(),
+	GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+	GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
 })
 
 export type ApiEnv = z.infer<typeof apiEnvSchema>
