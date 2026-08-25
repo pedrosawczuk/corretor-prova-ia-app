@@ -1,0 +1,8 @@
+{
+	"name": "@app/db",
+	"private": true,
+	"type": "module",
+	"devDependencies": {
+		"@app/typescript-config": "workspace:*"
+	}
+}
