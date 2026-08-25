@@ -10,12 +10,12 @@ interface SendWelcomeEmailParams {
 }
 
 export async function sendWelcomeEmail({ to, name }: SendWelcomeEmailParams) {
-	if (!env.RESEND_API_KEY) {
+	if (!env.RESEND_API_KEY || !env.MAIL_FROM) {
 		return
 	}
 
 	await resend.emails.send({
-		from: env.MAIL_FROM || 'Corretor de Prova IA <onboarding@resend.dev>',
+		from: env.MAIL_FROM,
 		to,
 		subject: 'Bem-vindo ao Corretor de Prova IA! 🚀',
 		react: WelcomeEmail({ name }),
