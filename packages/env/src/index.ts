@@ -19,20 +19,18 @@ export const dbEnvSchema = z.object({
 export type DbEnv = z.infer<typeof dbEnvSchema>
 
 export const apiEnvSchema = dbEnvSchema.extend({
-	NODE_ENV: z
-		.enum(['development', 'production', 'test'])
-		.default('development'),
-	PORT: z.coerce.number().default(3333),
-	HOST: z.string().default('0.0.0.0'),
-	REDIS_URL: z.string().url().default('redis://localhost:6379'),
-	REDIS_HOST: z.string().default('localhost'),
-	REDIS_PORT: z.coerce.number().default(6379),
-
-	// Auth
+	NODE_ENV: z.enum(['development', 'production', 'test']),
+	PORT: z.coerce.number(),
+	HOST: z.string(),
+	REDIS_URL: z.string().url(),
+	REDIS_HOST: z.string(),
+	REDIS_PORT: z.coerce.number(),
 	BETTER_AUTH_SECRET: z.string().min(1),
 	BETTER_AUTH_URL: z.string().url(),
 	GOOGLE_CLIENT_ID: z.string().min(1).optional(),
 	GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+	RESEND_API_KEY: z.string().min(1).optional(),
+	MAIL_FROM: z.string().optional(),
 })
 
 export type ApiEnv = z.infer<typeof apiEnvSchema>
