@@ -1,5 +1,5 @@
-import { auth } from '@/lib/auth'
 import type { FastifyReply, FastifyRequest } from 'fastify'
+import { auth } from '@/lib/auth'
 import type { SignInWithSocialInput } from './sign-in-with-social-schema'
 
 export async function signInWithSocialModule(

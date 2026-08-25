@@ -1,8 +1,8 @@
-import { InvalidCredentialsError } from '@/core/errors'
-import { auth } from '@/lib/auth'
 import { db, user } from '@app/db'
 import { eq } from 'drizzle-orm'
 import type { FastifyReply, FastifyRequest } from 'fastify'
+import { InvalidCredentialsError } from '@/core/errors'
+import { auth } from '@/lib/auth'
 import type { SignInWithEmailInput } from './sign-in-with-email-schema'
 
 export async function signInWithEmailModule(

@@ -1,6 +1,3 @@
-import { AppError } from '@/core/errors'
-import { auth } from '@/lib/auth'
-import { authRoutes } from '@/modules/auth/auth-routes'
 import { APIError } from 'better-auth/api'
 import { toNodeHandler } from 'better-auth/node'
 import fastify from 'fastify'
@@ -10,13 +7,16 @@ import {
 	type ZodTypeProvider,
 } from 'fastify-type-provider-zod'
 import { ZodError } from 'zod'
+import { AppError } from '@/core/errors'
+import { auth } from '@/lib/auth'
+import { authRoutes } from '@/modules/auth/auth-routes'
 
 export const app = fastify().withTypeProvider<ZodTypeProvider>()
 
 app.setValidatorCompiler(validatorCompiler)
 app.setSerializerCompiler(serializerCompiler)
 
-app.setErrorHandler((error, request, reply) => {
+app.setErrorHandler((error, _request, reply) => {
 	if (error instanceof AppError) {
 		return reply.status(error.statusCode).send({
 			code: error.errorCode,

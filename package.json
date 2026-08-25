@@ -11,11 +11,15 @@
 	},
 	"type": "module",
 	"scripts": {
-		"dev": "turbo dev"
+		"dev": "turbo dev",
+		"lint": "biome check .",
+		"format": "biome check --write .",
+		"prepare": "husky"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.10",
 		"@types/node": "^26.2.0",
+		"husky": "^9.1.7",
 		"turbo": "^2.10.11",
 		"typescript": "^7.0.2"
 	}

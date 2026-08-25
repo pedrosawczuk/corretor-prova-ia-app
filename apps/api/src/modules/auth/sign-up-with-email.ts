@@ -1,9 +1,9 @@
-import { ConflictError } from '@/core/errors'
-import { auth } from '@/lib/auth'
-import { sendWelcomeEmail } from '@/lib/mail'
 import { db, user } from '@app/db'
 import { eq } from 'drizzle-orm'
 import type { FastifyReply, FastifyRequest } from 'fastify'
+import { ConflictError } from '@/core/errors'
+import { auth } from '@/lib/auth'
+import { sendWelcomeEmail } from '@/lib/mail'
 import type { SignUpWithEmailInput } from './sign-up-with-email-schema'
 
 export async function signUpWithEmailModule(
