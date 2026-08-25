@@ -1,14 +1,11 @@
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
-import { v7 as uuidv7 } from 'uuid'
+import { pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 import { user } from './users'
 
 export const account = pgTable('account', {
-	id: uuid('id')
-		.primaryKey()
-		.$defaultFn(() => uuidv7()),
+	id: text('id').primaryKey(),
 	accountId: text('account_id').notNull(),
 	providerId: text('provider_id').notNull(),
-	userId: uuid('user_id')
+	userId: text('user_id')
 		.notNull()
 		.references(() => user.id, { onDelete: 'cascade' }),
 	accessToken: text('access_token'),
@@ -18,6 +15,7 @@ export const account = pgTable('account', {
 	refreshTokenExpiresAt: timestamp('refresh_token_expires_at'),
 	scope: text('scope'),
 	password: text('password'),
+	issuer: text('issuer'),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })

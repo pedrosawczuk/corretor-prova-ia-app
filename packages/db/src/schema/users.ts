@@ -1,10 +1,7 @@
-import { boolean, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
-import { v7 as uuidv7 } from 'uuid'
+import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 
 export const user = pgTable('user', {
-	id: uuid('id')
-		.primaryKey()
-		.$defaultFn(() => uuidv7()),
+	id: text('id').primaryKey(),
 	name: text('name').notNull(),
 	email: text('email').notNull().unique(),
 	emailVerified: boolean('email_verified').notNull(),
