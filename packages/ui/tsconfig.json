@@ -1,0 +1,10 @@
+{
+	"extends": "@app/typescript-config/base.json",
+	"compilerOptions": {
+		"lib": ["dom", "dom.iterable", "esnext"],
+		"paths": {
+			"@/*": ["./src/*"]
+		}
+	},
+	"include": ["src", ".storybook"]
+}
