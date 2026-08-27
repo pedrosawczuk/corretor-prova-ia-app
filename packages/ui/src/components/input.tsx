@@ -9,7 +9,7 @@ import {
 	X,
 } from 'lucide-react'
 import * as React from 'react'
-import { cn } from '@/lib/utils'
+import { cn } from '../lib/utils'
 
 const inputContainerVariants = cva(
 	'relative flex items-center w-full transition-all duration-150 group',
@@ -39,7 +39,7 @@ const inputContainerVariants = cva(
 			size: {
 				xs: 'h-7 text-xs rounded-sm',
 				sm: 'h-8 text-xs rounded-md',
-				default: 'h-10 text-sm rounded-md',
+				default: 'h-10 text-base sm:text-sm rounded-md',
 				lg: 'h-11 text-base rounded-lg',
 				xl: 'h-12 text-base rounded-lg',
 			},

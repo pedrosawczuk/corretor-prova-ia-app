@@ -1,7 +1,7 @@
 import { cva, type VariantProps } from 'class-variance-authority'
 import { AlertCircle, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import * as React from 'react'
-import { cn } from '@/lib/utils'
+import { cn } from '../lib/utils'
 
 const textareaContainerVariants = cva(
 	'relative flex flex-col w-full transition-all duration-150 rounded-md',
@@ -30,7 +30,7 @@ const textareaContainerVariants = cva(
 			},
 			size: {
 				sm: 'text-xs min-h-[64px]',
-				default: 'text-sm min-h-[96px]',
+				default: 'text-base sm:text-sm min-h-[96px]',
 				lg: 'text-base min-h-[128px]',
 				xl: 'text-base min-h-[160px]',
 			},

@@ -1,4 +1,4 @@
-﻿import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 import {
 	AlertTriangle,
 	ArrowRight,
@@ -292,14 +292,21 @@ export const DisabledStates: Story = {
 
 export const AsLink: Story = {
 	render: () => (
-		<div className="flex items-center gap-3">
+		<div className="flex flex-wrap items-center gap-3">
 			<Button asChild variant="default" rightIcon={<ExternalLink />}>
-				<a href="https://nextjs.org" target="_blank" rel="noopener noreferrer">
-					Acessar Documentação
+				<a
+					href="https://gabarita.app"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					Acessar Gabarita.app
 				</a>
 			</Button>
+			<Button asChild variant="outline" leftIcon={<FileText />}>
+				<a href="/termos">Termos de Uso</a>
+			</Button>
 			<Button asChild variant="link">
-				<a href="/login">Já possui uma conta? Faça login</a>
+				<a href="/entrar">Já possui uma conta? Faça login</a>
 			</Button>
 		</div>
 	),

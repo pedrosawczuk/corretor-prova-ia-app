@@ -1,8 +1,8 @@
-import { cn } from '@/lib/utils'
 import * as SelectPrimitive from '@radix-ui/react-select'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { AlertCircle, Check, ChevronDown, ChevronUp } from 'lucide-react'
 import * as React from 'react'
+import { cn } from '../lib/utils'
 
 const selectTriggerVariants = cva(
 	[
@@ -268,6 +268,6 @@ export {
 	SelectLabel,
 	SelectRoot,
 	SelectSeparator,
-	selectTriggerVariants,
 	SelectValue,
+	selectTriggerVariants,
 }

@@ -1,11 +1,11 @@
-﻿import { Slot } from '@radix-ui/react-slot'
+import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { Loader2 } from 'lucide-react'
 import * as React from 'react'
-import { cn } from '@/lib/utils'
+import { cn } from '../lib/utils'
 
 const buttonVariants = cva(
-	'inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all duration-150 select-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] motion-reduce:transform-none [&_svg]:pointer-events-none [&_svg]:shrink-0',
+	'inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all duration-150 select-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] motion-reduce:transform-none touch-manipulation [&_svg]:pointer-events-none [&_svg]:shrink-0',
 	{
 		variants: {
 			variant: {
@@ -98,6 +98,48 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 		const isButtonDisabled = disabled || isLoading
 
 		if (asChild) {
+			const hasVisualDecorators =
+				isLoading || leftIcon || rightIcon || loadingText
+
+			if (React.isValidElement(children) && hasVisualDecorators) {
+				const originalChild = children as React.ReactElement<{
+					children?: React.ReactNode
+				}>
+
+				const wrappedChildren = (
+					<>
+						{isLoading ? (
+							<>
+								<Loader2 className="animate-spin" />
+								{loadingText ?? originalChild.props.children}
+							</>
+						) : (
+							<>
+								{leftIcon}
+								{originalChild.props.children}
+								{rightIcon}
+							</>
+						)}
+					</>
+				)
+
+				return (
+					<Slot
+						className={cn(
+							buttonVariants({ variant, size, shape, fullWidth, className }),
+						)}
+						ref={ref}
+						aria-disabled={isButtonDisabled || undefined}
+						aria-busy={isLoading || undefined}
+						{...props}
+					>
+						{React.cloneElement(originalChild, {
+							children: wrappedChildren,
+						})}
+					</Slot>
+				)
+			}
+
 			return (
 				<Slot
 					className={cn(
@@ -105,6 +147,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 					)}
 					ref={ref}
 					aria-disabled={isButtonDisabled || undefined}
+					aria-busy={isLoading || undefined}
 					{...props}
 				>
 					{children}

@@ -2,7 +2,7 @@ import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { AlertCircle, Circle } from 'lucide-react'
 import * as React from 'react'
-import { cn } from '@/lib/utils'
+import { cn } from '../lib/utils'
 
 const radioGroupVariants = cva('grid gap-2.5', {
 	variants: {

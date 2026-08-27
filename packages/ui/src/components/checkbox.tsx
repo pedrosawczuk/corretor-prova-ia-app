@@ -1,8 +1,8 @@
-﻿import * as CheckboxPrimitive from '@radix-ui/react-checkbox'
+import * as CheckboxPrimitive from '@radix-ui/react-checkbox'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { AlertCircle, Check, Minus } from 'lucide-react'
 import * as React from 'react'
-import { cn } from '@/lib/utils'
+import { cn } from '../lib/utils'
 
 const checkboxVariants = cva(
 	'peer shrink-0 border border-input shadow-xs transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer flex items-center justify-center select-none active:scale-95 motion-reduce:transform-none',
