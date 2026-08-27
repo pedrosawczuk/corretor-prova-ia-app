@@ -1,12 +1,29 @@
-export default function Home() {
+import {
+	CtaSection,
+	FaqSection,
+	FeaturesSection,
+	HeroSection,
+	HowItWorksSection,
+	LandingFooter,
+	LandingHeader,
+	PainSection,
+} from './(public)/_components'
+
+export default function LandingPage() {
 	return (
-		<main className="flex min-h-screen flex-col items-center justify-center p-24">
-			<h1 className="text-4xl font-bold tracking-tight">
-				Corretor de Prova IA
-			</h1>
-			<p className="mt-4 text-slate-600">
-				Ambiente Web inicializado com sucesso.
-			</p>
-		</main>
+		<div className="min-h-screen flex flex-col bg-background text-foreground font-sans">
+			<LandingHeader />
+
+			<main className="flex-1 flex flex-col">
+				<HeroSection />
+				<PainSection />
+				<HowItWorksSection />
+				<FeaturesSection />
+				<FaqSection />
+				<CtaSection />
+			</main>
+
+			<LandingFooter />
+		</div>
 	)
 }
