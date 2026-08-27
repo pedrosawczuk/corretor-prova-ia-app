@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { auth } from '@/lib/auth'
+import { forwardWebResponse, toFetchHeaders } from '@/lib/http-utils'
 import type { SignInWithSocialInput } from './sign-in-with-social-schema'
 
 export async function signInWithSocialModule(
@@ -13,7 +14,12 @@ export async function signInWithSocialModule(
 			provider,
 			callbackURL,
 		},
+		asResponse: true,
+		headers: toFetchHeaders(request.headers),
 	})
 
-	return reply.status(200).send(response)
+	forwardWebResponse(response, reply)
+
+	const data = await response.json()
+	return reply.status(200).send(data)
 }

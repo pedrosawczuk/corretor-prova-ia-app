@@ -1,7 +1,10 @@
+import { env } from '@app/env'
+import cors from '@fastify/cors'
 import { APIError } from 'better-auth/api'
 import { toNodeHandler } from 'better-auth/node'
 import fastify from 'fastify'
 import {
+	hasZodFastifySchemaValidationErrors,
 	serializerCompiler,
 	validatorCompiler,
 	type ZodTypeProvider,
@@ -12,6 +15,12 @@ import { auth } from '@/lib/auth'
 import { authRoutes } from '@/modules/auth/auth-routes'
 
 export const app = fastify().withTypeProvider<ZodTypeProvider>()
+
+await app.register(cors, {
+	origin: [env.BETTER_AUTH_URL, 'http://localhost:3000'],
+	credentials: true,
+	methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+})
 
 app.setValidatorCompiler(validatorCompiler)
 app.setSerializerCompiler(serializerCompiler)
@@ -24,10 +33,18 @@ app.setErrorHandler((error, _request, reply) => {
 		})
 	}
 
+	if (hasZodFastifySchemaValidationErrors(error)) {
+		return reply.status(400).send({
+			code: 'VALIDATION_ERROR',
+			message: 'Validation failed for the provided fields.',
+			issues: error.validation,
+		})
+	}
+
 	if (error instanceof ZodError) {
 		return reply.status(400).send({
 			code: 'VALIDATION_ERROR',
-			message: 'Erro de validação nos campos informados.',
+			message: 'Validation failed for the provided fields.',
 			issues: error.format(),
 		})
 	}
@@ -48,7 +65,7 @@ app.setErrorHandler((error, _request, reply) => {
 
 	return reply.status(500).send({
 		code: 'INTERNAL_SERVER_ERROR',
-		message: 'Ocorreu um erro interno no servidor.',
+		message: 'Internal server error.',
 	})
 })
 

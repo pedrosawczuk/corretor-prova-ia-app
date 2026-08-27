@@ -1,8 +1,6 @@
-import { db, user } from '@app/db'
-import { eq } from 'drizzle-orm'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { InvalidCredentialsError } from '@/core/errors'
 import { auth } from '@/lib/auth'
+import { forwardWebResponse, toFetchHeaders } from '@/lib/http-utils'
 import type { SignInWithEmailInput } from './sign-in-with-email-schema'
 
 export async function signInWithEmailModule(
@@ -11,20 +9,17 @@ export async function signInWithEmailModule(
 ) {
 	const { email, password } = request.body
 
-	const existingUser = await db.query.user.findFirst({
-		where: eq(user.email, email),
-	})
-
-	if (!existingUser) {
-		throw new InvalidCredentialsError('E-mail ou senha incorretos.')
-	}
-
 	const response = await auth.api.signInEmail({
 		body: {
 			email,
 			password,
 		},
+		asResponse: true,
+		headers: toFetchHeaders(request.headers),
 	})
 
-	return reply.status(200).send(response)
+	forwardWebResponse(response, reply)
+
+	const data = await response.json()
+	return reply.status(200).send(data)
 }
