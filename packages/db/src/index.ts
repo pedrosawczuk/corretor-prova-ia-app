@@ -5,8 +5,8 @@ import postgres from 'postgres'
 import * as schema from './schema'
 
 const connectionString = dbEnv.DATABASE_URL
-const client = postgres(connectionString, {
-	max: dbEnv.DATABASE_URL.includes('localhost') ? 1 : undefined,
+export const client = postgres(connectionString, {
+	max: process.env.NODE_ENV === 'prod' ? 50 : 10,
 })
 
 export const db = drizzle(client, { schema })
