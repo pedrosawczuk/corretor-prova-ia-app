@@ -48,7 +48,9 @@ describe('POST /exams', () => {
 			totalPoints: '0.00',
 		})
 
-		vi.mocked(db.select).mockReturnValueOnce(createDbChain([classroom]) as never)
+		vi.mocked(db.select).mockReturnValueOnce(
+			createDbChain([classroom]) as never,
+		)
 		vi.mocked(db.insert).mockReturnValue(createDbChain([examRow]) as never)
 
 		const response = await app.inject({
@@ -87,7 +89,9 @@ describe('POST /exams', () => {
 		const payload = makeCreateExamInput()
 		const classroom = makeClassroom({ id: payload.classroomId })
 
-		vi.mocked(db.select).mockReturnValueOnce(createDbChain([classroom]) as never)
+		vi.mocked(db.select).mockReturnValueOnce(
+			createDbChain([classroom]) as never,
+		)
 
 		const response = await app.inject({
 			method: 'POST',

@@ -3,7 +3,8 @@ import { ProvaDetail } from '@/components/dashboard/prova-detail'
 
 export const metadata: Metadata = {
 	title: 'Prova — Gabarita.app',
-	description: 'Configure e gere as questões da prova com a IA do Gabarita.app.',
+	description:
+		'Configure e gere as questões da prova com a IA do Gabarita.app.',
 }
 
 interface ProvaDetailPageProps {

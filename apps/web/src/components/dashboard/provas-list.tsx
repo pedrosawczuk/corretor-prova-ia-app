@@ -70,7 +70,12 @@ export function ProvasList({ turmaId }: ProvasListProps) {
 								<div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
 									<FileText className="size-5" />
 								</div>
-								<Badge variant={exam.questions.length > 0 ? 'success-outline' : 'subtle'} size="sm">
+								<Badge
+									variant={
+										exam.questions.length > 0 ? 'success-outline' : 'subtle'
+									}
+									size="sm"
+								>
 									{exam.questions.length > 0
 										? `${exam.questions.length} questão(ões)`
 										: 'Sem questões'}
@@ -83,8 +88,7 @@ export function ProvasList({ turmaId }: ProvasListProps) {
 								{exam.description || 'Sem descrição.'}
 							</p>
 							<p className="mt-3 text-xs text-muted-foreground">
-								Criada em{' '}
-								{formatDate(exam.createdAt, 'DD [de] MMM [de] YYYY')}
+								Criada em {formatDate(exam.createdAt, 'DD [de] MMM [de] YYYY')}
 							</p>
 						</CardContent>
 					</Card>

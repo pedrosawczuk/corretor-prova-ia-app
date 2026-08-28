@@ -48,8 +48,8 @@ export function CriarProvaDialog({
 						Gerar Prova
 					</DialogTitle>
 					<DialogDescription>
-						Dê um nome e uma breve descrição. Depois de criada, você configura
-						a dificuldade e a quantidade de questões.
+						Dê um nome e uma breve descrição. Depois de criada, você configura a
+						dificuldade e a quantidade de questões.
 					</DialogDescription>
 				</DialogHeader>
 

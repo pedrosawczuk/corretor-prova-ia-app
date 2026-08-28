@@ -1,4 +1,9 @@
-import type { CreateExamInput, Exam, GenerateExamInput, Question } from '@app/shared'
+import type {
+	CreateExamInput,
+	Exam,
+	GenerateExamInput,
+	Question,
+} from '@app/shared'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 
@@ -10,8 +15,7 @@ const examsKeys = {
 export function useExams(classroomId: string) {
 	return useQuery({
 		queryKey: examsKeys.list(classroomId),
-		queryFn: () =>
-			apiClient<Exam[]>(`/exams?classroomId=${classroomId}`),
+		queryFn: () => apiClient<Exam[]>(`/exams?classroomId=${classroomId}`),
 		enabled: Boolean(classroomId),
 	})
 }
@@ -70,13 +74,15 @@ export function useUpdateCorrectOption(examId: string, questionId: string) {
 				},
 			),
 		onSuccess: (question) => {
-			queryClient.setQueryData<Exam>(examsKeys.detail(examId), (prev) =>
-				prev && {
-					...prev,
-					questions: prev.questions.map((q) =>
-						q.id === question.id ? question : q,
-					),
-				},
+			queryClient.setQueryData<Exam>(
+				examsKeys.detail(examId),
+				(prev) =>
+					prev && {
+						...prev,
+						questions: prev.questions.map((q) =>
+							q.id === question.id ? question : q,
+						),
+					},
 			)
 		},
 	})

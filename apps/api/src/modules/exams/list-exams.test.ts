@@ -52,7 +52,9 @@ describe('GET /exams', () => {
 		expect(response.statusCode).toBe(200)
 		const body = response.json()
 		expect(body).toHaveLength(2)
-		expect(body[0]).toEqual(expect.objectContaining({ id: examA.id, questions: [] }))
+		expect(body[0]).toEqual(
+			expect.objectContaining({ id: examA.id, questions: [] }),
+		)
 	})
 
 	it('retorna 404 quando a turma não existe', async () => {
@@ -68,7 +70,9 @@ describe('GET /exams', () => {
 
 	it('retorna 404 quando a turma pertence a outro professor', async () => {
 		const classroom = makeClassroom()
-		vi.mocked(db.select).mockReturnValueOnce(createDbChain([classroom]) as never)
+		vi.mocked(db.select).mockReturnValueOnce(
+			createDbChain([classroom]) as never,
+		)
 
 		const response = await app.inject({
 			method: 'GET',
