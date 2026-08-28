@@ -6,14 +6,14 @@ import {
 	questionOptionsTable,
 	questionsTable,
 } from '@app/db'
-import type { FastifyReply, FastifyRequest } from 'fastify'
-import { NotFoundError } from '@/core/errors'
-import { generateExamQuestions } from '@/lib/gemini'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
 import type {
 	RegenerateQuestionBody,
 	RegenerateQuestionParams,
 } from '@app/shared'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+import { NotFoundError } from '@/core/errors'
+import { generateExamQuestions } from '@/lib/gemini'
+import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
 
 export async function regenerateQuestionModule(
 	request: FastifyRequest<{

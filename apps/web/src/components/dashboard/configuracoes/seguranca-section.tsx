@@ -1,7 +1,5 @@
 'use client'
 
-import { ApiError, apiClient } from '@/lib/api-client'
-import { applyApiErrorsToForm } from '@/lib/api-error-handler'
 import { changePasswordSchema } from '@app/shared'
 import {
 	Button,
@@ -23,6 +21,8 @@ import { KeyRound, ShieldCheck } from 'lucide-react'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import type { z } from 'zod'
+import { ApiError, apiClient } from '@/lib/api-client'
+import { applyApiErrorsToForm } from '@/lib/api-error-handler'
 
 type ChangePasswordInput = z.infer<typeof changePasswordSchema>
 

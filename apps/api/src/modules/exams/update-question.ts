@@ -5,13 +5,10 @@ import {
 	questionOptionsTable,
 	questionsTable,
 } from '@app/db'
+import type { UpdateQuestionBody, UpdateQuestionParams } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { NotFoundError } from '@/core/errors'
 import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
-import type {
-	UpdateQuestionBody,
-	UpdateQuestionParams,
-} from '@app/shared'
 
 export async function updateQuestionModule(
 	request: FastifyRequest<{

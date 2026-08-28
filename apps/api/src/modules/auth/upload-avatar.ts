@@ -37,7 +37,7 @@ export async function uploadAvatarModule(
 	})
 
 	const fileType = await fileTypeFromBuffer(originalBuffer)
-	if (!fileType || !fileType.mime.startsWith('image/')) {
+	if (!fileType?.mime.startsWith('image/')) {
 		throw new BadRequestError('O arquivo enviado precisa ser uma imagem.')
 	}
 

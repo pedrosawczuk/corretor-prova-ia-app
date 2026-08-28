@@ -1,13 +1,8 @@
-import {
-	db,
-	eq,
-	examsTable,
-	questionsTable,
-} from '@app/db'
+import { db, eq, examsTable, questionsTable } from '@app/db'
+import type { UpdateQuestionParams } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { NotFoundError } from '@/core/errors'
 import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
-import type { UpdateQuestionParams } from '@app/shared'
 
 export async function deleteQuestionModule(
 	request: FastifyRequest<{

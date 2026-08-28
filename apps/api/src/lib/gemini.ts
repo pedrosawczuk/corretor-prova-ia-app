@@ -62,7 +62,6 @@ const responseSchema: Schema = {
 }
 
 function buildPrompt({
-	subject,
 	difficulty,
 	questionCount,
 	questionType,

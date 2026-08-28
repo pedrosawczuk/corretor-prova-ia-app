@@ -1,25 +1,26 @@
-import { createExamSchema, generateExamSchema } from '@app/shared'
+import {
+	createExamSchema,
+	generateExamSchema,
+	regenerateQuestionBodySchema,
+	regenerateQuestionParamsSchema,
+	updateQuestionBodySchema,
+	updateQuestionParamsSchema,
+} from '@app/shared'
 import type { FastifyInstance } from 'fastify'
 import { createExamModule } from './create-exam'
+import { deleteQuestionModule } from './delete-question'
 import { examParamsSchema } from './exam-params-schema'
 import { generateExamModule } from './generate-exam'
 import { getExamModule } from './get-exam'
 import { listExamsModule } from './list-exams'
 import { listExamsQuerySchema } from './list-exams-schema'
+import { regenerateQuestionModule } from './regenerate-question'
 import { updateCorrectOptionModule } from './update-correct-option'
-import {
-	updateQuestionParamsSchema,
-	updateQuestionBodySchema,
-	regenerateQuestionParamsSchema,
-	regenerateQuestionBodySchema,
-} from '@app/shared'
 import {
 	updateCorrectOptionBodySchema,
 	updateCorrectOptionParamsSchema,
 } from './update-correct-option-schema'
 import { updateQuestionModule } from './update-question'
-import { regenerateQuestionModule } from './regenerate-question'
-import { deleteQuestionModule } from './delete-question'
 
 export function examRoutes(app: FastifyInstance) {
 	app.post(

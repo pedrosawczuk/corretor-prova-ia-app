@@ -42,7 +42,7 @@ function getPublicBaseUrl() {
 	return `${protocol}://${env.MINIO_ENDPOINT}:${env.MINIO_PORT}/${env.MINIO_BUCKET}/`
 }
 
-export async function uploadAvatar(userId: string, buffer: Buffer) {
+export async function uploadAvatar(_userId: string, buffer: Buffer) {
 	const objectName = `${AVATARS_PREFIX}${randomUUID()}.webp`
 
 	await storageClient.putObject(
