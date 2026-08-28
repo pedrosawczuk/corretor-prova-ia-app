@@ -8,24 +8,15 @@ import { toastApiError } from '@/lib/api-error-handler'
 
 interface ProvaResultadoProps {
 	exam: Exam
-	onQuestionUpdated: (question: Question) => void
 }
 
-export function ProvaResultado({
-	exam,
-	onQuestionUpdated,
-}: ProvaResultadoProps) {
+export function ProvaResultado({ exam }: ProvaResultadoProps) {
 	const questions = [...exam.questions].sort((a, b) => a.order - b.order)
 
 	return (
 		<div className="flex flex-col gap-4">
 			{questions.map((question) => (
-				<QuestionCard
-					key={question.id}
-					examId={exam.id}
-					question={question}
-					onQuestionUpdated={onQuestionUpdated}
-				/>
+				<QuestionCard key={question.id} examId={exam.id} question={question} />
 			))}
 		</div>
 	)
@@ -34,14 +25,9 @@ export function ProvaResultado({
 interface QuestionCardProps {
 	examId: string
 	question: Question
-	onQuestionUpdated: (question: Question) => void
 }
 
-function QuestionCard({
-	examId,
-	question,
-	onQuestionUpdated,
-}: QuestionCardProps) {
+function QuestionCard({ examId, question }: QuestionCardProps) {
 	const updateCorrectOption = useUpdateCorrectOption(examId, question.id)
 
 	function handleSelect(optionId: string) {
@@ -50,9 +36,6 @@ function QuestionCard({
 		}
 
 		updateCorrectOption.mutate(optionId, {
-			onSuccess: (updatedQuestion) => {
-				onQuestionUpdated(updatedQuestion)
-			},
 			onError: (error) => {
 				toastApiError(
 					error,

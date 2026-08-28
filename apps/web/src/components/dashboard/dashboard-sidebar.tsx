@@ -11,20 +11,13 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from '@app/ui'
-import {
-	FileText,
-	LayoutDashboard,
-	LogOut,
-	Settings,
-	Users,
-} from 'lucide-react'
+import { LayoutDashboard, LogOut, Settings, Users } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const NAV_ITEMS = [
 	{ title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
 	{ title: 'Turmas', href: '/dashboard/turmas', icon: Users },
-	{ title: 'Provas', href: '/dashboard/provas', icon: FileText },
 	{ title: 'Configurações', href: '/dashboard/configuracoes', icon: Settings },
 ]
 

@@ -399,11 +399,10 @@ export function DashboardOverview() {
 				</div>
 				<h2 className="text-base font-semibold text-foreground">Provas</h2>
 				<p className="max-w-sm text-sm text-muted-foreground">
-					Em breve você poderá gerar e corrigir provas com a IA do Gabarita.app
-					por aqui.
+					Gere provas com a IA do Gabarita.app a partir de cada turma.
 				</p>
 				<Button variant="outline" size="sm" asChild rightIcon={<ArrowRight />}>
-					<Link href="/dashboard/provas">Ver seção de provas</Link>
+					<Link href="/dashboard/turmas">Ver turmas</Link>
 				</Button>
 			</div>
 		</div>

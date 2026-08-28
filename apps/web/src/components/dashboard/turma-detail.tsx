@@ -1,11 +1,9 @@
 'use client'
 
-import type { Exam, Question } from '@app/shared'
 import { Badge, Button, Card, CardContent, CardHeader, Skeleton } from '@app/ui'
 import {
 	ArrowLeft,
 	BookOpen,
-	FileText,
 	Pencil,
 	SearchX,
 	Sparkles,
@@ -17,10 +15,10 @@ import * as React from 'react'
 import { useClassroom } from '@/hooks/use-classrooms'
 import { ApiError } from '@/lib/api-client'
 import { formatDate } from '@/lib/date'
+import { CriarProvaDialog } from './criar-prova-dialog'
 import { EditarTurmaDialog } from './editar-turma-dialog'
 import { ExcluirTurmaDialog } from './excluir-turma-dialog'
-import { GerarProvaDialog } from './gerar-prova-dialog'
-import { ProvaResultado } from './prova-resultado'
+import { ProvasList } from './provas-list'
 
 interface TurmaDetailProps {
 	id: string
@@ -30,20 +28,7 @@ export function TurmaDetail({ id }: TurmaDetailProps) {
 	const { data: classroom, isLoading, error } = useClassroom(id)
 	const [editOpen, setEditOpen] = React.useState(false)
 	const [deleteOpen, setDeleteOpen] = React.useState(false)
-	const [gerarProvaOpen, setGerarProvaOpen] = React.useState(false)
-	const [exam, setExam] = React.useState<Exam | null>(null)
-
-	function handleQuestionUpdated(question: Question) {
-		setExam(
-			(prev) =>
-				prev && {
-					...prev,
-					questions: prev.questions.map((q) =>
-						q.id === question.id ? question : q,
-					),
-				},
-		)
-	}
+	const [criarProvaOpen, setCriarProvaOpen] = React.useState(false)
 
 	if (isLoading) {
 		return (
@@ -139,44 +124,18 @@ export function TurmaDetail({ id }: TurmaDetailProps) {
 				</CardContent>
 			</Card>
 
-			{exam ? (
-				<div className="flex flex-col gap-4">
-					<div className="flex items-center justify-end">
-						<Button
-							variant="outline"
-							size="sm"
-							leftIcon={<Sparkles />}
-							onClick={() => setGerarProvaOpen(true)}
-						>
-							Gerar nova prova
-						</Button>
-					</div>
-					<ProvaResultado
-						exam={exam}
-						onQuestionUpdated={handleQuestionUpdated}
-					/>
-				</div>
-			) : (
-				<div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-card p-12 text-center">
-					<div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-						<FileText className="size-6" />
-					</div>
-					<h2 className="text-base font-semibold text-foreground">
-						Nenhuma prova criada nesta turma
-					</h2>
-					<p className="max-w-sm text-sm text-muted-foreground">
-						Gere uma prova com a IA do Gabarita.app para {classroom.name} em
-						poucos segundos.
-					</p>
-					<Button
-						size="sm"
-						leftIcon={<Sparkles />}
-						onClick={() => setGerarProvaOpen(true)}
-					>
-						Gerar Prova
-					</Button>
-				</div>
-			)}
+			<div className="flex items-center justify-between gap-4">
+				<h2 className="text-base font-semibold text-foreground">Provas</h2>
+				<Button
+					size="sm"
+					leftIcon={<Sparkles />}
+					onClick={() => setCriarProvaOpen(true)}
+				>
+					Gerar Prova
+				</Button>
+			</div>
+
+			<ProvasList turmaId={id} />
 
 			<EditarTurmaDialog
 				classroom={classroom}
@@ -188,11 +147,10 @@ export function TurmaDetail({ id }: TurmaDetailProps) {
 				open={deleteOpen}
 				onOpenChange={setDeleteOpen}
 			/>
-			<GerarProvaDialog
-				open={gerarProvaOpen}
-				onOpenChange={setGerarProvaOpen}
+			<CriarProvaDialog
+				open={criarProvaOpen}
+				onOpenChange={setCriarProvaOpen}
 				classroomId={id}
-				onGenerated={setExam}
 			/>
 		</div>
 	)
