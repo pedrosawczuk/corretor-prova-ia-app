@@ -23,8 +23,10 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import type { z } from 'zod'
+import { apiClient } from '@/lib/api-client'
 import { applyApiErrorsToForm } from '@/lib/api-error-handler'
 import type { AuthUser } from '@/lib/auth-server'
+import { formatDate } from '@/lib/date'
 
 type UpdateProfileInput = z.infer<typeof updateProfileSchema>
 
@@ -52,40 +54,25 @@ export function PerfilSection({ user }: { user: AuthUser }) {
 		setIsLoading(true)
 
 		try {
-			const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
-			const response = await fetch(`${apiUrl}/auth/update-profile`, {
+			await apiClient('/auth/update-profile', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				credentials: 'include',
 				body: JSON.stringify({ name: data.name }),
 			})
 
-			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({}))
-				applyApiErrorsToForm(
-					errorData,
-					form.setError,
-					'Não foi possível atualizar seu perfil. Tente novamente.',
-				)
-				return
-			}
-
 			toast.success('Perfil atualizado com sucesso!')
 			router.refresh()
-		} catch {
-			toast.error(
-				'Não foi possível conectar ao servidor. Verifique sua conexão.',
+		} catch (error) {
+			applyApiErrorsToForm(
+				error,
+				form.setError,
+				'Não foi possível atualizar seu perfil. Tente novamente.',
 			)
 		} finally {
 			setIsLoading(false)
 		}
 	}
 
-	const memberSince = new Date(user.createdAt).toLocaleDateString('pt-BR', {
-		day: '2-digit',
-		month: 'long',
-		year: 'numeric',
-	})
+	const memberSince = formatDate(user.createdAt)
 
 	return (
 		<Card>

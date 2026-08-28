@@ -10,7 +10,6 @@ import {
 	FormLabel,
 	FormMessage,
 	Input,
-	toast,
 } from '@app/ui'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, CheckCircle2, Mail, SendHorizonal } from 'lucide-react'
@@ -18,6 +17,7 @@ import Link from 'next/link'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import type { z } from 'zod'
+import { apiClient } from '@/lib/api-client'
 import { applyApiErrorsToForm } from '@/lib/api-error-handler'
 
 type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
@@ -37,30 +37,19 @@ export function RecuperarSenhaForm() {
 		setIsLoading(true)
 
 		try {
-			const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
-			const response = await fetch(`${apiUrl}/auth/forgot-password`, {
+			await apiClient('/auth/forgot-password', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				credentials: 'include',
 				body: JSON.stringify({
 					email: data.email,
 				}),
 			})
 
-			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({}))
-				applyApiErrorsToForm(
-					errorData,
-					form.setError,
-					'Não foi possível enviar o link de recuperação. Tente novamente.',
-				)
-				return
-			}
-
 			setSentTo(data.email)
-		} catch {
-			toast.error(
-				'Não foi possível conectar ao servidor. Verifique sua conexão.',
+		} catch (error) {
+			applyApiErrorsToForm(
+				error,
+				form.setError,
+				'Não foi possível enviar o link de recuperação. Tente novamente.',
 			)
 		} finally {
 			setIsLoading(false)

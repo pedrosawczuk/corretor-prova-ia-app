@@ -12,6 +12,7 @@ import { CheckCircle2, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
+import { apiClient } from '@/lib/api-client'
 
 export default function SairPage() {
 	const router = useRouter()
@@ -20,12 +21,7 @@ export default function SairPage() {
 	React.useEffect(() => {
 		async function handleSignOut() {
 			try {
-				const apiUrl =
-					process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
-				await fetch(`${apiUrl}/auth/sign-out`, {
-					method: 'POST',
-					credentials: 'include',
-				})
+				await apiClient('/auth/sign-out', { method: 'POST' })
 
 				setIsLoggingOut(false)
 				toast.info('Sessão finalizada com sucesso.')

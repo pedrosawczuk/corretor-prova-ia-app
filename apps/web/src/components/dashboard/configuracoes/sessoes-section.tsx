@@ -27,7 +27,10 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import * as React from 'react'
+import { apiClient, ApiError } from '@/lib/api-client'
+import { toastApiError } from '@/lib/api-error-handler'
 import type { AuthSession } from '@/lib/auth-server'
+import { formatRelativeDate } from '@/lib/date'
 
 function parseDevice(userAgent?: string | null) {
 	if (!userAgent) {
@@ -58,23 +61,6 @@ function parseDevice(userAgent?: string | null) {
 	}
 }
 
-function formatRelativeDate(iso: string) {
-	const date = new Date(iso)
-	const diffMs = Date.now() - date.getTime()
-	const diffMinutes = Math.round(diffMs / 60_000)
-
-	if (diffMinutes < 1) return 'agora mesmo'
-	if (diffMinutes < 60) return `há ${diffMinutes} min`
-
-	const diffHours = Math.round(diffMinutes / 60)
-	if (diffHours < 24) return `há ${diffHours} h`
-
-	const diffDays = Math.round(diffHours / 24)
-	if (diffDays < 30) return `há ${diffDays} dia${diffDays > 1 ? 's' : ''}`
-
-	return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
-}
-
 interface SessoesSectionProps {
 	initialSessions: AuthSession[]
 	currentToken: string
@@ -101,32 +87,21 @@ export function SessoesSection({
 		setIsRevoking(true)
 
 		try {
-			const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
-			const response = await fetch(`${apiUrl}/auth/revoke-session`, {
+			await apiClient('/auth/revoke-session', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				credentials: 'include',
 				body: JSON.stringify({ token }),
 			})
 
-			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({}))
-				if (errorData.code === 'SESSION_NOT_FRESH') {
-					toast.error(
-						'Por segurança, faça login novamente para encerrar sessões.',
-					)
-				} else {
-					toast.error('Não foi possível encerrar essa sessão.')
-				}
-				return
-			}
-
 			setSessions((prev) => prev.filter((s) => s.token !== token))
 			toast.success('Sessão encerrada com sucesso.')
-		} catch {
-			toast.error(
-				'Não foi possível conectar ao servidor. Verifique sua conexão.',
-			)
+		} catch (error) {
+			if (error instanceof ApiError && error.code === 'SESSION_NOT_FRESH') {
+				toast.error(
+					'Por segurança, faça login novamente para encerrar sessões.',
+				)
+			} else {
+				toastApiError(error, 'Não foi possível encerrar essa sessão.')
+			}
 		} finally {
 			setIsRevoking(false)
 			setSessionToRevoke(null)
@@ -137,30 +112,18 @@ export function SessoesSection({
 		setIsRevokingAll(true)
 
 		try {
-			const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
-			const response = await fetch(`${apiUrl}/auth/revoke-other-sessions`, {
-				method: 'POST',
-				credentials: 'include',
-			})
-
-			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({}))
-				if (errorData.code === 'SESSION_NOT_FRESH') {
-					toast.error(
-						'Por segurança, faça login novamente para encerrar sessões.',
-					)
-				} else {
-					toast.error('Não foi possível encerrar as outras sessões.')
-				}
-				return
-			}
+			await apiClient('/auth/revoke-other-sessions', { method: 'POST' })
 
 			setSessions((prev) => prev.filter((s) => s.token === currentToken))
 			toast.success('Todas as outras sessões foram encerradas.')
-		} catch {
-			toast.error(
-				'Não foi possível conectar ao servidor. Verifique sua conexão.',
-			)
+		} catch (error) {
+			if (error instanceof ApiError && error.code === 'SESSION_NOT_FRESH') {
+				toast.error(
+					'Por segurança, faça login novamente para encerrar sessões.',
+				)
+			} else {
+				toastApiError(error, 'Não foi possível encerrar as outras sessões.')
+			}
 		} finally {
 			setIsRevokingAll(false)
 			setConfirmRevokeAll(false)

@@ -10,7 +10,6 @@ import {
 	FormLabel,
 	FormMessage,
 	Input,
-	toast,
 } from '@app/ui'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, CheckCircle2, KeyRound, Lock } from 'lucide-react'
@@ -19,6 +18,7 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { apiClient } from '@/lib/api-client'
 import { applyApiErrorsToForm } from '@/lib/api-error-handler'
 
 const redefinirSenhaSchema = resetPasswordSchema
@@ -54,31 +54,20 @@ export function RedefinirSenhaForm({ token }: RedefinirSenhaFormProps) {
 		setIsLoading(true)
 
 		try {
-			const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
-			const response = await fetch(`${apiUrl}/auth/reset-password`, {
+			await apiClient('/auth/reset-password', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				credentials: 'include',
 				body: JSON.stringify({
 					token: data.token,
 					password: data.password,
 				}),
 			})
 
-			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({}))
-				applyApiErrorsToForm(
-					errorData,
-					form.setError,
-					'Não foi possível redefinir sua senha. Tente novamente.',
-				)
-				return
-			}
-
 			setIsDone(true)
-		} catch {
-			toast.error(
-				'Não foi possível conectar ao servidor. Verifique sua conexão.',
+		} catch (error) {
+			applyApiErrorsToForm(
+				error,
+				form.setError,
+				'Não foi possível redefinir sua senha. Tente novamente.',
 			)
 		} finally {
 			setIsLoading(false)

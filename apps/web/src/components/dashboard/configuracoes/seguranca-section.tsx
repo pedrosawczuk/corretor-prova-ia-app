@@ -21,6 +21,7 @@ import { KeyRound, ShieldCheck } from 'lucide-react'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import type { z } from 'zod'
+import { apiClient, ApiError } from '@/lib/api-client'
 import { applyApiErrorsToForm } from '@/lib/api-error-handler'
 
 type ChangePasswordInput = z.infer<typeof changePasswordSchema>
@@ -41,51 +42,39 @@ export function SegurancaSection() {
 		setIsLoading(true)
 
 		try {
-			const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
-			const response = await fetch(`${apiUrl}/auth/update-password`, {
+			await apiClient('/auth/update-password', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				credentials: 'include',
 				body: JSON.stringify({
 					currentPassword: data.currentPassword,
 					newPassword: data.newPassword,
 				}),
 			})
 
-			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({}))
-
-				if (errorData.code === 'INVALID_PASSWORD') {
-					form.setError('currentPassword', {
-						type: 'manual',
-						message: 'Senha atual incorreta.',
-					})
-					toast.error('Senha atual incorreta.')
-					return
-				}
-
-				if (errorData.code === 'SESSION_NOT_FRESH') {
-					toast.error(
-						'Por segurança, faça login novamente para alterar sua senha.',
-					)
-					return
-				}
-
-				applyApiErrorsToForm(
-					errorData,
-					form.setError,
-					'Não foi possível alterar sua senha. Tente novamente.',
-				)
-				return
-			}
-
 			toast.success(
 				'Senha alterada com sucesso! Suas outras sessões foram encerradas.',
 			)
 			form.reset()
-		} catch {
-			toast.error(
-				'Não foi possível conectar ao servidor. Verifique sua conexão.',
+		} catch (error) {
+			if (error instanceof ApiError && error.code === 'INVALID_PASSWORD') {
+				form.setError('currentPassword', {
+					type: 'manual',
+					message: 'Senha atual incorreta.',
+				})
+				toast.error('Senha atual incorreta.')
+				return
+			}
+
+			if (error instanceof ApiError && error.code === 'SESSION_NOT_FRESH') {
+				toast.error(
+					'Por segurança, faça login novamente para alterar sua senha.',
+				)
+				return
+			}
+
+			applyApiErrorsToForm(
+				error,
+				form.setError,
+				'Não foi possível alterar sua senha. Tente novamente.',
 			)
 		} finally {
 			setIsLoading(false)

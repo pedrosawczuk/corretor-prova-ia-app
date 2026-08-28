@@ -12,7 +12,8 @@
 | Gerenciador de Pacotes | pnpm (Monorepo com workspaces e Turborepo) |
 | Estilo de Módulo | ESM (`"type": "module"`) |
 | Formatação & Linter | BiomeJS — regras em `biome.json` |
-| Idioma dos Commits e Código | Inglês (commits com Conventional Commits, nomes de branches, variáveis, funções, mensagens de erro da API e código em geral) |
+| Idioma dos Commits e Código | Inglês (commits com Conventional Commits, nomes de branches, variáveis, funções e código em geral) |
+| Idioma das Mensagens ao Usuário | PT-BR (mensagens de erro da API, validações Zod, toasts, alertas e qualquer texto exibido ao usuário final — o público é brasileiro) |
 | Nomenclatura de Arquivos | `kebab-case` (ex: `create-exam.ts`, `use-camera.ts`) |
 | Nomenclatura de Variáveis/Funções | `camelCase` (ex: `createExamModule`, `isValid`) |
 | Nomenclatura de Classes/Tipos/Interfaces | `PascalCase` (ex: `AppError`, `CreateExamInput`) |

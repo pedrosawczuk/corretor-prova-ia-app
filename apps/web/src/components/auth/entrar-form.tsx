@@ -21,7 +21,10 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { useGoogleAuth } from '@/hooks/use-google-auth'
+import { apiClient } from '@/lib/api-client'
 import { applyApiErrorsToForm } from '@/lib/api-error-handler'
+import { GoogleIcon } from './google-icon'
 
 const entrarSchema = signInWithEmailSchema.extend({
 	remember: z.boolean(),
@@ -32,7 +35,10 @@ type EntrarInput = z.infer<typeof entrarSchema>
 export function EntrarForm() {
 	const router = useRouter()
 	const [isLoading, setIsLoading] = React.useState(false)
-	const [isGoogleLoading, setIsGoogleLoading] = React.useState(false)
+	const { isLoading: isGoogleLoading, signInWithGoogle } = useGoogleAuth({
+		startErrorMessage: 'Não foi possível iniciar a autenticação com o Google.',
+		successMessage: 'Autenticado com sucesso via Google!',
+	})
 
 	const form = useForm<EntrarInput>({
 		resolver: zodResolver(entrarSchema),
@@ -47,70 +53,24 @@ export function EntrarForm() {
 		setIsLoading(true)
 
 		try {
-			const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
-			const response = await fetch(`${apiUrl}/auth/sign-in`, {
+			await apiClient('/auth/sign-in', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				credentials: 'include',
 				body: JSON.stringify({
 					email: data.email,
 					password: data.password,
 				}),
 			})
 
-			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({}))
-				applyApiErrorsToForm(
-					errorData,
-					form.setError,
-					'E-mail ou senha incorretos. Tente novamente.',
-				)
-				return
-			}
-
 			toast.success('Bem-vindo de volta ao Gabarita.app!')
 			router.push('/dashboard')
-		} catch {
-			toast.error(
-				'Não foi possível conectar ao servidor. Verifique sua conexão.',
+		} catch (error) {
+			applyApiErrorsToForm(
+				error,
+				form.setError,
+				'E-mail ou senha incorretos. Tente novamente.',
 			)
 		} finally {
 			setIsLoading(false)
-		}
-	}
-
-	async function handleGoogleSignIn() {
-		setIsGoogleLoading(true)
-
-		try {
-			const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
-			const response = await fetch(`${apiUrl}/auth/sign-in/social`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				credentials: 'include',
-				body: JSON.stringify({
-					provider: 'google',
-					callbackURL: `${window.location.origin}/dashboard`,
-				}),
-			})
-
-			if (!response.ok) {
-				toast.error('Não foi possível iniciar a autenticação com o Google.')
-				return
-			}
-
-			const data = await response.json().catch(() => ({}))
-			if (data.url) {
-				window.location.href = data.url
-				return
-			}
-
-			toast.success('Autenticado com sucesso via Google!')
-			router.push('/dashboard')
-		} catch {
-			toast.error('Erro ao comunicar com o servidor de autenticação.')
-		} finally {
-			setIsGoogleLoading(false)
 		}
 	}
 
@@ -130,28 +90,11 @@ export function EntrarForm() {
 				variant="outline"
 				fullWidth
 				size="lg"
-				onClick={handleGoogleSignIn}
+				onClick={signInWithGoogle}
 				isLoading={isGoogleLoading}
 				className="gap-2.5 font-medium"
 			>
-				<svg className="size-4.5" viewBox="0 0 24 24" aria-hidden="true">
-					<path
-						fill="#EA4335"
-						d="M12 5c1.56 0 2.97.54 4.09 1.43l3.05-3.05C17.29 1.63 14.81 1 12 1 7.51 1 3.69 3.56 1.83 7.29l3.65 2.83C6.35 7.15 8.93 5 12 5z"
-					/>
-					<path
-						fill="#4285F4"
-						d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.67 2.85c2.14-1.98 3.75-4.89 3.75-8.67z"
-					/>
-					<path
-						fill="#FBBC05"
-						d="M5.48 14.88c-.23-.69-.36-1.42-.36-2.18s.13-1.49.36-2.18L1.83 7.69C1.06 9.23.63 10.96.63 12.79s.43 3.56 1.2 5.1l3.65-2.83z"
-					/>
-					<path
-						fill="#34A853"
-						d="M12 23c3.24 0 5.95-1.08 7.93-2.91l-3.67-2.85c-1.07.72-2.44 1.16-4.26 1.16-3.07 0-5.65-2.15-6.52-5.12L1.83 16.1C3.69 19.83 7.51 23 12 23z"
-					/>
-				</svg>
+				<GoogleIcon className="size-4.5" />
 				Continuar com o Google
 			</Button>
 
