@@ -1,6 +1,6 @@
-import { Button } from '@app/ui'
-import { LayoutDashboard, Plus } from 'lucide-react'
 import type { Metadata } from 'next'
+import { CriarTurmaDialog } from '@/components/dashboard/criar-turma-dialog'
+import { TurmasList } from '@/components/dashboard/turmas-list'
 
 export const metadata: Metadata = {
 	title: 'Dashboard — Gabarita.app',
@@ -19,26 +19,10 @@ export default function DashboardPage() {
 						Acompanhe suas turmas e provas em um só lugar.
 					</p>
 				</div>
-				<Button size="sm" leftIcon={<Plus />}>
-					Nova Turma
-				</Button>
+				<CriarTurmaDialog />
 			</div>
 
-			<div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-card p-12 text-center">
-				<div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-					<LayoutDashboard className="size-6" />
-				</div>
-				<h2 className="text-base font-semibold text-foreground">
-					Nenhuma turma criada ainda
-				</h2>
-				<p className="max-w-sm text-sm text-muted-foreground">
-					Crie sua primeira turma para começar a gerar e organizar provas com a
-					IA do Gabarita.app.
-				</p>
-				<Button size="sm" leftIcon={<Plus />} className="mt-2">
-					Criar Turma
-				</Button>
-			</div>
+			<TurmasList />
 		</div>
 	)
 }
