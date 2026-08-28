@@ -30,7 +30,6 @@ const alertVariants = cva(
 export interface AlertProps
 	extends React.HTMLAttributes<HTMLDivElement>,
 		VariantProps<typeof alertVariants> {
-
 	showDefaultIcon?: boolean
 
 	icon?: React.ReactNode
@@ -122,4 +121,3 @@ const AlertDescription = React.forwardRef<
 AlertDescription.displayName = 'AlertDescription'
 
 export { Alert, AlertDescription, AlertTitle, alertVariants }
-

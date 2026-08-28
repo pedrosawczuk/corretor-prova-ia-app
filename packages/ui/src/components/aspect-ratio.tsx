@@ -30,7 +30,6 @@ export interface AspectRatioProps
 		React.ComponentPropsWithoutRef<typeof AspectRatioPrimitive.Root>,
 		'ratio'
 	> {
-
 	ratio?: number | AspectRatioPreset
 }
 
@@ -54,4 +53,3 @@ const AspectRatio = React.forwardRef<
 AspectRatio.displayName = 'AspectRatio'
 
 export { AspectRatio, RATIO_PRESETS }
-

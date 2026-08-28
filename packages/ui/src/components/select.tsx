@@ -184,7 +184,6 @@ Select.displayName = 'Select'
 
 export interface SelectItemProps
 	extends React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item> {
-
 	icon?: React.ReactNode
 
 	badge?: React.ReactNode
@@ -271,4 +270,3 @@ export {
 	SelectValue,
 	selectTriggerVariants,
 }
-

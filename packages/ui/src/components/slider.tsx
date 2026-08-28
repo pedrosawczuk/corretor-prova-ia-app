@@ -158,6 +158,7 @@ const Slider = React.forwardRef<
 
 					{valuesArray.map((_, index) => (
 						<SliderPrimitive.Thumb
+							// biome-ignore lint/suspicious/noArrayIndexKey: slider thumb index
 							key={index}
 							className={sliderThumbVariants({ variant, size })}
 							aria-label={label ? String(label) : `Slider thumb ${index + 1}`}
@@ -201,4 +202,3 @@ const Slider = React.forwardRef<
 Slider.displayName = 'Slider'
 
 export { Slider, sliderRangeVariants, sliderThumbVariants, sliderTrackVariants }
-

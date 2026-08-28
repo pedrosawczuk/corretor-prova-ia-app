@@ -1,7 +1,5 @@
 'use client'
 
-import { useClassrooms } from '@/hooks/use-classrooms'
-import { formatDate } from '@/lib/date'
 import {
 	Badge,
 	Card,
@@ -12,6 +10,8 @@ import {
 } from '@app/ui'
 import { LayoutDashboard, Users } from 'lucide-react'
 import Link from 'next/link'
+import { useClassrooms } from '@/hooks/use-classrooms'
+import { formatDate } from '@/lib/date'
 import { CriarTurmaDialog } from './criar-turma-dialog'
 
 export function TurmasList() {
@@ -21,6 +21,7 @@ export function TurmasList() {
 		return (
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				{Array.from({ length: 3 }).map((_, index) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
 					<Skeleton key={index} className="h-40 rounded-2xl" />
 				))}
 			</div>

@@ -16,6 +16,7 @@ export function createDbChain(result: unknown) {
 		chain[method] = vi.fn(() => chain)
 	}
 
+	// biome-ignore lint/suspicious/noThenProperty: Drizzle query chain is thenable
 	chain.then = (
 		onFulfilled: (value: unknown) => unknown,
 		onRejected?: (reason: unknown) => unknown,

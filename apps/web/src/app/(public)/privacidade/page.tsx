@@ -42,7 +42,6 @@ export default function PrivacidadePage() {
 
 	return (
 		<div className="min-h-screen flex flex-col bg-background text-foreground font-sans">
-
 			<Header variant="glass">
 				<HeaderBrand asChild>
 					<Link href="/" className="flex items-center gap-2.5">
@@ -74,7 +73,6 @@ export default function PrivacidadePage() {
 			</Header>
 
 			<main className="flex-1 py-12 md:py-20 px-6 max-w-4xl mx-auto w-full space-y-12">
-
 				<div className="space-y-4 text-left border-b border-border/60 pb-8">
 					<Badge variant="primary" size="sm" leftIcon={<ShieldCheck />}>
 						Privacidade & LGPD
@@ -343,4 +341,3 @@ export default function PrivacidadePage() {
 		</div>
 	)
 }
-

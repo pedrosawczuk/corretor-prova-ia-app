@@ -219,4 +219,3 @@ export const GabaritaAppSidebar: Story = {
 		</SidebarProvider>
 	),
 }
-

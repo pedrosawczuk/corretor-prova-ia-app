@@ -121,4 +121,3 @@ export const TableRowsLoading: Story = {
 		</div>
 	),
 }
-

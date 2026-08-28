@@ -80,7 +80,6 @@ const dotVariants = cva('rounded-full shrink-0', {
 export interface BadgeProps
 	extends React.HTMLAttributes<HTMLDivElement>,
 		VariantProps<typeof badgeVariants> {
-
 	asChild?: boolean
 
 	dot?: boolean
@@ -194,4 +193,3 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
 Badge.displayName = 'Badge'
 
 export { Badge, badgeVariants }
-

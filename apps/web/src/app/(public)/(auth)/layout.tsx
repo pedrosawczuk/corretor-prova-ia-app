@@ -16,9 +16,7 @@ export default function AuthLayout({
 }) {
 	return (
 		<div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-12 bg-background">
-
 			<div className="lg:col-span-6 xl:col-span-5 flex flex-col justify-between p-6 sm:p-10 md:p-12">
-
 				<header className="flex items-center justify-between">
 					<Link
 						href="/"
@@ -62,7 +60,6 @@ export default function AuthLayout({
 			</div>
 
 			<div className="hidden lg:flex lg:col-span-6 xl:col-span-7 relative bg-gradient-to-br from-[#0c0d0e] via-[#171a1c] to-[#291e52] text-white p-12 flex-col justify-between overflow-hidden border-l border-border/40">
-
 				<div className="absolute -top-24 -right-24 size-96 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
 				<div className="absolute -bottom-24 -left-24 size-96 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
 
@@ -146,4 +143,3 @@ export default function AuthLayout({
 		</div>
 	)
 }
-

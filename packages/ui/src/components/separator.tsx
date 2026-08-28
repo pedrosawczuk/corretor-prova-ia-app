@@ -70,7 +70,6 @@ export interface SeparatorProps
 			'orientation'
 		>,
 		Omit<VariantProps<typeof separatorVariants>, 'orientation'> {
-
 	orientation?: 'horizontal' | 'vertical'
 
 	label?: React.ReactNode
@@ -216,4 +215,3 @@ const Separator = React.forwardRef<
 Separator.displayName = 'Separator'
 
 export { Separator, separatorVariants }
-
