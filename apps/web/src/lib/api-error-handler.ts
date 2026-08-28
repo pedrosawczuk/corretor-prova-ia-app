@@ -1,24 +1,28 @@
 import { toast } from '@app/ui'
 import type { FieldValues, Path, UseFormSetError } from 'react-hook-form'
+import { ApiError } from './api-client'
 
-export interface ApiErrorResponse {
-	code?: string
-	message?: string
-	issues?:
-		| Array<{
-				path?: (string | number)[]
-				message: string
-		  }>
-		| Record<string, { _errors?: string[] }>
+const CONNECTION_ERROR_MESSAGE =
+	'Não foi possível conectar ao servidor. Verifique sua conexão.'
+
+export function toastApiError(error: unknown, fallback: string) {
+	toast.error(
+		error instanceof ApiError ? error.message || fallback : CONNECTION_ERROR_MESSAGE,
+	)
 }
 
 export function applyApiErrorsToForm<TFieldValues extends FieldValues>(
-	errorData: ApiErrorResponse,
+	error: unknown,
 	setError: UseFormSetError<TFieldValues>,
 	defaultMessage = 'Ocorreu um erro ao processar a solicitação.',
 ) {
-	if (Array.isArray(errorData.issues)) {
-		for (const issue of errorData.issues) {
+	if (!(error instanceof ApiError)) {
+		toast.error(CONNECTION_ERROR_MESSAGE)
+		return
+	}
+
+	if (Array.isArray(error.issues)) {
+		for (const issue of error.issues) {
 			const fieldName = issue.path?.[0] as Path<TFieldValues>
 			if (fieldName) {
 				setError(fieldName, {
@@ -27,16 +31,11 @@ export function applyApiErrorsToForm<TFieldValues extends FieldValues>(
 				})
 			}
 		}
-		toast.error(
-			errorData.message || 'Verifique os campos destacados no formulário.',
-		)
+		toast.error(error.message || 'Verifique os campos destacados no formulário.')
 		return
 	}
 
-	if (
-		errorData.code === 'CONFLICT' ||
-		errorData.code === 'USER_ALREADY_EXISTS'
-	) {
+	if (error.code === 'CONFLICT' || error.code === 'USER_ALREADY_EXISTS') {
 		setError('email' as Path<TFieldValues>, {
 			type: 'manual',
 			message: 'Este e-mail já está cadastrado no sistema.',
@@ -45,14 +44,14 @@ export function applyApiErrorsToForm<TFieldValues extends FieldValues>(
 		return
 	}
 
-	if (errorData.code === 'INVALID_TOKEN') {
+	if (error.code === 'INVALID_TOKEN') {
 		toast.error(
 			'Este link expirou ou já foi utilizado. Solicite um novo link de recuperação.',
 		)
 		return
 	}
 
-	if (errorData.code === 'INVALID_CREDENTIALS') {
+	if (error.code === 'INVALID_CREDENTIALS') {
 		setError('email' as Path<TFieldValues>, {
 			type: 'manual',
 			message: 'E-mail ou senha incorretos.',
@@ -65,5 +64,5 @@ export function applyApiErrorsToForm<TFieldValues extends FieldValues>(
 		return
 	}
 
-	toast.error(errorData.message || defaultMessage)
+	toast.error(error.message || defaultMessage)
 }

@@ -1,6 +1,7 @@
 import { Toaster } from '@app/ui'
 import type { Metadata } from 'next'
 import { Sora } from 'next/font/google'
+import { QueryProvider } from '@/components/providers/query-provider'
 import './globals.css'
 
 const sora = Sora({
@@ -23,8 +24,10 @@ export default function RootLayout({
 	return (
 		<html lang="pt-BR" className={`${sora.variable} font-sans`}>
 			<body className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20">
-				{children}
-				<Toaster richColors position="top-right" />
+				<QueryProvider>
+					{children}
+					<Toaster richColors position="top-right" />
+				</QueryProvider>
 			</body>
 		</html>
 	)
