@@ -19,6 +19,7 @@ vi.mock('@app/db', () => ({
 	},
 	desc: vi.fn(),
 	eq: vi.fn(),
+	inArray: vi.fn(),
 }))
 
 vi.mock('@/lib/get-authenticated-user', () => ({

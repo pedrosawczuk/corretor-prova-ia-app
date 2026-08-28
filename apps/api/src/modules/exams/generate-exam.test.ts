@@ -25,7 +25,7 @@ vi.mock('@/lib/gemini', () => ({
 	generateExamQuestions: vi.fn(),
 }))
 
-describe('POST /exams/generate', () => {
+describe('POST /exams/:examId/generate', () => {
 	let app: FastifyInstance
 	const user = makeAuthenticatedUser()
 
@@ -42,17 +42,16 @@ describe('POST /exams/generate', () => {
 		vi.mocked(getAuthenticatedUser).mockResolvedValue(user as never)
 	})
 
-	it('gera a prova para a turma do professor autenticado e retorna 201', async () => {
+	it('gera as questões para a prova do professor autenticado e retorna 200', async () => {
 		const payload = makeGenerateExamInput({
 			questionCount: 1,
 			questionType: 'multiple_choice',
 		})
+		const exam = makeExam({ creatorId: user.id })
 		const classroom = makeClassroom({
-			id: payload.classroomId,
+			id: exam.classroomId,
 			teacherId: user.id,
 		})
-
-		vi.mocked(db.select).mockReturnValue(createDbChain([classroom]) as never)
 
 		const generated = [
 			{
@@ -67,25 +66,29 @@ describe('POST /exams/generate', () => {
 		]
 		vi.mocked(generateExamQuestions).mockResolvedValue(generated as never)
 
-		const examRow = makeExam({
-			classroomId: classroom.id,
-			creatorId: user.id,
-			totalPoints: '1.00',
-		})
 		const questionRow = makeQuestion({
-			examId: examRow.id,
+			examId: exam.id,
 			order: 0,
 			type: 'multiple_choice',
 		})
 		const optionRows = generated[0].options.map((option) =>
 			makeQuestionOption({ questionId: questionRow.id, ...option }),
 		)
+		const updatedExam = { ...exam, totalPoints: '1.00' }
 
-		const tx = { insert: vi.fn() }
+		vi.mocked(db.select)
+			.mockReturnValueOnce(createDbChain([exam]) as never)
+			.mockReturnValueOnce(createDbChain([classroom]) as never)
+			.mockReturnValueOnce(createDbChain([updatedExam]) as never)
+			.mockReturnValueOnce(createDbChain([questionRow]) as never)
+			.mockReturnValueOnce(createDbChain(optionRows) as never)
+
+		const tx = { delete: vi.fn(), insert: vi.fn(), update: vi.fn() }
+		tx.delete.mockReturnValue(createDbChain([]))
 		tx.insert
-			.mockReturnValueOnce(createDbChain([examRow]))
 			.mockReturnValueOnce(createDbChain([questionRow]))
 			.mockReturnValueOnce(createDbChain(optionRows))
+		tx.update.mockReturnValue(createDbChain([]))
 
 		vi.mocked(db.transaction).mockImplementation(
 			createDbTransactionMock(tx) as never,
@@ -93,49 +96,39 @@ describe('POST /exams/generate', () => {
 
 		const response = await app.inject({
 			method: 'POST',
-			url: '/exams/generate',
+			url: `/exams/${exam.id}/generate`,
 			payload,
 		})
 
-		expect(response.statusCode).toBe(201)
+		expect(response.statusCode).toBe(200)
 		expect(generateExamQuestions).toHaveBeenCalledWith({
 			subject: classroom.subject,
 			difficulty: payload.difficulty,
 			questionCount: payload.questionCount,
 			questionType: payload.questionType,
 		})
-		expect(tx.insert).toHaveBeenCalledTimes(3)
+		expect(tx.delete).toHaveBeenCalledTimes(1)
+		expect(tx.insert).toHaveBeenCalledTimes(2)
+		expect(tx.update).toHaveBeenCalledTimes(1)
 
 		const body = response.json()
 		expect(body).toEqual(
-			expect.objectContaining({
-				id: examRow.id,
-				title: examRow.title,
-				status: 'draft',
-				classroomId: classroom.id,
-				creatorId: user.id,
-			}),
+			expect.objectContaining({ id: exam.id, totalPoints: '1.00' }),
 		)
 		expect(body.questions).toHaveLength(1)
-		expect(body.questions[0]).toEqual(
-			expect.objectContaining({
-				id: questionRow.id,
-				statement: questionRow.statement,
-			}),
-		)
 		expect(body.questions[0].options).toHaveLength(4)
 		expect(body.questions[0].options[1]).toEqual(
 			expect.objectContaining({ letter: 'B', isCorrect: true }),
 		)
 	})
 
-	it('retorna 404 quando a turma não existe', async () => {
+	it('retorna 404 quando a prova não existe', async () => {
 		const payload = makeGenerateExamInput()
-		vi.mocked(db.select).mockReturnValue(createDbChain([]) as never)
+		vi.mocked(db.select).mockReturnValueOnce(createDbChain([]) as never)
 
 		const response = await app.inject({
 			method: 'POST',
-			url: '/exams/generate',
+			url: `/exams/${crypto.randomUUID()}/generate`,
 			payload,
 		})
 
@@ -144,15 +137,15 @@ describe('POST /exams/generate', () => {
 		expect(db.transaction).not.toHaveBeenCalled()
 	})
 
-	it('retorna 404 quando a turma pertence a outro professor', async () => {
+	it('retorna 404 quando a prova pertence a outro professor', async () => {
 		const payload = makeGenerateExamInput()
-		const classroom = makeClassroom({ id: payload.classroomId })
+		const exam = makeExam()
 
-		vi.mocked(db.select).mockReturnValue(createDbChain([classroom]) as never)
+		vi.mocked(db.select).mockReturnValueOnce(createDbChain([exam]) as never)
 
 		const response = await app.inject({
 			method: 'POST',
-			url: '/exams/generate',
+			url: `/exams/${exam.id}/generate`,
 			payload,
 		})
 
@@ -163,12 +156,12 @@ describe('POST /exams/generate', () => {
 
 	it('propaga um erro não 2xx quando a geração via IA falha', async () => {
 		const payload = makeGenerateExamInput()
-		const classroom = makeClassroom({
-			id: payload.classroomId,
-			teacherId: user.id,
-		})
+		const exam = makeExam({ creatorId: user.id })
+		const classroom = makeClassroom({ id: exam.classroomId })
 
-		vi.mocked(db.select).mockReturnValue(createDbChain([classroom]) as never)
+		vi.mocked(db.select)
+			.mockReturnValueOnce(createDbChain([exam]) as never)
+			.mockReturnValueOnce(createDbChain([classroom]) as never)
 
 		vi.mocked(generateExamQuestions).mockRejectedValue(
 			new AiGenerationError('Falha ao gerar a prova com IA.'),
@@ -176,7 +169,7 @@ describe('POST /exams/generate', () => {
 
 		const response = await app.inject({
 			method: 'POST',
-			url: '/exams/generate',
+			url: `/exams/${exam.id}/generate`,
 			payload,
 		})
 
@@ -190,9 +183,8 @@ describe('POST /exams/generate', () => {
 	it('retorna 400 quando o corpo enviado é inválido', async () => {
 		const response = await app.inject({
 			method: 'POST',
-			url: '/exams/generate',
+			url: `/exams/${crypto.randomUUID()}/generate`,
 			payload: {
-				classroomId: crypto.randomUUID(),
 				difficulty: 11,
 				questionCount: 21,
 				questionType: 'multiple_choice',
