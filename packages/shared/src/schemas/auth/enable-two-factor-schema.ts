@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 export const enableTwoFactorSchema = z.object({
-	password: z.string().min(6, 'Informe sua senha atual'),
+	password: z.string().min(8, 'Informe sua senha atual'),
 	method: z.enum(['totp', 'otp']).default('totp'),
 })
 

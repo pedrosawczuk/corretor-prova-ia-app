@@ -1,4 +1,5 @@
 export * from './change-password-schema'
+export * from './delete-account-schema'
 export * from './disable-two-factor-schema'
 export * from './enable-two-factor-schema'
 export * from './forgot-password-schema'
