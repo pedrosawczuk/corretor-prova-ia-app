@@ -116,9 +116,7 @@ export function PerfilSection({ user }: { user: AuthUser }) {
 					)}
 
 					<div className="space-y-1">
-						<p className="text-sm font-semibold text-foreground">
-							{user.name}
-						</p>
+						<p className="text-sm font-semibold text-foreground">{user.name}</p>
 						<p className="text-xs text-muted-foreground">
 							Membro desde {memberSince}
 						</p>

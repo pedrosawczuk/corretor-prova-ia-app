@@ -52,7 +52,8 @@ function parseDevice(userAgent?: string | null) {
 	else if (/Linux/.test(userAgent)) os = 'Linux'
 
 	return {
-		label: [browser, os].filter(Boolean).join(' • ') || 'Navegador desconhecido',
+		label:
+			[browser, os].filter(Boolean).join(' • ') || 'Navegador desconhecido',
 		isMobile,
 	}
 }
@@ -199,8 +200,8 @@ export function SessoesSection({
 					<div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border bg-muted/30 p-6 text-center">
 						<ShieldAlert className="size-6 text-warning" />
 						<p className="text-sm text-muted-foreground max-w-sm">
-							Por segurança, não foi possível carregar suas sessões. Faça
-							login novamente para gerenciar seus dispositivos.
+							Por segurança, não foi possível carregar suas sessões. Faça login
+							novamente para gerenciar seus dispositivos.
 						</p>
 						<Button variant="outline" size="sm" asChild>
 							<Link href="/entrar">Entrar novamente</Link>

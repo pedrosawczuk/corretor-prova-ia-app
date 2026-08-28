@@ -2,7 +2,10 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 import { auth } from '@/lib/auth'
 import { forwardWebResponse, toFetchHeaders } from '@/lib/http-utils'
 
-export async function signOutModule(request: FastifyRequest, reply: FastifyReply) {
+export async function signOutModule(
+	request: FastifyRequest,
+	reply: FastifyReply,
+) {
 	const response = await auth.api.signOut({
 		asResponse: true,
 		headers: toFetchHeaders(request.headers),

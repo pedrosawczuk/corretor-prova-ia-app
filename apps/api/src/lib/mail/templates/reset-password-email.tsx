@@ -17,7 +17,10 @@ interface ResetPasswordEmailProps {
 	resetUrl: string
 }
 
-export function ResetPasswordEmail({ name, resetUrl }: ResetPasswordEmailProps) {
+export function ResetPasswordEmail({
+	name,
+	resetUrl,
+}: ResetPasswordEmailProps) {
 	return (
 		<Html>
 			<Tailwind
@@ -46,7 +49,12 @@ export function ResetPasswordEmail({ name, resetUrl }: ResetPasswordEmailProps) 
 						<Section className="bg-primary h-1" />
 
 						<Section className="px-10 py-8">
-							<table role="presentation" cellPadding={0} cellSpacing={0} align="center">
+							<table
+								role="presentation"
+								cellPadding={0}
+								cellSpacing={0}
+								align="center"
+							>
 								<tbody>
 									<tr>
 										<td className="size-8 rounded-xl bg-primary text-center align-middle">
@@ -68,9 +76,9 @@ export function ResetPasswordEmail({ name, resetUrl }: ResetPasswordEmailProps) 
 							</Text>
 
 							<Text className="text-sm text-muted-foreground text-center leading-relaxed mt-3 mb-0">
-								Olá, {name}. Recebemos uma solicitação para redefinir a senha
-								da sua conta na gabarita.app. Clique no botão abaixo para
-								criar uma nova senha.
+								Olá, {name}. Recebemos uma solicitação para redefinir a senha da
+								sua conta na gabarita.app. Clique no botão abaixo para criar uma
+								nova senha.
 							</Text>
 
 							<Section className="text-center mt-8">
@@ -113,7 +121,10 @@ export function ResetPasswordEmail({ name, resetUrl }: ResetPasswordEmailProps) 
 						reservados.
 					</Text>
 					<Text className="text-xs text-muted-foreground text-center mt-1 mb-0">
-						<Link href="mailto:contato@gabarita.app" className="text-muted-foreground">
+						<Link
+							href="mailto:contato@gabarita.app"
+							className="text-muted-foreground"
+						>
 							contato@gabarita.app
 						</Link>
 					</Text>
