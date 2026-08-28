@@ -1,6 +1,8 @@
-# 🗄️ Modelagem de Banco de Dados (Pré-Drizzle)
+# 🗄️ Modelagem de Banco de Dados (Drizzle ORM)
 
-Este documento define o modelo de entidades, relacionamentos e tipos de dados do sistema antes da implementação dos schemas no **Drizzle ORM**.
+Este documento define o modelo de entidades, relacionamentos e tipos de dados do sistema, refletindo os schemas implementados em `packages/db/src/schema`.
+
+> **Fora de escopo no MVP (ver `requisitos.md`):** gestão de alunos/matrículas, organizações/instituições e questões dissertativas. Essas entidades foram removidas deste documento por não serem cobertas por nenhum requisito funcional atual.
 
 ---
 
@@ -8,136 +10,137 @@ Este documento define o modelo de entidades, relacionamentos e tipos de dados do
 
 ```mermaid
 erDiagram
-    USERS ||--o{ ORGANIZATION_MEMBERS : "possui"
-    ORGANIZATIONS ||--o{ ORGANIZATION_MEMBERS : "contem"
-    ORGANIZATIONS ||--o{ CLASSROOMS : "gerencia"
-    USERS ||--o{ CLASSROOMS : "cria"
-    CLASSROOMS ||--o{ CLASSROOM_STUDENTS : "matricula"
-    STUDENTS ||--o{ CLASSROOM_STUDENTS : "pertence"
-    
-    USERS ||--o{ EXAMS : "autor"
+    USER ||--o{ ACCOUNT : "autentica"
+    USER ||--o{ SESSION : "possui"
+
+    USER ||--o{ CLASSROOMS : "leciona"
     CLASSROOMS ||--o{ EXAMS : "recebe"
+    USER ||--o{ EXAMS : "autor"
     EXAMS ||--o{ QUESTIONS : "composto_por"
     QUESTIONS ||--o{ QUESTION_OPTIONS : "possui"
-    QUESTIONS ||--o{ RUBRICS : "possui"
 
     EXAMS ||--o{ SUBMISSIONS : "gera"
-    STUDENTS ||--o{ SUBMISSIONS : "realiza"
     SUBMISSIONS ||--o{ SUBMISSION_PAGES : "contem"
     SUBMISSIONS ||--o{ SUBMISSION_ANSWERS : "avalia"
     QUESTIONS ||--o{ SUBMISSION_ANSWERS : "referencia"
+    USER ||--o{ SUBMISSION_ANSWERS : "revisa"
 ```
 
 ---
 
 ## 2. Dicionário de Dados das Tabelas
 
-### 2.1 `users`
-Armazena os professores, coordenadores e administradores da plataforma.
+### 2.1 `user`, `account`, `session`, `verification` (Autenticação — `better-auth`)
 
-| Campo | Tipo | Nulo? | Descrição |
-| :--- | :--- | :--- | :--- |
-| `id` | `uuid` | Não | Chave primária (padrão `gen_random_uuid()`) |
-| `name` | `text` | Não | Nome completo |
-| `email` | `text` | Não | E-mail único do usuário |
-| `password_hash` | `text` | Sim | Hash da senha (nulo se login via OAuth) |
-| `avatar_url` | `text` | Sim | URL da foto de perfil |
-| `role` | `enum('teacher', 'admin', 'coordinator')` | Não | Papel padrão: `teacher` |
-| `created_at` | `timestamp with time zone` | Não | Data de criação |
-| `updated_at` | `timestamp with time zone` | Não | Data de atualização |
-
----
-
-### 2.2 `organizations` e `organization_members`
-Suporte a planos institucionais (escolas, faculdades e cursinhos).
+Gerenciadas pelo adapter Drizzle do `better-auth` (RF01, RF02). O schema não é definido manualmente com base neste documento: é gerado a partir da configuração de `apps/api/src/lib/auth.ts` e vive em `packages/db/src/schema/{users,accounts,sessions,verifications}.ts`. Os `id` são `text` (gerados pela própria lib), não `uuid`.
 
 | Tabela | Campos Principais | Descrição |
 | :--- | :--- | :--- |
-| `organizations` | `id`, `name`, `slug`, `plan`, `created_at` | Dados da escola ou instituição |
-| `organization_members` | `id`, `organization_id`, `user_id`, `role`, `joined_at` | Associação de professores à instituição |
+| `user` | `id`, `name`, `email`, `email_verified`, `image` | Professor cadastrado na plataforma. Não há papéis/roles no MVP — não há alunos ou administradores. |
+| `account` | `id`, `account_id`, `provider_id`, `user_id`, `password` | Um método de autenticação vinculado ao usuário (senha ou Google OAuth), permitindo account linking (RF02). |
+| `session` | `id`, `token`, `expires_at`, `user_id` | Sessão ativa do professor. |
+| `verification` | `id`, `identifier`, `value`, `expires_at` | Tokens de verificação (ex: reset de senha, verificação de e-mail). |
 
 ---
 
-### 2.3 `classrooms` & `students`
-Gestão de turmas e alunos para atribuição automática nas provas digitalizadas.
+### 2.2 `classrooms`
 
-- **`classrooms`**: `id`, `name`, `grade`, `subject`, `teacher_id`, `created_at`.
-- **`students`**: `id`, `name`, `email`, `registration_number` (matrícula), `created_at`.
-- **`classroom_students`**: `classroom_id`, `student_id`.
+Turmas como "pastas organizadoras" (RN, RF03, RF04) — sem cadastro de alunos ou matrículas.
+
+| Campo | Tipo | Nulo? | Descrição |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | Não | Chave primária (`gen_random_uuid()`) |
+| `name` | `text` | Não | Nome da turma (ex: "8º Ano A") |
+| `subject` | `text` | Não | Disciplina/Matéria |
+| `description` | `text` | Sim | Descrição livre |
+| `teacher_id` | `text` | Não | Professor dono da turma (FK `user`, `on delete cascade`) |
+| `created_at` / `updated_at` | `timestamp` | Não | Auditoria |
 
 ---
 
-### 2.4 `exams` (Provas)
-Representa a avaliação criada pelo professor (manual ou via IA).
+### 2.3 `exams` (Provas)
+
+Representa a avaliação criada pelo professor, manual ou via IA (RF05–RF08).
 
 | Campo | Tipo | Nulo? | Descrição |
 | :--- | :--- | :--- | :--- |
 | `id` | `uuid` | Não | Chave primária |
-| `title` | `text` | Não | Título da avaliação (ex: "Prova Bimestral 1") |
-| `description` | `text` | Sim | Instruções gerais |
-| `subject` | `text` | Não | Disciplina (ex: "Matemática", "História") |
-| `total_points` | `numeric(5, 2)` | Não | Valor total da prova (ex: 10.00) |
-| `status` | `enum('draft', 'published', 'archived')` | Não | Status da prova |
-| `classroom_id` | `uuid` | Sim | Turma vinculada (FK) |
-| `creator_id` | `uuid` | Não | Usuário autor (FK `users`) |
-| `template_pdf_url` | `text` | Sim | URL do PDF gerado pronto para impressão |
-| `created_at` | `timestamp with time zone` | Não | Data de criação |
+| `title` | `text` | Não | Título da avaliação |
+| `description` | `text` | Sim | Instruções gerais / prompt de geração |
+| `total_points` | `numeric(5, 2)` | Não | Valor total da prova |
+| `status` | `enum('draft', 'finalized')` | Não | Ciclo de vida da prova: `RASCUNHO` / `FINALIZADA` (RN) |
+| `classroom_id` | `uuid` | Não | Turma vinculada (FK `classrooms`, `on delete cascade`) |
+| `creator_id` | `text` | Não | Professor autor (FK `user`, `on delete cascade`) |
+| `template_pdf_url` | `text` | Sim | URL do PDF pronto para impressão (RF08). O QR Code do rodapé usa o próprio `id` da prova como identificador — não há campo dedicado. |
+| `created_at` / `updated_at` | `timestamp` | Não | Auditoria |
 
 ---
 
-### 2.5 `questions`, `question_options` & `rubrics`
-Estrutura detalhada de cada questão da prova.
+### 2.4 `questions` & `question_options`
 
-- **`questions`**:
+Estrutura das questões. Escopo do MVP restrito a **múltipla escolha** e **verdadeiro/falso** (RN "Escopo de Questões") — sem questões dissertativas/numéricas e, portanto, sem tabela de rubrics.
+
+- **`questions`**
   - `id` (`uuid`, PK)
-  - `exam_id` (`uuid`, FK `exams`)
-  - `order` (`integer`, ordem da questão)
-  - `statement` (`text`, enunciado)
-  - `type` (`enum('multiple_choice', 'true_false', 'open_ended', 'numeric')`)
+  - `exam_id` (`uuid`, FK `exams`, `on delete cascade`)
+  - `order` (`integer`, ordem de exibição)
+  - `statement` (`text`, enunciado — pode ficar vazio no fluxo de gabarito manual, RF07)
+  - `type` (`enum('multiple_choice', 'true_false')`)
   - `max_points` (`numeric(5, 2)`, pontuação máxima da questão)
-  - `expected_answer` (`text`, resposta esperada ou explicação do gabarito)
+  - `expected_answer` (`text`, gabarito — letra da alternativa ou `V`/`F`; único campo populado no fluxo de gabarito manual em texto corrido, RF07)
 
-- **`question_options`** (para questões de múltipla escolha):
+- **`question_options`** (apenas para questões `multiple_choice`)
   - `id` (`uuid`, PK)
-  - `question_id` (`uuid`, FK `questions`)
-  - `letter` (`char(1)`, ex: 'A', 'B', 'C', 'D', 'E')
+  - `question_id` (`uuid`, FK `questions`, `on delete cascade`)
+  - `letter` (`char(1)`, ex: `A`, `B`, `C`, `D`, `E`)
   - `text` (`text`, texto da alternativa)
-  - `is_correct` (`boolean`, se é a alternativa correta)
-
-- **`rubrics`** (critérios de correção detalhados para questões dissertativas):
-  - `id` (`uuid`, PK)
-  - `question_id` (`uuid`, FK `questions`)
-  - `criterion` (`text`, ex: "Citou os dois fatores históricos principais")
-  - `points` (`numeric(5, 2)`, pontuação atribuída a este critério)
+  - `is_correct` (`boolean`, se é a alternativa do gabarito)
 
 ---
 
-### 2.6 `submissions`, `submission_pages` & `submission_answers`
-Armazenamento das provas digitalizadas e corrigidas.
+### 2.5 `submissions`, `submission_pages` & `submission_answers`
 
-- **`submissions`**:
+Armazenamento das folhas de resposta digitalizadas e corrigidas via visão computacional (RF09–RF12). Como o sistema **não gerencia cadastro de alunos** (RN "Sem Gestão de Alunos"), a submissão não tem FK para uma entidade "aluno" — apenas um identificador textual livre e opcional, preenchido pelo professor para diferenciar folhas dentro de uma mesma sessão de escaneamento.
+
+- **`submissions`**
   - `id` (`uuid`, PK)
-  - `exam_id` (`uuid`, FK `exams`)
-  - `student_id` (`uuid`, FK `students`, opcional se anônimo no momento do scan)
+  - `exam_id` (`uuid`, FK `exams`, `on delete cascade`)
+  - `student_identifier` (`text`, opcional — nome/número anotado pelo professor, sem vínculo com cadastro)
   - `total_score` (`numeric(5, 2)`, pontuação calculada final)
   - `status` (`enum('pending_processing', 'processing', 'needs_review', 'completed', 'failed')`)
-  - `corrected_at` (`timestamp with time zone`)
+  - `corrected_at` (`timestamp`)
+  - `created_at` (`timestamp`)
 
-- **`submission_pages`**:
+- **`submission_pages`**
   - `id` (`uuid`, PK)
-  - `submission_id` (`uuid`, FK `submissions`)
+  - `submission_id` (`uuid`, FK `submissions`, `on delete cascade`)
   - `page_number` (`integer`)
   - `image_url` (`text`, URL da imagem no bucket de storage)
   - `raw_ocr_payload` (`jsonb`, retorno bruto da extração visual/OCR)
+  - `created_at` (`timestamp`)
 
-- **`submission_answers`**:
+- **`submission_answers`**
   - `id` (`uuid`, PK)
-  - `submission_id` (`uuid`, FK `submissions`)
-  - `question_id` (`uuid`, FK `questions`)
-  - `extracted_text` (`text`, texto/alternativa extraída pela IA)
+  - `submission_id` (`uuid`, FK `submissions`, `on delete cascade`)
+  - `question_id` (`uuid`, FK `questions`, `on delete cascade`)
+  - `extracted_text` (`text`, alternativa/texto extraído pela IA)
   - `ai_score` (`numeric(5, 2)`, pontuação sugerida pela IA)
   - `final_score` (`numeric(5, 2)`, pontuação final homologada)
-  - `ai_feedback` (`text`, justificativa e explicação da IA para o aluno)
+  - `ai_feedback` (`text`, justificativa da IA)
   - `confidence` (`numeric(3, 2)`, taxa de confiança de 0.00 a 1.00)
-  - `requires_review` (`boolean`, flag para atenção do professor)
-  - `reviewed_by` (`uuid`, FK `users`, quem validou manualmente)
+  - `requires_review` (`boolean`, flag de intervenção manual — RF11)
+  - `reviewed_by` (`text`, FK `user`, `on delete set null` — quem validou manualmente)
+  - `created_at` (`timestamp`)
+
+---
+
+## 3. Mudanças em relação à modelagem anterior
+
+Este documento substitui uma versão anterior que incluía entidades sem respaldo em `requisitos.md`. Alterações feitas para alinhar o modelo ao MVP:
+
+- **Removido:** `organizations` / `organization_members` — não há requisito de multi-tenant institucional no MVP.
+- **Removido:** `students` / `classroom_students` — RN é explícita: "Sem Gestão de Alunos (Scope Cut)". `submissions` passa a usar `student_identifier` (texto livre e opcional) em vez de FK para aluno.
+- **Removido:** `rubrics` e os tipos `open_ended` / `numeric` de questão — RN restringe o MVP a múltipla escolha e V/F.
+- **Ajustado:** `exams.status` de `('draft', 'published', 'archived')` para `('draft', 'finalized')`, espelhando exatamente os dois estados descritos na RN (`RASCUNHO` / `FINALIZADA`).
+- **Ajustado:** `users` deixou de ser uma tabela customizada (com `password_hash`, `role`, `avatar_url`) e passou a refletir o schema gerado pelo `better-auth` (`user`/`account`/`session`/`verification`, com `id` do tipo `text`), já implementado em `apps/api/src/lib/auth.ts`.
+- **Ajustado:** `classroom_id` em `exams` passou a ser obrigatório — RF05 exige que o professor sempre selecione uma turma para gerar a prova.
