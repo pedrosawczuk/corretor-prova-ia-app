@@ -1,4 +1,5 @@
 import {
+	deleteAccountSchema,
 	disableTwoFactorSchema,
 	enableTwoFactorSchema,
 	forgotPasswordSchema,
@@ -14,6 +15,7 @@ import {
 	verifyTwoFactorOtpSchema,
 } from '@app/shared'
 import type { FastifyInstance } from 'fastify'
+import { deleteAccountModule } from './delete-account'
 import { disableTwoFactorModule } from './disable-two-factor'
 import { enableTwoFactorModule } from './enable-two-factor'
 import { forgotPasswordModule } from './forgot-password'
@@ -181,5 +183,15 @@ export function authRoutes(app: FastifyInstance) {
 			},
 		},
 		verifyTwoFactorOtpModule,
+	)
+
+	app.post(
+		'/delete-account',
+		{
+			schema: {
+				body: deleteAccountSchema,
+			},
+		},
+		deleteAccountModule,
 	)
 }

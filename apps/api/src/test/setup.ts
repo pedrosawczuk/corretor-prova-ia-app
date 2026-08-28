@@ -10,6 +10,7 @@ vi.mock('@app/db', () => ({
 	examsTable: {},
 	questionsTable: {},
 	questionOptionsTable: {},
+	user: {},
 	db: {
 		delete: vi.fn(),
 		insert: vi.fn(),
