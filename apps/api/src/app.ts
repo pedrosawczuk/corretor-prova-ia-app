@@ -13,6 +13,7 @@ import { ZodError } from 'zod'
 import { AppError } from '@/core/errors'
 import { auth } from '@/lib/auth'
 import { authRoutes } from '@/modules/auth/auth-routes'
+import { classroomRoutes } from '@/modules/classrooms/classroom-routes'
 
 export const app = fastify().withTypeProvider<ZodTypeProvider>()
 
@@ -36,7 +37,7 @@ app.setErrorHandler((error, _request, reply) => {
 	if (hasZodFastifySchemaValidationErrors(error)) {
 		return reply.status(400).send({
 			code: 'VALIDATION_ERROR',
-			message: 'Validation failed for the provided fields.',
+			message: 'Falha na validação dos campos enviados.',
 			issues: error.validation,
 		})
 	}
@@ -44,7 +45,7 @@ app.setErrorHandler((error, _request, reply) => {
 	if (error instanceof ZodError) {
 		return reply.status(400).send({
 			code: 'VALIDATION_ERROR',
-			message: 'Validation failed for the provided fields.',
+			message: 'Falha na validação dos campos enviados.',
 			issues: error.format(),
 		})
 	}
@@ -65,7 +66,7 @@ app.setErrorHandler((error, _request, reply) => {
 
 	return reply.status(500).send({
 		code: 'INTERNAL_SERVER_ERROR',
-		message: 'Internal server error.',
+		message: 'Erro interno do servidor.',
 	})
 })
 
@@ -74,6 +75,7 @@ app.all('/api/auth/*', async (request, reply) => {
 })
 
 app.register(authRoutes, { prefix: '/auth' })
+app.register(classroomRoutes, { prefix: '/classrooms' })
 
 app.get('/', async () => {
 	return { message: 'Hello World' }

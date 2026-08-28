@@ -1,0 +1,35 @@
+import { classroomsTable, db, eq } from '@app/db'
+import type { CreateClassroomInput } from '@app/shared'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+import { NotFoundError } from '@/core/errors'
+import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
+import type { GetClassroomParams } from './get-classroom-schema'
+
+export async function updateClassroomModule(
+	request: FastifyRequest<{
+		Params: GetClassroomParams
+		Body: CreateClassroomInput
+	}>,
+	reply: FastifyReply,
+) {
+	const user = await getAuthenticatedUser(request)
+	const { id } = request.params
+	const { name, subject, description } = request.body
+
+	const [existing] = await db
+		.select()
+		.from(classroomsTable)
+		.where(eq(classroomsTable.id, id))
+
+	if (!existing || existing.teacherId !== user.id) {
+		throw new NotFoundError('Turma não encontrada.')
+	}
+
+	const [classroom] = await db
+		.update(classroomsTable)
+		.set({ name, subject, description, updatedAt: new Date() })
+		.where(eq(classroomsTable.id, id))
+		.returning()
+
+	return reply.status(200).send(classroom)
+}

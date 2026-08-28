@@ -12,7 +12,7 @@ export const signInWithSocialSchema = z.object({
 				const allowedOrigins = [env.BETTER_AUTH_URL, 'http://localhost:3000']
 				return allowedOrigins.includes(origin)
 			},
-			{ message: 'Invalid callback URL domain' },
+			{ message: 'Domínio da URL de callback inválido' },
 		)
 		.default(`${env.BETTER_AUTH_URL}/dashboard`),
 })

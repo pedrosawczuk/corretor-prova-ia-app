@@ -14,6 +14,7 @@
 		"typescript": "^7.0.2"
 	},
 	"dependencies": {
+		"@app/dayjs": "workspace:*",
 		"@app/db": "workspace:*",
 		"@app/env": "workspace:*",
 		"@app/shared": "workspace:*",
