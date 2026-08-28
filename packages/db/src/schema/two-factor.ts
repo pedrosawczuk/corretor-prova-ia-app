@@ -1,10 +1,4 @@
-import {
-	boolean,
-	integer,
-	pgTable,
-	text,
-	timestamp,
-} from 'drizzle-orm/pg-core'
+import { boolean, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 import { user } from './users'
 
 export const twoFactor = pgTable('two_factor', {
