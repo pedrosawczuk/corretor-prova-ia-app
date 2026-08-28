@@ -2,6 +2,8 @@ import { env } from '@app/env'
 import { Resend } from 'resend'
 import { NewLoginEmail } from './mail/templates/new-login-email'
 import { ResetPasswordEmail } from './mail/templates/reset-password-email'
+import { TwoFactorOtpEmail } from './mail/templates/two-factor-otp-email'
+import { VerifyEmail } from './mail/templates/verify-email'
 import { WelcomeEmail } from './mail/templates/welcome-email'
 
 export const resend = new Resend(env.RESEND_API_KEY)
@@ -44,6 +46,52 @@ export async function sendPasswordResetEmail({
 		to,
 		subject: 'Redefinir sua senha — gabarita.app',
 		react: ResetPasswordEmail({ name, resetUrl }),
+	})
+}
+
+interface SendVerificationEmailParams {
+	to: string
+	name: string
+	verificationUrl: string
+}
+
+export async function sendVerificationEmail({
+	to,
+	name,
+	verificationUrl,
+}: SendVerificationEmailParams) {
+	if (!env.RESEND_API_KEY || !env.MAIL_FROM) {
+		return
+	}
+
+	await resend.emails.send({
+		from: env.MAIL_FROM,
+		to,
+		subject: 'Confirme seu e-mail — gabarita.app',
+		react: VerifyEmail({ name, verificationUrl }),
+	})
+}
+
+interface SendTwoFactorOtpEmailParams {
+	to: string
+	name: string
+	otp: string
+}
+
+export async function sendTwoFactorOtpEmail({
+	to,
+	name,
+	otp,
+}: SendTwoFactorOtpEmailParams) {
+	if (!env.RESEND_API_KEY || !env.MAIL_FROM) {
+		return
+	}
+
+	await resend.emails.send({
+		from: env.MAIL_FROM,
+		to,
+		subject: 'Seu código de verificação — gabarita.app',
+		react: TwoFactorOtpEmail({ name, otp }),
 	})
 }
 

@@ -37,7 +37,7 @@ export function ExcluirTurmaDialog({
 			onSuccess: () => {
 				toast.success('Turma excluída com sucesso.')
 				onOpenChange(false)
-				router.push('/dashboard')
+				router.push('/dashboard/turmas')
 			},
 			onError: (error) => {
 				toastApiError(

@@ -1,19 +1,19 @@
 import { env } from '@app/env'
 import cors from '@fastify/cors'
-import { APIError } from 'better-auth/api'
+import multipart from '@fastify/multipart'
 import { toNodeHandler } from 'better-auth/node'
 import fastify from 'fastify'
 import {
-	hasZodFastifySchemaValidationErrors,
 	serializerCompiler,
 	validatorCompiler,
 	type ZodTypeProvider,
 } from 'fastify-type-provider-zod'
-import { ZodError } from 'zod'
-import { AppError } from '@/core/errors'
 import { auth } from '@/lib/auth'
+import { registerErrorHandler } from '@/lib/register-error-handler'
+import { MAX_AVATAR_SIZE_BYTES, ensureAvatarsBucket } from '@/lib/storage'
 import { authRoutes } from '@/modules/auth/auth-routes'
 import { classroomRoutes } from '@/modules/classrooms/classroom-routes'
+import { examRoutes } from '@/modules/exams/exam-routes'
 
 export const app = fastify().withTypeProvider<ZodTypeProvider>()
 
@@ -23,52 +23,16 @@ await app.register(cors, {
 	methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 })
 
+await app.register(multipart, {
+	limits: { fileSize: MAX_AVATAR_SIZE_BYTES },
+})
+
 app.setValidatorCompiler(validatorCompiler)
 app.setSerializerCompiler(serializerCompiler)
 
-app.setErrorHandler((error, _request, reply) => {
-	if (error instanceof AppError) {
-		return reply.status(error.statusCode).send({
-			code: error.errorCode,
-			message: error.message,
-		})
-	}
+registerErrorHandler(app)
 
-	if (hasZodFastifySchemaValidationErrors(error)) {
-		return reply.status(400).send({
-			code: 'VALIDATION_ERROR',
-			message: 'Falha na validação dos campos enviados.',
-			issues: error.validation,
-		})
-	}
-
-	if (error instanceof ZodError) {
-		return reply.status(400).send({
-			code: 'VALIDATION_ERROR',
-			message: 'Falha na validação dos campos enviados.',
-			issues: error.format(),
-		})
-	}
-
-	if (error instanceof APIError) {
-		const statusCode =
-			typeof error.status === 'number'
-				? error.status
-				: Number(error.status) || 400
-
-		return reply.status(statusCode).send({
-			code: error.body?.code || 'AUTH_ERROR',
-			message: error.message,
-		})
-	}
-
-	console.error(error)
-
-	return reply.status(500).send({
-		code: 'INTERNAL_SERVER_ERROR',
-		message: 'Erro interno do servidor.',
-	})
-})
+await ensureAvatarsBucket()
 
 app.all('/api/auth/*', async (request, reply) => {
 	return toNodeHandler(auth)(request.raw, reply.raw)
@@ -76,6 +40,7 @@ app.all('/api/auth/*', async (request, reply) => {
 
 app.register(authRoutes, { prefix: '/auth' })
 app.register(classroomRoutes, { prefix: '/classrooms' })
+app.register(examRoutes, { prefix: '/exams' })
 
 app.get('/', async () => {
 	return { message: 'Hello World' }

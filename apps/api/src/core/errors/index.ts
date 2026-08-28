@@ -1,4 +1,6 @@
+export * from './ai-generation-error'
 export * from './app-error'
+export * from './bad-request-error'
 export * from './conflict-error'
 export * from './invalid-credentials-error'
 export * from './not-found-error'

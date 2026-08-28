@@ -3,7 +3,13 @@ import { db, eq, user as userTable } from '@app/db'
 import { env } from '@app/env'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { sendNewLoginEmail, sendPasswordResetEmail } from './mail'
+import { twoFactor } from 'better-auth/plugins'
+import {
+	sendNewLoginEmail,
+	sendPasswordResetEmail,
+	sendTwoFactorOtpEmail,
+	sendVerificationEmail,
+} from './mail'
 import { parseUserAgent } from './parse-user-agent'
 
 export const auth = betterAuth({
@@ -12,11 +18,23 @@ export const auth = betterAuth({
 	}),
 	emailAndPassword: {
 		enabled: true,
+		requireEmailVerification: true,
 		sendResetPassword: async ({ user, url }) => {
 			await sendPasswordResetEmail({
 				to: user.email,
 				name: user.name,
 				resetUrl: url,
+			})
+		},
+	},
+	emailVerification: {
+		sendOnSignUp: true,
+		autoSignInAfterVerification: true,
+		sendVerificationEmail: async ({ user, url }) => {
+			await sendVerificationEmail({
+				to: user.email,
+				name: user.name,
+				verificationUrl: url,
 			})
 		},
 	},
@@ -26,6 +44,20 @@ export const auth = betterAuth({
 			clientSecret: env.GOOGLE_CLIENT_SECRET || '',
 		},
 	},
+	plugins: [
+		twoFactor({
+			issuer: 'gabarita.app',
+			otpOptions: {
+				sendOTP: async ({ user, otp }) => {
+					await sendTwoFactorOtpEmail({
+						to: user.email,
+						name: user.name,
+						otp,
+					})
+				},
+			},
+		}),
+	],
 	databaseHooks: {
 		session: {
 			create: {

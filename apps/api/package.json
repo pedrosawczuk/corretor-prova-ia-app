@@ -3,15 +3,19 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "tsx watch src/server.ts"
+		"dev": "tsx watch src/server.ts",
+		"test": "vitest run",
+		"test:watch": "vitest"
 	},
 	"devDependencies": {
 		"@app/typescript-config": "workspace:*",
+		"@faker-js/faker": "^10.6.0",
 		"@types/node": "^26.2.0",
 		"@types/react": "^19.2.18",
 		"@types/react-dom": "^19.2.5",
 		"tsx": "^4.23.12",
-		"typescript": "^7.0.2"
+		"typescript": "^7.0.2",
+		"vitest": "^4.1.11"
 	},
 	"dependencies": {
 		"@app/dayjs": "workspace:*",
@@ -19,14 +23,18 @@
 		"@app/env": "workspace:*",
 		"@app/shared": "workspace:*",
 		"@fastify/cors": "^11.3.0",
+		"@fastify/multipart": "^10.1.1",
+		"@google/genai": "^2.19.0",
 		"@react-email/components": "^1.0.12",
 		"better-auth": "^1.7.1",
 		"drizzle-orm": "^0.45.2",
 		"fastify": "^5.12.1",
 		"fastify-type-provider-zod": "^7.0.0",
+		"minio": "^8.0.7",
 		"react": "^19.2.8",
 		"react-dom": "^19.2.8",
 		"resend": "^6.22.0",
+		"sharp": "^0.35.4",
 		"zod": "^4.4.3"
 	}
 }

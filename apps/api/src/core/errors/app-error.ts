@@ -7,6 +7,6 @@ export abstract class AppError extends Error {
 		this.statusCode = statusCode
 		this.errorCode = errorCode
 
-		Object.setPrototypeOf(this, AppError.prototype)
+		Object.setPrototypeOf(this, new.target.prototype)
 	}
 }
