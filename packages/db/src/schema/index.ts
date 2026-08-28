@@ -1,4 +1,5 @@
 export * from './accounts'
+export * from './audit-logs'
 export * from './classrooms'
 export * from './exams'
 export * from './question-options'
