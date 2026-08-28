@@ -151,7 +151,10 @@ export function TurmaDetail({ id }: TurmaDetailProps) {
 							Gerar nova prova
 						</Button>
 					</div>
-					<ProvaResultado exam={exam} onQuestionUpdated={handleQuestionUpdated} />
+					<ProvaResultado
+						exam={exam}
+						onQuestionUpdated={handleQuestionUpdated}
+					/>
 				</div>
 			) : (
 				<div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-card p-12 text-center">

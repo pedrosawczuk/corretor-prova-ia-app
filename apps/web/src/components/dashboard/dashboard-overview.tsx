@@ -26,13 +26,16 @@ import {
 	Bar,
 	BarChart,
 	CartesianGrid,
-	ResponsiveContainer,
 	Tooltip as RechartsTooltip,
+	ResponsiveContainer,
 	type TooltipContentProps,
 	XAxis,
 	YAxis,
 } from 'recharts'
-import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent'
+import type {
+	NameType,
+	ValueType,
+} from 'recharts/types/component/DefaultTooltipContent'
 import { type Classroom, useClassrooms } from '@/hooks/use-classrooms'
 import { formatRelativeDate } from '@/lib/date'
 
@@ -213,17 +216,25 @@ export function DashboardOverview() {
 										dataKey="subject"
 										tickLine={false}
 										axisLine={false}
-										tick={{ fill: 'var(--color-muted-foreground)', fontSize: 12 }}
+										tick={{
+											fill: 'var(--color-muted-foreground)',
+											fontSize: 12,
+										}}
 									/>
 									<YAxis
 										allowDecimals={false}
 										tickLine={false}
 										axisLine={false}
-										tick={{ fill: 'var(--color-muted-foreground)', fontSize: 12 }}
+										tick={{
+											fill: 'var(--color-muted-foreground)',
+											fontSize: 12,
+										}}
 									/>
 									<RechartsTooltip
 										cursor={{ fill: 'var(--color-muted)' }}
-										content={(props) => <ChartTooltip {...props} suffix="turma(s)" />}
+										content={(props) => (
+											<ChartTooltip {...props} suffix="turma(s)" />
+										)}
 									/>
 									<Bar
 										dataKey="count"
@@ -278,20 +289,28 @@ export function DashboardOverview() {
 										dataKey="month"
 										tickLine={false}
 										axisLine={false}
-										tick={{ fill: 'var(--color-muted-foreground)', fontSize: 12 }}
+										tick={{
+											fill: 'var(--color-muted-foreground)',
+											fontSize: 12,
+										}}
 									/>
 									<YAxis
 										allowDecimals={false}
 										tickLine={false}
 										axisLine={false}
-										tick={{ fill: 'var(--color-muted-foreground)', fontSize: 12 }}
+										tick={{
+											fill: 'var(--color-muted-foreground)',
+											fontSize: 12,
+										}}
 									/>
 									<RechartsTooltip
 										cursor={{
 											stroke: 'var(--color-border)',
 											strokeWidth: 1,
 										}}
-										content={(props) => <ChartTooltip {...props} suffix="turma(s)" />}
+										content={(props) => (
+											<ChartTooltip {...props} suffix="turma(s)" />
+										)}
 									/>
 									<Area
 										type="monotone"
@@ -311,7 +330,12 @@ export function DashboardOverview() {
 				<CardHeader>
 					<CardTitle>
 						Turmas
-						<Button variant="ghost" size="sm" asChild rightIcon={<ArrowRight />}>
+						<Button
+							variant="ghost"
+							size="sm"
+							asChild
+							rightIcon={<ArrowRight />}
+						>
 							<Link href="/dashboard/turmas">Ver todas</Link>
 						</Button>
 					</CardTitle>
@@ -375,8 +399,8 @@ export function DashboardOverview() {
 				</div>
 				<h2 className="text-base font-semibold text-foreground">Provas</h2>
 				<p className="max-w-sm text-sm text-muted-foreground">
-					Em breve você poderá gerar e corrigir provas com a IA do
-					Gabarita.app por aqui.
+					Em breve você poderá gerar e corrigir provas com a IA do Gabarita.app
+					por aqui.
 				</p>
 				<Button variant="outline" size="sm" asChild rightIcon={<ArrowRight />}>
 					<Link href="/dashboard/provas">Ver seção de provas</Link>

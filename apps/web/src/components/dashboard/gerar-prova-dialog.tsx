@@ -32,7 +32,11 @@ export function GerarProvaDialog({
 	const { data: classroomsList } = useClassrooms()
 	const generateExam = useGenerateExam()
 
-	const classrooms = classroomId ? (classroom ? [classroom] : []) : classroomsList
+	const classrooms = classroomId
+		? classroom
+			? [classroom]
+			: []
+		: classroomsList
 
 	function onSubmit(data: GenerateExamInput) {
 		generateExam.mutate(data, {

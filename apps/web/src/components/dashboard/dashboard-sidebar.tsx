@@ -11,7 +11,13 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from '@app/ui'
-import { FileText, LayoutDashboard, LogOut, Settings, Users } from 'lucide-react'
+import {
+	FileText,
+	LayoutDashboard,
+	LogOut,
+	Settings,
+	Users,
+} from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 

@@ -11,7 +11,10 @@ interface ProvaResultadoProps {
 	onQuestionUpdated: (question: Question) => void
 }
 
-export function ProvaResultado({ exam, onQuestionUpdated }: ProvaResultadoProps) {
+export function ProvaResultado({
+	exam,
+	onQuestionUpdated,
+}: ProvaResultadoProps) {
 	const questions = [...exam.questions].sort((a, b) => a.order - b.order)
 
 	return (
@@ -34,7 +37,11 @@ interface QuestionCardProps {
 	onQuestionUpdated: (question: Question) => void
 }
 
-function QuestionCard({ examId, question, onQuestionUpdated }: QuestionCardProps) {
+function QuestionCard({
+	examId,
+	question,
+	onQuestionUpdated,
+}: QuestionCardProps) {
 	const updateCorrectOption = useUpdateCorrectOption(examId, question.id)
 
 	function handleSelect(optionId: string) {

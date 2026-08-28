@@ -18,7 +18,15 @@ import {
 	toast,
 } from '@app/ui'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { BadgeCheck, Camera, Loader2, Mail, Save, ShieldAlert, User } from 'lucide-react'
+import {
+	BadgeCheck,
+	Camera,
+	Loader2,
+	Mail,
+	Save,
+	ShieldAlert,
+	User,
+} from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
@@ -105,7 +113,10 @@ export function PerfilSection({ user }: { user: AuthUser }) {
 			toast.success('Foto de perfil atualizada com sucesso!')
 			router.refresh()
 		} catch (error) {
-			toastApiError(error, 'Não foi possível atualizar sua foto. Tente novamente.')
+			toastApiError(
+				error,
+				'Não foi possível atualizar sua foto. Tente novamente.',
+			)
 		} finally {
 			setIsUploadingAvatar(false)
 		}
