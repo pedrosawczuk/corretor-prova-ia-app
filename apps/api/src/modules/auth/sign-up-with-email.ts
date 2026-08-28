@@ -1,8 +1,8 @@
+import type { SignUpWithEmailInput } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { auth } from '@/lib/auth'
 import { forwardWebResponse, toFetchHeaders } from '@/lib/http-utils'
 import { sendWelcomeEmail } from '@/lib/mail'
-import type { SignUpWithEmailInput } from './sign-up-with-email-schema'
 
 export async function signUpWithEmailModule(
 	request: FastifyRequest<{ Body: SignUpWithEmailInput }>,
@@ -30,5 +30,5 @@ export async function signUpWithEmailModule(
 	forwardWebResponse(response, reply)
 
 	const data = await response.json()
-	return reply.status(201).send(data)
+	return reply.status(response.status).send(data)
 }

@@ -1,19 +1,9 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { auth } from '@/lib/auth'
 import { forwardWebResponse, toFetchHeaders } from '@/lib/http-utils'
-import type { SignInWithSocialInput } from './sign-in-with-social-schema'
 
-export async function signInWithSocialModule(
-	request: FastifyRequest<{ Body: SignInWithSocialInput }>,
-	reply: FastifyReply,
-) {
-	const { provider, callbackURL } = request.body
-
-	const response = await auth.api.signInSocial({
-		body: {
-			provider,
-			callbackURL,
-		},
+export async function signOutModule(request: FastifyRequest, reply: FastifyReply) {
+	const response = await auth.api.signOut({
 		asResponse: true,
 		headers: toFetchHeaders(request.headers),
 	})

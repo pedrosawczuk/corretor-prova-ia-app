@@ -1,18 +1,19 @@
+import { env } from '@app/env'
+import type { ForgotPasswordInput } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { auth } from '@/lib/auth'
 import { forwardWebResponse, toFetchHeaders } from '@/lib/http-utils'
-import type { SignInWithSocialInput } from './sign-in-with-social-schema'
 
-export async function signInWithSocialModule(
-	request: FastifyRequest<{ Body: SignInWithSocialInput }>,
+export async function forgotPasswordModule(
+	request: FastifyRequest<{ Body: ForgotPasswordInput }>,
 	reply: FastifyReply,
 ) {
-	const { provider, callbackURL } = request.body
+	const { email } = request.body
 
-	const response = await auth.api.signInSocial({
+	const response = await auth.api.requestPasswordReset({
 		body: {
-			provider,
-			callbackURL,
+			email,
+			redirectTo: `${env.WEB_URL}/redefinir-senha`,
 		},
 		asResponse: true,
 		headers: toFetchHeaders(request.headers),

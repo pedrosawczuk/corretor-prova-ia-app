@@ -1,18 +1,19 @@
+import type { UpdatePasswordInput } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { auth } from '@/lib/auth'
 import { forwardWebResponse, toFetchHeaders } from '@/lib/http-utils'
-import type { SignInWithSocialInput } from './sign-in-with-social-schema'
 
-export async function signInWithSocialModule(
-	request: FastifyRequest<{ Body: SignInWithSocialInput }>,
+export async function updatePasswordModule(
+	request: FastifyRequest<{ Body: UpdatePasswordInput }>,
 	reply: FastifyReply,
 ) {
-	const { provider, callbackURL } = request.body
+	const { currentPassword, newPassword } = request.body
 
-	const response = await auth.api.signInSocial({
+	const response = await auth.api.changePassword({
 		body: {
-			provider,
-			callbackURL,
+			currentPassword,
+			newPassword,
+			revokeOtherSessions: true,
 		},
 		asResponse: true,
 		headers: toFetchHeaders(request.headers),

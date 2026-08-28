@@ -16,6 +16,7 @@
 	"dependencies": {
 		"@app/db": "workspace:*",
 		"@app/env": "workspace:*",
+		"@app/shared": "workspace:*",
 		"@fastify/cors": "^11.3.0",
 		"@react-email/components": "^1.0.12",
 		"better-auth": "^1.7.1",
