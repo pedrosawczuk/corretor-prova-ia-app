@@ -231,6 +231,9 @@ importers:
       '@app/env':
         specifier: workspace:*
         version: link:../../packages/env
+      '@app/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@fastify/cors':
         specifier: ^11.3.0
         version: 11.3.0
@@ -283,12 +286,18 @@ importers:
 
   apps/web:
     dependencies:
+      '@app/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@app/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       '@hookform/resolvers':
         specifier: ^5.9.1
         version: 5.9.1(@standard-schema/spec@1.1.0)(ajv@8.20.0)(react-hook-form@7.86.0(react@19.2.8))(zod@4.4.3)
+      better-auth:
+        specifier: ^1.7.1
+        version: 1.7.1(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(kysely@0.29.5)(postgres@3.4.9))(next@16.3.3(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@26.2.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       lucide-react:
         specifier: ^1.34.0
         version: 1.34.0(react@19.2.8)
@@ -370,6 +379,19 @@ importers:
       '@types/node':
         specifier: ^26.2.0
         version: 26.2.0
+
+  packages/shared:
+    dependencies:
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@app/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
 
   packages/typescript-config: {}
 
