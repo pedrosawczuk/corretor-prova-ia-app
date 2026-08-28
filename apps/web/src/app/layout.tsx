@@ -22,8 +22,15 @@ export default function RootLayout({
 	children: React.ReactNode
 }>) {
 	return (
-		<html lang="pt-BR" className={`${sora.variable} font-sans`}>
-			<body className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20">
+		<html
+			lang="pt-BR"
+			className={`${sora.variable} font-sans`}
+			suppressHydrationWarning
+		>
+			<body
+				className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20"
+				suppressHydrationWarning
+			>
 				<QueryProvider>
 					{children}
 					<Toaster richColors position="top-right" />

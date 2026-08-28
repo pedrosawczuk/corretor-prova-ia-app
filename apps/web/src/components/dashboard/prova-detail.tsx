@@ -184,7 +184,9 @@ export function ProvaDetail({ turmaId, examId }: ProvaDetailProps) {
 				</CardContent>
 			</Card>
 
-			{hasQuestions ? (
+			{generateExam.isPending ? (
+				<ProvaResultadoSkeleton count={questionCount} />
+			) : hasQuestions ? (
 				<ProvaResultado exam={exam} />
 			) : (
 				<div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-card p-12 text-center">
@@ -199,6 +201,44 @@ export function ProvaDetail({ turmaId, examId }: ProvaDetailProps) {
 					</p>
 				</div>
 			)}
+		</div>
+	)
+}
+
+function ProvaResultadoSkeleton({ count }: { count: number }) {
+	const [visibleCount, setVisibleCount] = React.useState(1)
+
+	React.useEffect(() => {
+		const interval = setInterval(() => {
+			setVisibleCount((prev) => (prev < count ? prev + 1 : prev))
+		}, 800)
+		return () => clearInterval(interval)
+	}, [count])
+
+	return (
+		<div className="flex flex-col gap-4">
+			{Array.from({ length: visibleCount }).map((_, i) => (
+				<Card
+					// biome-ignore lint/suspicious/noArrayIndexKey: animated skeleton items
+					key={i}
+					className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+				>
+					<CardHeader>
+						<CardTitle className="flex items-center gap-2">
+							<Skeleton className="size-5 rounded-full shrink-0" />
+							<Skeleton className="h-5 w-3/4" />
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+							<Skeleton className="h-12 w-full rounded-xl" />
+							<Skeleton className="h-12 w-full rounded-xl" />
+							<Skeleton className="h-12 w-full rounded-xl" />
+							<Skeleton className="h-12 w-full rounded-xl" />
+						</div>
+					</CardContent>
+				</Card>
+			))}
 		</div>
 	)
 }

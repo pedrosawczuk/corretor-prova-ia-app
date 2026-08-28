@@ -1,4 +1,4 @@
-ï»¿import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 import { Bot, Sparkles, Zap } from 'lucide-react'
 import { RadioGroup, RadioGroupItem } from './radio-group'
 
@@ -11,7 +11,7 @@ const meta: Meta<typeof RadioGroup> = {
 		docs: {
 			description: {
 				component:
-					'Componente de seleÃ§Ã£o Ãºnica (Radio Group / RadioButton) acessÃ­vel baseado em Radix UI com navegaÃ§Ã£o completa por teclado, variantes de cor, tamanhos e modo Card com badges.',
+					'Componente de seleção única (Radio Group / RadioButton) acessível baseado em Radix UI com navegação completa por teclado, variantes de cor, tamanhos e modo Card com badges.',
 			},
 		},
 	},
@@ -19,7 +19,7 @@ const meta: Meta<typeof RadioGroup> = {
 		orientation: {
 			control: 'select',
 			options: ['vertical', 'horizontal'],
-			description: 'DireÃ§Ã£o do layout do grupo de rÃ¡dios',
+			description: 'Direção do layout do grupo de rádios',
 		},
 		disabled: {
 			control: 'boolean',
@@ -32,21 +32,21 @@ type Story = StoryObj<typeof RadioGroup>
 
 export const Primary: Story = {
 	render: () => (
-		<RadioGroup defaultValue="multipla_escolha" label="Formato das QuestÃµes">
+		<RadioGroup defaultValue="multipla_escolha" label="Formato das Questões">
 			<RadioGroupItem
 				value="multipla_escolha"
-				label="MÃºltipla Escolha"
-				description="QuestÃµes objetivas com 4 ou 5 alternativas e 1 resposta correta."
+				label="Múltipla Escolha"
+				description="Questões objetivas com 4 ou 5 alternativas e 1 resposta correta."
 			/>
 			<RadioGroupItem
 				value="dissertativa"
 				label="Dissertativa / Discursiva"
-				description="Respostas abertas corrigidas por rubrica semÃ¢ntica da IA."
+				description="Respostas abertas corrigidas por rubrica semântica da IA."
 			/>
 			<RadioGroupItem
 				value="mista"
-				label="AvaliaÃ§Ã£o Mista"
-				description="CombinaÃ§Ã£o de questÃµes objetivas e dissertativas."
+				label="Avaliação Mista"
+				description="Combinação de questões objetivas e dissertativas."
 			/>
 		</RadioGroup>
 	),
@@ -86,7 +86,7 @@ export const AllVariants: Story = {
 					<RadioGroupItem
 						variant="warning"
 						value="warning_opt"
-						label="Em RevisÃ£o (Warning)"
+						label="Em Revisão (Warning)"
 					/>
 					<RadioGroupItem
 						variant="destructive"
@@ -112,19 +112,19 @@ export const Sizes: Story = {
 					size="sm"
 					value="size_sm"
 					label="Tamanho Small (sm - 14px)"
-					description="Adequado para tabelas compactas e formulÃ¡rios densos."
+					description="Adequado para tabelas compactas e formulários densos."
 				/>
 				<RadioGroupItem
 					size="default"
 					value="size_default"
 					label="Tamanho Default (md - 18px)"
-					description="Tamanho padrÃ£o recomendado para a maioria das interfaces."
+					description="Tamanho padrão recomendado para a maioria das interfaces."
 				/>
 				<RadioGroupItem
 					size="lg"
 					value="size_lg"
 					label="Tamanho Large (lg - 24px)"
-					description="Destaque tÃ¡til para tablets ou seleÃ§Ã£o rÃ¡pida."
+					description="Destaque tátil para tablets ou seleção rápida."
 				/>
 			</RadioGroup>
 		</div>
@@ -136,13 +136,13 @@ export const HorizontalOrientation: Story = {
 		<RadioGroup
 			defaultValue="medio"
 			orientation="horizontal"
-			label="NÃ­vel de Dificuldade da Prova"
-			description="Influencia o vocabulÃ¡rio e a complexidade das alternativas geradas."
+			label="Nível de Dificuldade da Prova"
+			description="Influencia o vocabulário e a complexidade das alternativas geradas."
 		>
-			<RadioGroupItem value="facil" label="FÃ¡cil" />
-			<RadioGroupItem value="medio" label="MÃ©dio" />
-			<RadioGroupItem value="dificil" label="DifÃ­cil" />
-			<RadioGroupItem value="avancado" label="OlimpÃ­ada / ENEM" />
+			<RadioGroupItem value="facil" label="Fácil" />
+			<RadioGroupItem value="medio" label="Médio" />
+			<RadioGroupItem value="dificil" label="Difícil" />
+			<RadioGroupItem value="avancado" label="Olimpíada / ENEM" />
 		</RadioGroup>
 	),
 }
@@ -164,7 +164,7 @@ export const AsCardSelectors: Story = {
 						Gemini 2.0 Flash
 					</span>
 				}
-				description="CorreÃ§Ã£o ultrarrÃ¡pida (menos de 2s por folha) ideal para provas objetivas em massa."
+				description="Correção ultrarrápida (menos de 2s por folha) ideal para provas objetivas em massa."
 			/>
 
 			<RadioGroupItem
@@ -172,7 +172,7 @@ export const AsCardSelectors: Story = {
 				value="pro"
 				badge={
 					<span className="text-[11px] font-semibold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 px-2 py-0.5 rounded-full">
-						Alta PrecisÃ£o
+						Alta Precisão
 					</span>
 				}
 				label={
@@ -181,7 +181,7 @@ export const AsCardSelectors: Story = {
 						Gemini 1.5 Pro
 					</span>
 				}
-				description="RaciocÃ­nio aprofundado para correÃ§Ã£o de redaÃ§Ãµes e questÃµes discursivas complexas."
+				description="Raciocínio aprofundado para correção de redações e questões discursivas complexas."
 			/>
 
 			<RadioGroupItem
@@ -198,7 +198,7 @@ export const AsCardSelectors: Story = {
 						Claude 3.5 Sonnet
 					</span>
 				}
-				description="Excelente para anÃ¡lise literÃ¡ria, rubricas com critÃ©rios subjetivos e feedback pedagÃ³gico."
+				description="Excelente para análise literária, rubricas com critérios subjetivos e feedback pedagógico."
 			/>
 		</RadioGroup>
 	),
@@ -208,8 +208,8 @@ export const ValidationError: Story = {
 	render: () => (
 		<RadioGroup
 			required
-			label="MÃ©todo de AtribuiÃ§Ã£o de Nota"
-			errorMessage="Selecione obrigatoriamente um mÃ©todo de cÃ¡lculo para gerar o relatÃ³rio."
+			label="Método de Atribuição de Nota"
+			errorMessage="Selecione obrigatoriamente um método de cálculo para gerar o relatório."
 		>
 			<RadioGroupItem
 				value="soma_simples"
@@ -225,17 +225,18 @@ export const ValidationError: Story = {
 
 export const DisabledStates: Story = {
 	render: () => (
-		<RadioGroup defaultValue="opt1" disabled label="ConfiguraÃ§Ãµes Bloqueadas">
+		<RadioGroup defaultValue="opt1" disabled label="Configurações Bloqueadas">
 			<RadioGroupItem
 				value="opt1"
-				label="OpÃ§Ã£o Selecionada (Desabilitada)"
-				description="NÃ£o pode ser alterada no status atual da prova."
+				label="Opção Selecionada (Desabilitada)"
+				description="Não pode ser alterada no status atual da prova."
 			/>
 			<RadioGroupItem
 				value="opt2"
-				label="OpÃ§Ã£o NÃ£o Selecionada (Desabilitada)"
-				description="IndisponÃ­vel no momento."
+				label="Opção Não Selecionada (Desabilitada)"
+				description="Indisponível no momento."
 			/>
 		</RadioGroup>
 	),
 }
+

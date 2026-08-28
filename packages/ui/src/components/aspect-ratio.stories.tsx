@@ -128,3 +128,4 @@ export const StandardWidescreen: Story = {
 		</div>
 	),
 }
+

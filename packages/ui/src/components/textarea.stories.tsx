@@ -1,4 +1,4 @@
-ï»¿import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 import {
 	Bold,
 	Code,
@@ -21,7 +21,7 @@ const meta: Meta<typeof Textarea> = {
 		docs: {
 			description: {
 				component:
-					'Componente de Ã¡rea de texto expansÃ­vel com suporte a temas, contador de caracteres com feedback de limite, slots de cabeÃ§alho/rodapÃ© e validaÃ§Ã£o acessÃ­vel.',
+					'Componente de área de texto expansível com suporte a temas, contador de caracteres com feedback de limite, slots de cabeçalho/rodapé e validação acessível.',
 			},
 		},
 	},
@@ -34,12 +34,12 @@ const meta: Meta<typeof Textarea> = {
 		status: {
 			control: 'select',
 			options: ['default', 'error', 'success', 'warning'],
-			description: 'Estado de validaÃ§Ã£o',
+			description: 'Estado de validação',
 		},
 		size: {
 			control: 'select',
 			options: ['sm', 'default', 'lg', 'xl'],
-			description: 'Tamanho da fonte e altura mÃ­nima',
+			description: 'Tamanho da fonte e altura mínima',
 		},
 		shape: {
 			control: 'select',
@@ -49,7 +49,7 @@ const meta: Meta<typeof Textarea> = {
 		resize: {
 			control: 'select',
 			options: ['none', 'vertical', 'horizontal', 'both'],
-			description: 'Controle de redimensionamento pelo usuÃ¡rio',
+			description: 'Controle de redimensionamento pelo usuário',
 		},
 		showCount: {
 			control: 'boolean',
@@ -57,7 +57,7 @@ const meta: Meta<typeof Textarea> = {
 		},
 		maxLength: {
 			control: 'number',
-			description: 'Limite mÃ¡ximo de caracteres permitidos',
+			description: 'Limite máximo de caracteres permitidos',
 		},
 		disabled: {
 			control: 'boolean',
@@ -70,11 +70,11 @@ type Story = StoryObj<typeof Textarea>
 
 export const Primary: Story = {
 	args: {
-		label: 'InstruÃ§Ãµes para a IA',
+		label: 'Instruções para a IA',
 		placeholder:
-			'Ex: Crie 5 questÃµes sobre a RevoluÃ§Ã£o Francesa com foco em causas econÃ´micas...',
+			'Ex: Crie 5 questões sobre a Revolução Francesa com foco em causas econômicas...',
 		helperText:
-			'VocÃª pode especificar o nÃ­vel de dificuldade, nÃºmero de alternativas e gabarito detalhado.',
+			'Você pode especificar o nível de dificuldade, número de alternativas e gabarito detalhado.',
 		variant: 'default',
 		size: 'default',
 		showCount: true,
@@ -88,17 +88,17 @@ export const AllVariants: Story = {
 			<Textarea
 				variant="default"
 				label="Variante: Default"
-				placeholder="Ãrea de texto padrÃ£o com borda suave"
+				placeholder="Área de texto padrão com borda suave"
 			/>
 			<Textarea
 				variant="filled"
 				label="Variante: Filled"
-				placeholder="Ãrea de texto com fundo preenchido"
+				placeholder="Área de texto com fundo preenchido"
 			/>
 			<Textarea
 				variant="outline"
 				label="Variante: Outline"
-				placeholder="Ãrea de texto com borda espessa de 2px"
+				placeholder="Área de texto com borda espessa de 2px"
 			/>
 			<Textarea
 				variant="ghost"
@@ -119,23 +119,23 @@ export const ValidationStates: Story = {
 		<div className="flex flex-col gap-5 w-96">
 			<Textarea
 				label="Estado Normal"
-				placeholder="Digite as observaÃ§Ãµes da prova..."
-				helperText="InformaÃ§Ãµes adicionais para os alunos."
+				placeholder="Digite as observações da prova..."
+				helperText="Informações adicionais para os alunos."
 			/>
 			<Textarea
 				label="Estado de Erro"
 				defaultValue="Texto muito curto"
-				errorMessage="O enunciado da questÃ£o dissertativa deve conter pelo menos 30 caracteres."
+				errorMessage="O enunciado da questão dissertativa deve conter pelo menos 30 caracteres."
 			/>
 			<Textarea
 				label="Estado de Sucesso"
-				defaultValue="Rubrica de correÃ§Ã£o e critÃ©rios de pontuaÃ§Ã£o definidos com sucesso."
+				defaultValue="Rubrica de correção e critérios de pontuação definidos com sucesso."
 				status="success"
-				helperText="CritÃ©rios aprovados!"
+				helperText="Critérios aprovados!"
 			/>
 			<Textarea
 				label="Estado de Alerta (Warning)"
-				defaultValue="AtenÃ§Ã£o: este comando pode sobrescrever o gabarito original salvo."
+				defaultValue="Atenção: este comando pode sobrescrever o gabarito original salvo."
 				status="warning"
 				helperText="Verifique antes de salvar."
 			/>
@@ -147,7 +147,7 @@ export const CharacterCounter: Story = {
 	render: () => (
 		<div className="flex flex-col gap-5 w-96">
 			<Textarea
-				label="Contador Sem Limite MÃ¡ximo"
+				label="Contador Sem Limite Máximo"
 				showCount
 				placeholder="Digite livremente..."
 			/>
@@ -155,7 +155,7 @@ export const CharacterCounter: Story = {
 				label="Contador com Limite (100 caracteres)"
 				showCount
 				maxLength={100}
-				defaultValue="Este texto jÃ¡ preencheu parte do limite estabelecido para a descriÃ§Ã£o."
+				defaultValue="Este texto já preencheu parte do limite estabelecido para a descrição."
 				helperText="Muda de cor ao aproximar de 90% do limite."
 			/>
 		</div>
@@ -183,21 +183,21 @@ export const WithToolbarHeader: Story = {
 	render: () => (
 		<div className="w-96">
 			<Textarea
-				label="Editor de Enunciado de QuestÃ£o"
-				placeholder="Escreva o enunciado completo da questÃ£o aqui..."
+				label="Editor de Enunciado de Questão"
+				placeholder="Escreva o enunciado completo da questão aqui..."
 				headerSlot={
 					<>
 						<div className="flex items-center gap-1">
 							<Button size="icon-xs" variant="ghost" aria-label="Negrito">
 								<Bold />
 							</Button>
-							<Button size="icon-xs" variant="ghost" aria-label="ItÃ¡lico">
+							<Button size="icon-xs" variant="ghost" aria-label="Itálico">
 								<Italic />
 							</Button>
 							<Button size="icon-xs" variant="ghost" aria-label="Lista">
 								<List />
 							</Button>
-							<Button size="icon-xs" variant="ghost" aria-label="CÃ³digo">
+							<Button size="icon-xs" variant="ghost" aria-label="Código">
 								<Code />
 							</Button>
 						</div>
@@ -208,7 +208,7 @@ export const WithToolbarHeader: Story = {
 				}
 				footerSlot={
 					<Button size="xs" variant="ghost" leftIcon={<HelpCircle />}>
-						Ajuda de formataÃ§Ã£o
+						Ajuda de formatação
 					</Button>
 				}
 				showCount
@@ -222,11 +222,11 @@ export const WithAIPromptAction: Story = {
 	render: () => (
 		<div className="w-96">
 			<Textarea
-				label="Gerador de AvaliaÃ§Ã£o por IA"
+				label="Gerador de Avaliação por IA"
 				variant="filled"
 				shape="rounded"
-				placeholder="Descreva o conteÃºdo, nÃ­vel da turma e quantidade de questÃµes..."
-				defaultValue="Gere uma prova de Biologia sobre GenÃ©tica Mendeliana com 5 questÃµes de mÃºltipla escolha e 2 dissertativas."
+				placeholder="Descreva o conteúdo, nível da turma e quantidade de questões..."
+				defaultValue="Gere uma prova de Biologia sobre Genética Mendeliana com 5 questões de múltipla escolha e 2 dissertativas."
 				footerSlot={
 					<div className="flex items-center gap-2">
 						<Button size="xs" variant="outline" leftIcon={<FileText />}>
@@ -258,11 +258,11 @@ export const ResizeOptions: Story = {
 			<Textarea
 				resize="none"
 				label="Redimensionamento Desabilitado (resize-none)"
-				placeholder="Altura fixa, sem alÃ§a de arrasto"
+				placeholder="Altura fixa, sem alça de arrasto"
 			/>
 			<Textarea
 				resize="vertical"
-				label="Redimensionamento Vertical PadrÃ£o (resize-y)"
+				label="Redimensionamento Vertical Padrão (resize-y)"
 				placeholder="Arraste para redimensionar verticalmente"
 			/>
 		</div>
@@ -275,14 +275,15 @@ export const DisabledAndReadOnly: Story = {
 			<Textarea
 				label="Textarea Desabilitado"
 				disabled
-				defaultValue="Este texto nÃ£o pode ser modificado ou focado."
+				defaultValue="Este texto não pode ser modificado ou focado."
 			/>
 			<Textarea
 				label="Textarea ReadOnly (Somente Leitura)"
 				readOnly
-				defaultValue="Gabarito oficial gerado pelo sistema: 1-A, 2-C, 3-D, 4-B, 5-E. CritÃ©rios de pontuaÃ§Ã£o bloqueados para ediÃ§Ã£o."
-				helperText="ConteÃºdo gerado automaticamente."
+				defaultValue="Gabarito oficial gerado pelo sistema: 1-A, 2-C, 3-D, 4-B, 5-E. Critérios de pontuação bloqueados para edição."
+				helperText="Conteúdo gerado automaticamente."
 			/>
 		</div>
 	),
 }
+

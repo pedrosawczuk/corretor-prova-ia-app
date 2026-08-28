@@ -68,9 +68,9 @@ export interface SelectProps
 	errorMessage?: string
 	required?: boolean
 	disabled?: boolean
-	/** Icon shown on the left side of the trigger */
+
 	leftIcon?: React.ReactNode
-	/** Full width trigger */
+
 	fullWidth?: boolean
 	containerClassName?: string
 	triggerClassName?: string
@@ -184,11 +184,11 @@ Select.displayName = 'Select'
 
 export interface SelectItemProps
 	extends React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item> {
-	/** Optional icon shown to the left of the label */
+
 	icon?: React.ReactNode
-	/** Optional badge/tag shown to the right */
+
 	badge?: React.ReactNode
-	/** Secondary description line below the label */
+
 	description?: string
 }
 
@@ -271,3 +271,4 @@ export {
 	SelectValue,
 	selectTriggerVariants,
 }
+

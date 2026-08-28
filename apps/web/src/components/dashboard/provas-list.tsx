@@ -1,17 +1,17 @@
 'use client'
 
+import { useExams } from '@/hooks/use-exams'
+import { formatDate } from '@/lib/date'
 import {
-	Badge,
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-	Skeleton,
+    Badge,
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+    Skeleton,
 } from '@app/ui'
 import { FileText } from 'lucide-react'
 import Link from 'next/link'
-import { useExams } from '@/hooks/use-exams'
-import { formatDate } from '@/lib/date'
 
 interface ProvasListProps {
 	turmaId: string
@@ -24,7 +24,6 @@ export function ProvasList({ turmaId }: ProvasListProps) {
 		return (
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				{Array.from({ length: 3 }).map((_, index) => (
-					// biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
 					<Skeleton key={index} className="h-32 rounded-2xl" />
 				))}
 			</div>

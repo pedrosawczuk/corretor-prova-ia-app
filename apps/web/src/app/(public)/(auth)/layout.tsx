@@ -16,9 +16,9 @@ export default function AuthLayout({
 }) {
 	return (
 		<div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-12 bg-background">
-			{/* COLUNA ESQUERDA: Formulário & Ações de Autenticação */}
+
 			<div className="lg:col-span-6 xl:col-span-5 flex flex-col justify-between p-6 sm:p-10 md:p-12">
-				{/* Topo: Branding */}
+
 				<header className="flex items-center justify-between">
 					<Link
 						href="/"
@@ -40,10 +40,8 @@ export default function AuthLayout({
 					</Link>
 				</header>
 
-				{/* Centro: Formulário dinâmico */}
 				<main className="my-auto py-8 w-full max-w-md mx-auto">{children}</main>
 
-				{/* Rodapé institucional */}
 				<footer className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground pt-6 border-t border-border/40">
 					<span>© {new Date().getFullYear()} gabarita.app</span>
 					<div className="flex items-center gap-4">
@@ -63,13 +61,11 @@ export default function AuthLayout({
 				</footer>
 			</div>
 
-			{/* COLUNA DIREITA: Showcase Visual (Desktop) */}
 			<div className="hidden lg:flex lg:col-span-6 xl:col-span-7 relative bg-gradient-to-br from-[#0c0d0e] via-[#171a1c] to-[#291e52] text-white p-12 flex-col justify-between overflow-hidden border-l border-border/40">
-				{/* Detalhes de iluminação sutil de fundo */}
+
 				<div className="absolute -top-24 -right-24 size-96 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
 				<div className="absolute -bottom-24 -left-24 size-96 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
 
-				{/* Topo do Showcase */}
 				<div className="relative z-10 flex items-center justify-between">
 					<Badge
 						size="sm"
@@ -86,7 +82,6 @@ export default function AuthLayout({
 					</div>
 				</div>
 
-				{/* Centro do Showcase: Card de Destaque */}
 				<div className="relative z-10 max-w-lg mx-auto space-y-6">
 					<div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-6 shadow-2xl space-y-5">
 						<div className="flex items-center justify-between border-b border-white/10 pb-4">
@@ -141,7 +136,6 @@ export default function AuthLayout({
 					</div>
 				</div>
 
-				{/* Rodapé do Showcase */}
 				<div className="relative z-10 flex items-center gap-3 text-xs text-zinc-400">
 					<GraduationCap className="size-4 text-primary" />
 					<span>
@@ -152,3 +146,4 @@ export default function AuthLayout({
 		</div>
 	)
 }
+

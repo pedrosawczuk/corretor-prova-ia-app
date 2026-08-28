@@ -42,7 +42,7 @@ export default function PrivacidadePage() {
 
 	return (
 		<div className="min-h-screen flex flex-col bg-background text-foreground font-sans">
-			{/* HEADER */}
+
 			<Header variant="glass">
 				<HeaderBrand asChild>
 					<Link href="/" className="flex items-center gap-2.5">
@@ -74,7 +74,7 @@ export default function PrivacidadePage() {
 			</Header>
 
 			<main className="flex-1 py-12 md:py-20 px-6 max-w-4xl mx-auto w-full space-y-12">
-				{/* Topo do Documento */}
+
 				<div className="space-y-4 text-left border-b border-border/60 pb-8">
 					<Badge variant="primary" size="sm" leftIcon={<ShieldCheck />}>
 						Privacidade & LGPD
@@ -88,7 +88,6 @@ export default function PrivacidadePage() {
 					</p>
 				</div>
 
-				{/* Resumo em Cards para o Professor */}
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 					<Card>
 						<CardHeader className="pb-2">
@@ -130,7 +129,6 @@ export default function PrivacidadePage() {
 					</Card>
 				</div>
 
-				{/* Conteúdo Textual Estruturado */}
 				<div className="space-y-8 text-sm sm:text-base text-foreground/90 leading-relaxed">
 					<section className="space-y-3">
 						<h2 className="text-xl font-bold text-foreground">
@@ -245,7 +243,6 @@ export default function PrivacidadePage() {
 				</div>
 			</main>
 
-			{/* FOOTER */}
 			<Footer variant="default">
 				<FooterContent>
 					<FooterBrand>
@@ -346,3 +343,4 @@ export default function PrivacidadePage() {
 		</div>
 	)
 }
+

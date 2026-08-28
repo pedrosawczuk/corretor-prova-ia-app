@@ -70,13 +70,13 @@ export interface SeparatorProps
 			'orientation'
 		>,
 		Omit<VariantProps<typeof separatorVariants>, 'orientation'> {
-	/** Orientação do separador */
+
 	orientation?: 'horizontal' | 'vertical'
-	/** Rótulo ou conteúdo central exibido no separador (apenas para orientação horizontal) */
+
 	label?: React.ReactNode
-	/** Alinhamento do rótulo na horizontal */
+
 	labelAlignment?: 'start' | 'center' | 'end'
-	/** Estilo da linha (sólida, tracejada ou pontilhada) */
+
 	borderStyle?: 'solid' | 'dashed' | 'dotted'
 }
 
@@ -216,3 +216,4 @@ const Separator = React.forwardRef<
 Separator.displayName = 'Separator'
 
 export { Separator, separatorVariants }
+

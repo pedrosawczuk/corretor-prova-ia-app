@@ -10,27 +10,23 @@ import {
 } from '@app/ui'
 import { CheckCircle2, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import * as React from 'react'
 import { apiClient } from '@/lib/api-client'
 
 export default function SairPage() {
-	const router = useRouter()
 	const [isLoggingOut, setIsLoggingOut] = React.useState(true)
+	const hasSignedOutRef = React.useRef(false)
 
 	React.useEffect(() => {
+		if (hasSignedOutRef.current) return
+		hasSignedOutRef.current = true
+
 		async function handleSignOut() {
 			try {
 				await apiClient('/auth/sign-out', { method: 'POST' })
 
 				setIsLoggingOut(false)
 				toast.info('Sessão finalizada com sucesso.')
-
-				const redirectTimer = setTimeout(() => {
-					router.push('/entrar')
-				}, 1500)
-
-				return () => clearTimeout(redirectTimer)
 			} catch {
 				setIsLoggingOut(false)
 				toast.error('Erro ao finalizar sessão.')
@@ -38,7 +34,7 @@ export default function SairPage() {
 		}
 
 		handleSignOut()
-	}, [router])
+	}, [])
 
 	return (
 		<div className="min-h-screen w-full flex items-center justify-center p-6 bg-background">
@@ -60,7 +56,7 @@ export default function SairPage() {
 					<p className="text-sm text-muted-foreground">
 						{isLoggingOut
 							? 'Aguarde um instante enquanto encerramos seu acesso com segurança.'
-							: 'Sua sessão foi encerrada. Redirecionando para a página de login em instantes...'}
+							: 'Sua sessão foi encerrada com segurança. O que você gostaria de fazer agora?'}
 					</p>
 
 					{!isLoggingOut && (

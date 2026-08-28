@@ -80,21 +80,21 @@ const dotVariants = cva('rounded-full shrink-0', {
 export interface BadgeProps
 	extends React.HTMLAttributes<HTMLDivElement>,
 		VariantProps<typeof badgeVariants> {
-	/** Renderiza como componente filho via Radix Slot (ex: Link ou Anchor) */
+
 	asChild?: boolean
-	/** Exibe um indicador circular de status (dot) */
+
 	dot?: boolean
-	/** Faz o dot piscar suavemente para indicar atividade contínua */
+
 	pulse?: boolean
-	/** Cor customizada para a classe do dot */
+
 	dotClassName?: string
-	/** Ícone exibido à esquerda */
+
 	leftIcon?: React.ReactNode
-	/** Ícone exibido à direita */
+
 	rightIcon?: React.ReactNode
-	/** Callback executado ao clicar no botão de remover a tag */
+
 	onDismiss?: (e: React.MouseEvent<HTMLButtonElement>) => void
-	/** Label de acessibilidade para o botão de dismiss */
+
 	dismissLabel?: string
 }
 
@@ -194,3 +194,4 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
 Badge.displayName = 'Badge'
 
 export { Badge, badgeVariants }
+

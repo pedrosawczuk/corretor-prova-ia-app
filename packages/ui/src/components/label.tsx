@@ -44,17 +44,17 @@ const labelVariants = cva(
 export interface LabelProps
 	extends React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>,
 		VariantProps<typeof labelVariants> {
-	/** Exibe o indicador de campo obrigatório (*) */
+
 	required?: boolean
-	/** Exibe texto secundário discreto indicando campo opcional */
+
 	optional?: boolean
-	/** Ícone ou elemento exibido à esquerda do texto */
+
 	leftIcon?: React.ReactNode
-	/** Ícone ou elemento exibido à direita do texto (ex: Tooltip / Help) */
+
 	rightIcon?: React.ReactNode
-	/** Subtexto ou descrição auxiliar exibido abaixo do rótulo */
+
 	helperText?: React.ReactNode
-	/** Container wrapper customizado para layouts com subtexto */
+
 	containerClassName?: string
 }
 
@@ -135,3 +135,4 @@ const Label = React.forwardRef<
 Label.displayName = 'Label'
 
 export { Label, labelVariants }
+

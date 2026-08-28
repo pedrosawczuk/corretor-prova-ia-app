@@ -3,6 +3,8 @@ import type {
 	Exam,
 	GenerateExamInput,
 	Question,
+	RegenerateQuestionBody,
+	UpdateQuestionBody,
 } from '@app/shared'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
@@ -82,6 +84,78 @@ export function useUpdateCorrectOption(examId: string, questionId: string) {
 						questions: prev.questions.map((q) =>
 							q.id === question.id ? question : q,
 						),
+					},
+			)
+		},
+	})
+}
+
+export function useUpdateQuestion(examId: string, questionId: string) {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (data: UpdateQuestionBody) =>
+			apiClient<Question>(`/exams/${examId}/questions/${questionId}`, {
+				method: 'PATCH',
+				body: JSON.stringify(data),
+			}),
+		onSuccess: (question) => {
+			queryClient.setQueryData<Exam>(
+				examsKeys.detail(examId),
+				(prev) =>
+					prev && {
+						...prev,
+						questions: prev.questions.map((q) =>
+							q.id === question.id ? question : q,
+						),
+					},
+			)
+		},
+	})
+}
+
+export function useRegenerateQuestion(examId: string, questionId: string) {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (data: RegenerateQuestionBody) =>
+			apiClient<Question>(
+				`/exams/${examId}/questions/${questionId}/regenerate`,
+				{
+					method: 'POST',
+					body: JSON.stringify(data),
+				},
+			),
+		onSuccess: (question) => {
+			queryClient.setQueryData<Exam>(
+				examsKeys.detail(examId),
+				(prev) =>
+					prev && {
+						...prev,
+						questions: prev.questions.map((q) =>
+							q.id === question.id ? question : q,
+						),
+					},
+			)
+		},
+	})
+}
+
+export function useDeleteQuestion(examId: string, questionId: string) {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: () =>
+			apiClient(`/exams/${examId}/questions/${questionId}`, {
+				method: 'DELETE',
+			}),
+		onSuccess: () => {
+			queryClient.setQueryData<Exam>(
+				examsKeys.detail(examId),
+				(prev) =>
+					prev && {
+						...prev,
+						questions: prev.questions.filter((q) => q.id !== questionId),
 					},
 			)
 		},

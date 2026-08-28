@@ -168,3 +168,4 @@ export const PrivateDashboardTopbar: Story = {
 		</div>
 	),
 }
+

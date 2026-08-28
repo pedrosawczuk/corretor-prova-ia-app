@@ -30,11 +30,11 @@ const alertVariants = cva(
 export interface AlertProps
 	extends React.HTMLAttributes<HTMLDivElement>,
 		VariantProps<typeof alertVariants> {
-	/** Exibe o ícone padrão correspondente à variante */
+
 	showDefaultIcon?: boolean
-	/** Ícone customizado para substituir o padrão */
+
 	icon?: React.ReactNode
-	/** Callback executado ao clicar no botão de fechar o alerta */
+
 	onClose?: () => void
 }
 
@@ -122,3 +122,4 @@ const AlertDescription = React.forwardRef<
 AlertDescription.displayName = 'AlertDescription'
 
 export { Alert, AlertDescription, AlertTitle, alertVariants }
+

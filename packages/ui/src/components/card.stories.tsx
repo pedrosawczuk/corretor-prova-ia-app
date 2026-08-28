@@ -260,3 +260,4 @@ export const CreateNewClassroomPlaceholder: Story = {
 		</Card>
 	),
 }
+
