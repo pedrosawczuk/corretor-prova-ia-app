@@ -1,6 +1,7 @@
-import { MonitorSmartphone, ShieldCheck, UserRound } from 'lucide-react'
+import { MonitorSmartphone, ShieldCheck, Trash2, UserRound } from 'lucide-react'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
+import { DeletarContaSection } from '@/components/dashboard/configuracoes/deletar-conta-section'
 import { PerfilSection } from '@/components/dashboard/configuracoes/perfil-section'
 import { SegurancaSection } from '@/components/dashboard/configuracoes/seguranca-section'
 import { SessoesSection } from '@/components/dashboard/configuracoes/sessoes-section'
@@ -15,6 +16,7 @@ const NAV_ITEMS = [
 	{ id: 'perfil', label: 'Perfil', icon: UserRound },
 	{ id: 'seguranca', label: 'Segurança', icon: ShieldCheck },
 	{ id: 'sessoes', label: 'Sessões', icon: MonitorSmartphone },
+	{ id: 'deletar-conta', label: 'Deletar Conta', icon: Trash2 },
 ]
 
 export default async function ConfiguracoesPage() {
@@ -79,6 +81,10 @@ export default async function ConfiguracoesPage() {
 							currentToken={authSession.session.token}
 							unavailable={sessions === null}
 						/>
+					</section>
+
+					<section id="deletar-conta" className="scroll-mt-6">
+						<DeletarContaSection user={authSession.user} />
 					</section>
 				</div>
 			</div>

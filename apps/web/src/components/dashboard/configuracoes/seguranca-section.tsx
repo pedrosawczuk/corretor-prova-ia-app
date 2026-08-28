@@ -1,5 +1,7 @@
 'use client'
 
+import { ApiError, apiClient } from '@/lib/api-client'
+import { applyApiErrorsToForm } from '@/lib/api-error-handler'
 import { changePasswordSchema } from '@app/shared'
 import {
 	Button,
@@ -21,8 +23,6 @@ import { KeyRound, ShieldCheck } from 'lucide-react'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import type { z } from 'zod'
-import { ApiError, apiClient } from '@/lib/api-client'
-import { applyApiErrorsToForm } from '@/lib/api-error-handler'
 
 type ChangePasswordInput = z.infer<typeof changePasswordSchema>
 
@@ -137,7 +137,7 @@ export function SegurancaSection() {
 										</FormLabel>
 										<FormControl>
 											<Input
-												placeholder="Mínimo 6 caracteres"
+												placeholder="Mínimo 8 caracteres"
 												type="password"
 												autoComplete="new-password"
 												disabled={isLoading}
