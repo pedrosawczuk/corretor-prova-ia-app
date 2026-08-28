@@ -10,10 +10,7 @@ import {
 	vi,
 } from 'vitest'
 import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
-import {
-	createDbChain,
-	createDbTransactionMock,
-} from '@/test/create-db-chain'
+import { createDbChain, createDbTransactionMock } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
 import { makeExam } from '@/test/factories/make-exam'

@@ -10,7 +10,7 @@ import {
 } from 'fastify-type-provider-zod'
 import { auth } from '@/lib/auth'
 import { registerErrorHandler } from '@/lib/register-error-handler'
-import { MAX_AVATAR_SIZE_BYTES, ensureAvatarsBucket } from '@/lib/storage'
+import { ensureAvatarsBucket, MAX_AVATAR_SIZE_BYTES } from '@/lib/storage'
 import { authRoutes } from '@/modules/auth/auth-routes'
 import { classroomRoutes } from '@/modules/classrooms/classroom-routes'
 import { examRoutes } from '@/modules/exams/exam-routes'

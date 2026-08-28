@@ -10,12 +10,9 @@ import {
 	vi,
 } from 'vitest'
 import { AiGenerationError } from '@/core/errors'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
 import { generateExamQuestions } from '@/lib/gemini'
-import {
-	createDbChain,
-	createDbTransactionMock,
-} from '@/test/create-db-chain'
+import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
+import { createDbChain, createDbTransactionMock } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
 import { makeClassroom } from '@/test/factories/make-classroom'

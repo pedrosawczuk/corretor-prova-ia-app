@@ -17,8 +17,7 @@ export async function generateExamModule(
 	reply: FastifyReply,
 ) {
 	const user = await getAuthenticatedUser(request)
-	const { classroomId, difficulty, questionCount, questionType } =
-		request.body
+	const { classroomId, difficulty, questionCount, questionType } = request.body
 
 	const [classroom] = await db
 		.select()
