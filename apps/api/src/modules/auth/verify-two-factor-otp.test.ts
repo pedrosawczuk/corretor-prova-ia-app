@@ -19,11 +19,16 @@ describe('POST /auth/two-factor/verify-otp', () => {
 
 	it('verifica o código otp e repassa o cookie de sessão', async () => {
 		const code = faker.string.numeric(6)
-		const responseBody = { token: faker.string.uuid(), user: { id: faker.string.uuid() } }
+		const responseBody = {
+			token: faker.string.uuid(),
+			user: { id: faker.string.uuid() },
+		}
 
 		vi.mocked(auth.api.verifyTwoFactorOTP).mockResolvedValue(
 			makeAuthResponse(responseBody, {
-				headers: { 'set-cookie': 'better-auth.session=abc123; Path=/; HttpOnly' },
+				headers: {
+					'set-cookie': 'better-auth.session=abc123; Path=/; HttpOnly',
+				},
 			}) as never,
 		)
 

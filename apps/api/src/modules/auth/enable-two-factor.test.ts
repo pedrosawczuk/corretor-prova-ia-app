@@ -22,7 +22,10 @@ describe('POST /auth/two-factor/enable', () => {
 		const responseBody = {
 			method: 'totp',
 			totpURI: 'otpauth://totp/gabarita.app?secret=ABC123',
-			backupCodes: [faker.string.alphanumeric(10), faker.string.alphanumeric(10)],
+			backupCodes: [
+				faker.string.alphanumeric(10),
+				faker.string.alphanumeric(10),
+			],
 		}
 
 		vi.mocked(auth.api.enableTwoFactor).mockResolvedValue(

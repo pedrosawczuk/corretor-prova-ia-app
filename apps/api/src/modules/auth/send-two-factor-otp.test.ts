@@ -38,7 +38,10 @@ describe('POST /auth/two-factor/send-otp', () => {
 	it('retorna 401 quando não há um desafio de 2fa válido em andamento', async () => {
 		vi.mocked(auth.api.sendTwoFactorOTP).mockResolvedValue(
 			makeAuthResponse(
-				{ code: 'INVALID_TWO_FACTOR_COOKIE', message: 'Sessão de 2fa inválida' },
+				{
+					code: 'INVALID_TWO_FACTOR_COOKIE',
+					message: 'Sessão de 2fa inválida',
+				},
 				{ status: 401 },
 			) as never,
 		)

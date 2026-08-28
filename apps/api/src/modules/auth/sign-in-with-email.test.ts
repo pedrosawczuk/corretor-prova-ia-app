@@ -32,7 +32,9 @@ describe('POST /auth/sign-in', () => {
 
 		vi.mocked(auth.api.signInEmail).mockResolvedValue(
 			makeAuthResponse(responseBody, {
-				headers: { 'set-cookie': 'better-auth.session=abc123; Path=/; HttpOnly' },
+				headers: {
+					'set-cookie': 'better-auth.session=abc123; Path=/; HttpOnly',
+				},
 			}) as never,
 		)
 

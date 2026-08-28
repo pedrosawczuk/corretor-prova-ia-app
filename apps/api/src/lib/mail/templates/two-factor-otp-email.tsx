@@ -90,8 +90,8 @@ export function TwoFactorOtpEmail({ name, otp }: TwoFactorOtpEmailProps) {
 
 							<Section className="bg-[#fffbeb] border border-solid border-[#fde68a] rounded-lg px-4 py-3">
 								<Text className="text-xs text-[#92400e] leading-relaxed m-0">
-									Se você não tentou fazer login, ignore este e-mail e
-									considere alterar sua senha.
+									Se você não tentou fazer login, ignore este e-mail e considere
+									alterar sua senha.
 								</Text>
 							</Section>
 						</Section>

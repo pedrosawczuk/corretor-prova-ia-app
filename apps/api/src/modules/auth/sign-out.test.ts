@@ -22,8 +22,7 @@ describe('POST /auth/sign-out', () => {
 		vi.mocked(auth.api.signOut).mockResolvedValue(
 			makeAuthResponse(responseBody, {
 				headers: {
-					'set-cookie':
-						'better-auth.session=; Path=/; HttpOnly; Max-Age=0',
+					'set-cookie': 'better-auth.session=; Path=/; HttpOnly; Max-Age=0',
 				},
 			}) as never,
 		)
