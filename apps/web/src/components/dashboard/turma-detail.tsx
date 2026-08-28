@@ -1,8 +1,5 @@
 'use client'
 
-import { useClassroom } from '@/hooks/use-classrooms'
-import { ApiError } from '@/lib/api-client'
-import { formatDate } from '@/lib/date'
 import { Badge, Button, Card, CardContent, CardHeader, Skeleton } from '@app/ui'
 import {
 	ArrowLeft,
@@ -15,6 +12,9 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import * as React from 'react'
+import { useClassroom } from '@/hooks/use-classrooms'
+import { ApiError } from '@/lib/api-client'
+import { formatDate } from '@/lib/date'
 import { EditarTurmaDialog } from './editar-turma-dialog'
 import { ExcluirTurmaDialog } from './excluir-turma-dialog'
 

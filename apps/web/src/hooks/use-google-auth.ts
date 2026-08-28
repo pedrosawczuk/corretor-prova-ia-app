@@ -3,7 +3,7 @@
 import { toast } from '@app/ui'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
-import { apiClient, ApiError } from '@/lib/api-client'
+import { ApiError, apiClient } from '@/lib/api-client'
 
 interface UseGoogleAuthOptions {
 	startErrorMessage: string

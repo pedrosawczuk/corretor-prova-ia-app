@@ -1,7 +1,5 @@
 'use client'
 
-import { useClassrooms } from '@/hooks/use-classrooms'
-import { formatDate } from '@/lib/date'
 import {
 	Badge,
 	Card,
@@ -12,6 +10,8 @@ import {
 } from '@app/ui'
 import { LayoutDashboard, Users } from 'lucide-react'
 import Link from 'next/link'
+import { useClassrooms } from '@/hooks/use-classrooms'
+import { formatDate } from '@/lib/date'
 import { CriarTurmaDialog } from './criar-turma-dialog'
 
 export function TurmasList() {

@@ -42,9 +42,7 @@ export const auth = betterAuth({
 						name: loggedInUser.name,
 						device: parseUserAgent(session.userAgent),
 						ipAddress: session.ipAddress || 'IP desconhecido',
-						dateTime: dayjs(session.createdAt).format(
-							'DD/MM/YYYY [às] HH:mm',
-						),
+						dateTime: dayjs(session.createdAt).format('DD/MM/YYYY [às] HH:mm'),
 						securityUrl: `${env.WEB_URL}/dashboard/configuracoes`,
 					})
 				},

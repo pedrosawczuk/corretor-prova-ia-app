@@ -27,7 +27,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import * as React from 'react'
-import { apiClient, ApiError } from '@/lib/api-client'
+import { ApiError, apiClient } from '@/lib/api-client'
 import { toastApiError } from '@/lib/api-error-handler'
 import type { AuthSession } from '@/lib/auth-server'
 import { formatRelativeDate } from '@/lib/date'

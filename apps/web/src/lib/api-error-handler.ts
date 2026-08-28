@@ -7,7 +7,9 @@ const CONNECTION_ERROR_MESSAGE =
 
 export function toastApiError(error: unknown, fallback: string) {
 	toast.error(
-		error instanceof ApiError ? error.message || fallback : CONNECTION_ERROR_MESSAGE,
+		error instanceof ApiError
+			? error.message || fallback
+			: CONNECTION_ERROR_MESSAGE,
 	)
 }
 
@@ -31,7 +33,9 @@ export function applyApiErrorsToForm<TFieldValues extends FieldValues>(
 				})
 			}
 		}
-		toast.error(error.message || 'Verifique os campos destacados no formulário.')
+		toast.error(
+			error.message || 'Verifique os campos destacados no formulário.',
+		)
 		return
 	}
 

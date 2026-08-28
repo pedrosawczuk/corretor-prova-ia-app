@@ -9,10 +9,7 @@ import {
 	uuid,
 } from 'drizzle-orm/pg-core'
 
-export const auditOutcomeEnum = pgEnum('audit_outcome', [
-	'success',
-	'failure',
-])
+export const auditOutcomeEnum = pgEnum('audit_outcome', ['success', 'failure'])
 
 export const auditLogsTable = pgTable(
 	'audit_logs',
@@ -48,10 +45,7 @@ export const auditLogsTable = pgTable(
 		index('audit_logs_request_id_idx').on(table.requestId),
 		index('audit_logs_actor_id_idx').on(table.actorId),
 		index('audit_logs_action_idx').on(table.action),
-		index('audit_logs_resource_idx').on(
-			table.resourceType,
-			table.resourceId,
-		),
+		index('audit_logs_resource_idx').on(table.resourceType, table.resourceId),
 		index('audit_logs_created_at_idx').on(table.createdAt),
 	],
 )
