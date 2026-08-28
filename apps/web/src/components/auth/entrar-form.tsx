@@ -1,5 +1,6 @@
 'use client'
 
+import { signInWithEmailSchema } from '@app/shared'
 import {
 	Button,
 	Checkbox,
@@ -22,9 +23,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { applyApiErrorsToForm } from '@/lib/api-error-handler'
 
-const entrarSchema = z.object({
-	email: z.string().email('Informe um e-mail válido para acessar'),
-	password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres'),
+const entrarSchema = signInWithEmailSchema.extend({
 	remember: z.boolean(),
 })
 

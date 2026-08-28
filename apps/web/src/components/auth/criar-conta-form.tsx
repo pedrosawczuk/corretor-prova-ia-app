@@ -1,5 +1,6 @@
 'use client'
 
+import { signUpWithEmailSchema } from '@app/shared'
 import {
 	Button,
 	Form,
@@ -18,16 +19,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
+import type { z } from 'zod'
 import { applyApiErrorsToForm } from '@/lib/api-error-handler'
 
-const registerSchema = z.object({
-	name: z.string().min(3, 'Informe seu nome completo (mínimo 3 letras)'),
-	email: z.string().email('Informe um e-mail válido'),
-	password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres'),
-})
-
-type RegisterInput = z.infer<typeof registerSchema>
+type RegisterInput = z.infer<typeof signUpWithEmailSchema>
 
 export function CriarContaForm() {
 	const router = useRouter()
@@ -35,7 +30,7 @@ export function CriarContaForm() {
 	const [isGoogleLoading, setIsGoogleLoading] = React.useState(false)
 
 	const form = useForm<RegisterInput>({
-		resolver: zodResolver(registerSchema),
+		resolver: zodResolver(signUpWithEmailSchema),
 		defaultValues: {
 			name: '',
 			email: '',
@@ -216,7 +211,7 @@ export function CriarContaForm() {
 								</FormLabel>
 								<FormControl>
 									<Input
-										placeholder="Mínimo 6 caracteres"
+										placeholder="Mínimo 8 caracteres"
 										type="password"
 										autoComplete="new-password"
 										disabled={isLoading}

@@ -45,6 +45,13 @@ export function applyApiErrorsToForm<TFieldValues extends FieldValues>(
 		return
 	}
 
+	if (errorData.code === 'INVALID_TOKEN') {
+		toast.error(
+			'Este link expirou ou já foi utilizado. Solicite um novo link de recuperação.',
+		)
+		return
+	}
+
 	if (errorData.code === 'INVALID_CREDENTIALS') {
 		setError('email' as Path<TFieldValues>, {
 			type: 'manual',

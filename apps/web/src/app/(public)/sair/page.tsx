@@ -20,7 +20,13 @@ export default function SairPage() {
 	React.useEffect(() => {
 		async function handleSignOut() {
 			try {
-				await new Promise((resolve) => setTimeout(resolve, 800))
+				const apiUrl =
+					process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
+				await fetch(`${apiUrl}/auth/sign-out`, {
+					method: 'POST',
+					credentials: 'include',
+				})
+
 				setIsLoggingOut(false)
 				toast.info('Sessão finalizada com sucesso.')
 
