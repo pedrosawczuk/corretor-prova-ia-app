@@ -1,4 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
+import { fileTypeFromBuffer } from 'file-type'
 import sharp from 'sharp'
 import { BadRequestError, UnauthorizedError } from '@/core/errors'
 import { auth } from '@/lib/auth'
@@ -34,6 +35,11 @@ export async function uploadAvatarModule(
 		}
 		throw error
 	})
+
+	const fileType = await fileTypeFromBuffer(originalBuffer)
+	if (!fileType || !fileType.mime.startsWith('image/')) {
+		throw new BadRequestError('O arquivo enviado precisa ser uma imagem.')
+	}
 
 	const webpBuffer = await sharp(originalBuffer)
 		.resize(AVATAR_DIMENSION, AVATAR_DIMENSION, { fit: 'cover' })

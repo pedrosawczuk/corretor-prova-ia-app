@@ -1,6 +1,7 @@
 import { env } from '@app/env'
 import cors from '@fastify/cors'
 import multipart from '@fastify/multipart'
+import rateLimit from '@fastify/rate-limit'
 import { toNodeHandler } from 'better-auth/node'
 import fastify from 'fastify'
 import {
@@ -27,6 +28,11 @@ await app.register(multipart, {
 	limits: { fileSize: MAX_AVATAR_SIZE_BYTES },
 })
 
+await app.register(rateLimit, {
+	max: 100,
+	timeWindow: '1 minute',
+})
+
 app.setValidatorCompiler(validatorCompiler)
 app.setSerializerCompiler(serializerCompiler)
 
@@ -34,9 +40,20 @@ registerErrorHandler(app)
 
 await ensureAvatarsBucket()
 
-app.all('/api/auth/*', async (request, reply) => {
-	return toNodeHandler(auth)(request.raw, reply.raw)
-})
+app.all(
+	'/api/auth/*',
+	{
+		config: {
+			rateLimit: {
+				max: 30,
+				timeWindow: '1 minute',
+			},
+		},
+	},
+	async (request, reply) => {
+		return toNodeHandler(auth)(request.raw, reply.raw)
+	},
+)
 
 app.register(authRoutes, { prefix: '/auth' })
 app.register(classroomRoutes, { prefix: '/classrooms' })

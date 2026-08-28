@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { env } from '@app/env'
 import { Client } from 'minio'
 
@@ -42,7 +43,7 @@ function getPublicBaseUrl() {
 }
 
 export async function uploadAvatar(userId: string, buffer: Buffer) {
-	const objectName = `${AVATARS_PREFIX}${userId}-${Date.now()}.webp`
+	const objectName = `${AVATARS_PREFIX}${randomUUID()}.webp`
 
 	await storageClient.putObject(
 		env.MINIO_BUCKET,

@@ -32,7 +32,6 @@ export const apiEnvSchema = dbEnvSchema.extend({
 	GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
 	RESEND_API_KEY: z.string().min(1).optional(),
 	MAIL_FROM: z.string().optional(),
-	// .env ships GEMINI_API_KEY empty (not unset) for local dev, so tolerate '' as "not configured"
 	GEMINI_API_KEY: z.string().min(1).optional().catch(undefined),
 	GEMINI_MODEL: z.string().min(1).default('gemini-2.5-flash'),
 	MINIO_ENDPOINT: z.string().min(1),
