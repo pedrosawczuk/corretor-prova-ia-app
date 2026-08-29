@@ -1,10 +1,10 @@
 import { env } from '@app/env'
 import { Resend } from 'resend'
-import { NewLoginEmail } from './mail/templates/new-login-email'
-import { ResetPasswordEmail } from './mail/templates/reset-password-email'
-import { TwoFactorOtpEmail } from './mail/templates/two-factor-otp-email'
-import { VerifyEmail } from './mail/templates/verify-email'
-import { WelcomeEmail } from './mail/templates/welcome-email'
+import { NewLoginEmail } from './templates/new-login-email'
+import { ResetPasswordEmail } from './templates/reset-password-email'
+import { TwoFactorOtpEmail } from './templates/two-factor-otp-email'
+import { VerifyEmail } from './templates/verify-email'
+import { WelcomeEmail } from './templates/welcome-email'
 
 export const resend = new Resend(env.RESEND_API_KEY)
 

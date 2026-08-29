@@ -1,8 +1,9 @@
+import { env } from '@app/env'
 import { faker } from '@faker-js/faker'
 import type { FastifyInstance } from 'fastify'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import { auth } from '@/lib/auth'
-import { sendWelcomeEmail } from '@/lib/mail'
+import { auth } from '@/lib/auth/auth'
+import { sendWelcomeEmail } from '@/lib/mail/mail'
 import { createAuthTestApp } from '@/test/create-auth-test-app'
 import { makeAuthResponse } from '@/test/factories/make-auth-response'
 
@@ -50,6 +51,7 @@ describe('POST /auth/sign-up', () => {
 					name: payload.name,
 					email: payload.email,
 					password: payload.password,
+					callbackURL: `${env.WEB_URL}/verificar-email?email=${encodeURIComponent(payload.email)}`,
 				},
 				asResponse: true,
 			}),

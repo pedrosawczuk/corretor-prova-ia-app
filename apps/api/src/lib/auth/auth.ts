@@ -9,7 +9,7 @@ import {
 	sendPasswordResetEmail,
 	sendTwoFactorOtpEmail,
 	sendVerificationEmail,
-} from './mail'
+} from '../mail/mail'
 import { parseUserAgent } from './parse-user-agent'
 
 export const auth = betterAuth({
@@ -36,6 +36,15 @@ export const auth = betterAuth({
 				name: user.name,
 				verificationUrl: url,
 			})
+		},
+	},
+	user: {
+		additionalFields: {
+			phoneNumber: {
+				type: 'string',
+				required: false,
+				input: true,
+			},
 		},
 	},
 	socialProviders: {

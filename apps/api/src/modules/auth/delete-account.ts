@@ -2,9 +2,9 @@ import { db, eq, user as userTable } from '@app/db'
 import type { DeleteAccountInput } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { BadRequestError } from '@/core/errors'
-import { auth } from '@/lib/auth'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
-import { forwardWebResponse, toFetchHeaders } from '@/lib/http-utils'
+import { auth } from '@/lib/auth/auth'
+import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { forwardWebResponse, toFetchHeaders } from '@/lib/auth/http-utils'
 
 export async function deleteAccountModule(
 	request: FastifyRequest<{ Body: DeleteAccountInput }>,

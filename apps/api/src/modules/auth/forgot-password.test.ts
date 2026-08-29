@@ -2,7 +2,7 @@ import { env } from '@app/env'
 import { faker } from '@faker-js/faker'
 import type { FastifyInstance } from 'fastify'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import { auth } from '@/lib/auth'
+import { auth } from '@/lib/auth/auth'
 import { createAuthTestApp } from '@/test/create-auth-test-app'
 import { makeAuthResponse } from '@/test/factories/make-auth-response'
 

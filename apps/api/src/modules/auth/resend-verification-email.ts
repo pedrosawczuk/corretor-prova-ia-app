@@ -1,8 +1,8 @@
 import { env } from '@app/env'
 import type { ResendVerificationEmailInput } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { auth } from '@/lib/auth'
-import { forwardWebResponse, toFetchHeaders } from '@/lib/http-utils'
+import { auth } from '@/lib/auth/auth'
+import { forwardWebResponse, toFetchHeaders } from '@/lib/auth/http-utils'
 
 export async function resendVerificationEmailModule(
 	request: FastifyRequest<{ Body: ResendVerificationEmailInput }>,
@@ -13,7 +13,7 @@ export async function resendVerificationEmailModule(
 	const response = await auth.api.sendVerificationEmail({
 		body: {
 			email,
-			callbackURL: `${env.WEB_URL}/dashboard`,
+			callbackURL: `${env.WEB_URL}/verificar-email?email=${encodeURIComponent(email)}`,
 		},
 		asResponse: true,
 		headers: toFetchHeaders(request.headers),

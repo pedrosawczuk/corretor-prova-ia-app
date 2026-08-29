@@ -2,9 +2,9 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 import { fileTypeFromBuffer } from 'file-type'
 import sharp from 'sharp'
 import { BadRequestError, UnauthorizedError } from '@/core/errors'
-import { auth } from '@/lib/auth'
-import { forwardWebResponse, toFetchHeaders } from '@/lib/http-utils'
-import { deleteObjectByPublicUrl, uploadAvatar } from '@/lib/storage'
+import { auth } from '@/lib/auth/auth'
+import { forwardWebResponse, toFetchHeaders } from '@/lib/auth/http-utils'
+import { deleteObjectByPublicUrl, uploadAvatar } from '@/lib/storage/storage'
 
 const AVATAR_DIMENSION = 512
 

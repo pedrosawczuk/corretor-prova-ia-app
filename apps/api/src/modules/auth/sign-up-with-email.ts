@@ -1,8 +1,9 @@
+import { env } from '@app/env'
 import type { SignUpWithEmailInput } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { auth } from '@/lib/auth'
-import { forwardWebResponse, toFetchHeaders } from '@/lib/http-utils'
-import { sendWelcomeEmail } from '@/lib/mail'
+import { auth } from '@/lib/auth/auth'
+import { forwardWebResponse, toFetchHeaders } from '@/lib/auth/http-utils'
+import { sendWelcomeEmail } from '@/lib/mail/mail'
 
 export async function signUpWithEmailModule(
 	request: FastifyRequest<{ Body: SignUpWithEmailInput }>,
@@ -15,6 +16,7 @@ export async function signUpWithEmailModule(
 			name,
 			email,
 			password,
+			callbackURL: `${env.WEB_URL}/verificar-email?email=${encodeURIComponent(email)}`,
 		},
 		asResponse: true,
 		headers: toFetchHeaders(request.headers),

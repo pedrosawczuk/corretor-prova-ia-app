@@ -1,16 +1,16 @@
 import type { UpdateProfileInput } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { auth } from '@/lib/auth'
-import { forwardWebResponse, toFetchHeaders } from '@/lib/http-utils'
+import { auth } from '@/lib/auth/auth'
+import { forwardWebResponse, toFetchHeaders } from '@/lib/auth/http-utils'
 
 export async function updateProfileModule(
 	request: FastifyRequest<{ Body: UpdateProfileInput }>,
 	reply: FastifyReply,
 ) {
-	const { name } = request.body
+	const { name, phoneNumber } = request.body
 
 	const response = await auth.api.updateUser({
-		body: { name },
+		body: { name, phoneNumber },
 		asResponse: true,
 		headers: toFetchHeaders(request.headers),
 	})

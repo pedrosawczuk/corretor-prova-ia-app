@@ -11,8 +11,8 @@ import {
 	vi,
 } from 'vitest'
 import { UnauthorizedError } from '@/core/errors'
-import { auth } from '@/lib/auth'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
+import { auth } from '@/lib/auth/auth'
+import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
 import { createAuthTestApp } from '@/test/create-auth-test-app'
 import { createDbChain } from '@/test/create-db-chain'
 import { makeAuthResponse } from '@/test/factories/make-auth-response'

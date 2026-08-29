@@ -9,9 +9,12 @@ import {
 	validatorCompiler,
 	type ZodTypeProvider,
 } from 'fastify-type-provider-zod'
-import { auth } from '@/lib/auth'
-import { registerErrorHandler } from '@/lib/register-error-handler'
-import { ensureAvatarsBucket, MAX_AVATAR_SIZE_BYTES } from '@/lib/storage'
+import { auth } from '@/lib/auth/auth'
+import { registerErrorHandler } from '@/lib/http/register-error-handler'
+import {
+	ensureAvatarsBucket,
+	MAX_AVATAR_SIZE_BYTES,
+} from '@/lib/storage/storage'
 import { authRoutes } from '@/modules/auth/auth-routes'
 import { classroomRoutes } from '@/modules/classrooms/classroom-routes'
 import { examRoutes } from '@/modules/exams/exam-routes'

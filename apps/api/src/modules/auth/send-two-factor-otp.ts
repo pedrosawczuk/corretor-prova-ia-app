@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { auth } from '@/lib/auth'
-import { forwardWebResponse, toFetchHeaders } from '@/lib/http-utils'
+import { auth } from '@/lib/auth/auth'
+import { forwardWebResponse, toFetchHeaders } from '@/lib/auth/http-utils'
 
 export async function sendTwoFactorOtpModule(
 	request: FastifyRequest,
