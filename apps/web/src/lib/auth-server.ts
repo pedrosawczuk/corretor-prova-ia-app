@@ -6,6 +6,7 @@ export interface AuthUser {
 	email: string
 	emailVerified: boolean
 	image?: string | null
+	phoneNumber?: string | null
 	createdAt: string
 	updatedAt: string
 }

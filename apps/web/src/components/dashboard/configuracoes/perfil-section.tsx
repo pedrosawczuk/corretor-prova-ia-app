@@ -23,6 +23,7 @@ import {
 	Camera,
 	Loader2,
 	Mail,
+	Phone,
 	Save,
 	ShieldAlert,
 	User,
@@ -47,6 +48,16 @@ function getInitials(name: string) {
 
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024
 
+function formatPhoneNumber(value: string) {
+	const digits = value.replace(/\D/g, '').slice(0, 11)
+
+	if (digits.length <= 2) return digits.replace(/^(\d*)/, '($1')
+	if (digits.length <= 6) return digits.replace(/^(\d{2})(\d*)/, '($1) $2')
+	if (digits.length <= 10)
+		return digits.replace(/^(\d{2})(\d{4})(\d*)/, '($1) $2-$3')
+	return digits.replace(/^(\d{2})(\d{5})(\d*)/, '($1) $2-$3')
+}
+
 export function PerfilSection({ user }: { user: AuthUser }) {
 	const router = useRouter()
 	const [isLoading, setIsLoading] = React.useState(false)
@@ -57,18 +68,20 @@ export function PerfilSection({ user }: { user: AuthUser }) {
 		resolver: zodResolver(updateProfileSchema),
 		defaultValues: {
 			name: user.name,
+			phoneNumber: user.phoneNumber ?? '',
 		},
 	})
 
 	async function onSubmit(data: UpdateProfileInput) {
-		if (data.name === user.name) return
-
 		setIsLoading(true)
 
 		try {
 			await apiClient('/auth/update-profile', {
 				method: 'POST',
-				body: JSON.stringify({ name: data.name }),
+				body: JSON.stringify({
+					name: data.name,
+					phoneNumber: data.phoneNumber || null,
+				}),
 			})
 
 			toast.success('Perfil atualizado com sucesso!')
@@ -239,6 +252,31 @@ export function PerfilSection({ user }: { user: AuthUser }) {
 								)}
 							</div>
 						</FormItem>
+
+						<FormField
+							control={form.control}
+							name="phoneNumber"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel leftIcon={<Phone className="size-3.5" />}>
+										Telefone (WhatsApp)
+									</FormLabel>
+									<FormControl>
+										<Input
+											placeholder="(11) 99999-9999"
+											inputMode="tel"
+											autoComplete="tel"
+											disabled={isLoading}
+											{...field}
+											onChange={(event) =>
+												field.onChange(formatPhoneNumber(event.target.value))
+											}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
 
 						<div className="flex justify-end pt-2">
 							<Button

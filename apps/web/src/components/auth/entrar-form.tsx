@@ -22,7 +22,7 @@ import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useGoogleAuth } from '@/hooks/use-google-auth'
-import { apiClient } from '@/lib/api-client'
+import { ApiError, apiClient } from '@/lib/api-client'
 import { applyApiErrorsToForm } from '@/lib/api-error-handler'
 import { GoogleIcon } from './google-icon'
 
@@ -64,6 +64,13 @@ export function EntrarForm() {
 			toast.success('Bem-vindo de volta ao Gabarita.app!')
 			router.push('/dashboard')
 		} catch (error) {
+			if (error instanceof ApiError && error.code === 'EMAIL_NOT_VERIFIED') {
+				router.push(
+					`/verificar-email?error=EMAIL_NOT_VERIFIED&email=${encodeURIComponent(data.email)}`,
+				)
+				return
+			}
+
 			applyApiErrorsToForm(
 				error,
 				form.setError,

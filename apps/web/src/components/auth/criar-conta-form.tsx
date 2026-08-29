@@ -14,9 +14,15 @@ import {
 	toast,
 } from '@app/ui'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowRight, Lock, Mail, User } from 'lucide-react'
+import {
+	ArrowLeft,
+	ArrowRight,
+	CheckCircle2,
+	Lock,
+	Mail,
+	User,
+} from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import type { z } from 'zod'
@@ -28,8 +34,10 @@ import { GoogleIcon } from './google-icon'
 type RegisterInput = z.infer<typeof signUpWithEmailSchema>
 
 export function CriarContaForm() {
-	const router = useRouter()
 	const [isLoading, setIsLoading] = React.useState(false)
+	const [registeredEmail, setRegisteredEmail] = React.useState<string | null>(
+		null,
+	)
 	const { isLoading: isGoogleLoading, signInWithGoogle } = useGoogleAuth({
 		startErrorMessage: 'Não foi possível iniciar o cadastro com o Google.',
 		successMessage: 'Cadastro realizado com sucesso via Google!',
@@ -57,8 +65,7 @@ export function CriarContaForm() {
 				}),
 			})
 
-			toast.success('Conta criada com sucesso! Bem-vindo ao Gabarita.app.')
-			router.push('/dashboard')
+			setRegisteredEmail(data.email)
 		} catch (error) {
 			applyApiErrorsToForm(
 				error,
@@ -68,6 +75,71 @@ export function CriarContaForm() {
 		} finally {
 			setIsLoading(false)
 		}
+	}
+
+	async function handleResend() {
+		if (!registeredEmail) return
+
+		setIsLoading(true)
+
+		try {
+			await apiClient('/auth/resend-verification-email', {
+				method: 'POST',
+				body: JSON.stringify({ email: registeredEmail }),
+			})
+
+			toast.success('E-mail de confirmação reenviado com sucesso.')
+		} catch (error) {
+			applyApiErrorsToForm(
+				error,
+				form.setError,
+				'Não foi possível reenviar o e-mail de confirmação. Tente novamente.',
+			)
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	if (registeredEmail) {
+		return (
+			<div className="w-full space-y-6 text-left">
+				<div className="size-12 rounded-2xl bg-success/10 text-success flex items-center justify-center">
+					<CheckCircle2 className="size-6" />
+				</div>
+
+				<div className="space-y-2">
+					<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+						Confirme seu e-mail
+					</h1>
+					<p className="text-sm text-muted-foreground leading-relaxed">
+						Sua conta foi criada! Enviamos um link de confirmação para{' '}
+						<strong className="text-foreground">{registeredEmail}</strong>. Abra
+						o e-mail e clique no link para ativar sua conta antes de entrar na
+						plataforma.
+					</p>
+				</div>
+
+				<div className="rounded-xl border border-border/60 bg-muted/40 p-4 text-xs text-muted-foreground leading-relaxed">
+					Não encontrou o e-mail? Confira também a caixa de spam ou{' '}
+					<button
+						type="button"
+						onClick={handleResend}
+						disabled={isLoading}
+						className="text-primary font-semibold hover:underline cursor-pointer disabled:opacity-50"
+					>
+						reenvie o link de confirmação
+					</button>
+					.
+				</div>
+
+				<Button variant="outline" fullWidth size="lg" asChild>
+					<Link href="/entrar">
+						<ArrowLeft />
+						Voltar para o login
+					</Link>
+				</Button>
+			</div>
+		)
 	}
 
 	return (

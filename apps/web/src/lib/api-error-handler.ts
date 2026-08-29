@@ -55,6 +55,13 @@ export function applyApiErrorsToForm<TFieldValues extends FieldValues>(
 		return
 	}
 
+	if (error.code === 'EMAIL_NOT_VERIFIED') {
+		toast.error(
+			'Você precisa confirmar seu e-mail antes de entrar. Verifique sua caixa de entrada.',
+		)
+		return
+	}
+
 	if (error.code === 'INVALID_CREDENTIALS') {
 		setError('email' as Path<TFieldValues>, {
 			type: 'manual',
