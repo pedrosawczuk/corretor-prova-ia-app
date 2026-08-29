@@ -4,6 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "tsx watch src/server.ts",
+		"db:seed": "tsx src/scripts/seed.ts",
 		"test": "vitest run",
 		"test:watch": "vitest"
 	},
