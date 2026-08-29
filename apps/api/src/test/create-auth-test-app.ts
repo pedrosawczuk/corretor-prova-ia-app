@@ -4,7 +4,7 @@ import {
 	validatorCompiler,
 	type ZodTypeProvider,
 } from 'fastify-type-provider-zod'
-import { registerErrorHandler } from '@/lib/register-error-handler'
+import { registerErrorHandler } from '@/lib/http/register-error-handler'
 import { authRoutes } from '@/modules/auth/auth-routes'
 
 export function createAuthTestApp() {

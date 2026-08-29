@@ -9,7 +9,8 @@ import {
 	it,
 	vi,
 } from 'vitest'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
+import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { getOrSetCache } from '@/lib/cache/redis'
 import { createDbChain } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
@@ -54,6 +55,19 @@ describe('GET /exams/:examId', () => {
 		expect(body).toEqual(expect.objectContaining({ id: exam.id }))
 		expect(body.questions).toHaveLength(1)
 		expect(body.questions[0].options).toHaveLength(1)
+	})
+
+	it('retorna a prova do cache sem consultar o banco quando há valor em cache', async () => {
+		const exam = makeExam({ creatorId: user.id })
+		vi.mocked(getOrSetCache).mockResolvedValueOnce({ ...exam, questions: [] })
+
+		const response = await app.inject({
+			method: 'GET',
+			url: `/exams/${exam.id}`,
+		})
+
+		expect(response.statusCode).toBe(200)
+		expect(db.select).not.toHaveBeenCalled()
 	})
 
 	it('retorna 404 quando a prova não existe', async () => {

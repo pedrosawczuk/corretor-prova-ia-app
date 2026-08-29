@@ -9,13 +9,15 @@ import {
 	it,
 	vi,
 } from 'vitest'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
+import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { invalidateCache } from '@/lib/cache/redis'
 import { createDbChain, createDbTransactionMock } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
 import { makeExam } from '@/test/factories/make-exam'
 import { makeQuestion } from '@/test/factories/make-question'
 import { makeQuestionOption } from '@/test/factories/make-question-option'
+import { examCacheKey, examListCacheKey } from './exam-cache'
 
 describe('PATCH /exams/:examId/questions/:questionId/correct-option', () => {
 	let app: FastifyInstance
@@ -85,6 +87,10 @@ describe('PATCH /exams/:examId/questions/:questionId/correct-option', () => {
 			}),
 		)
 		expect(response.json().options).toHaveLength(2)
+		expect(invalidateCache).toHaveBeenCalledWith(
+			examCacheKey(exam.id),
+			examListCacheKey(exam.classroomId),
+		)
 	})
 
 	it('retorna 404 quando a prova não pertence ao professor autenticado', async () => {

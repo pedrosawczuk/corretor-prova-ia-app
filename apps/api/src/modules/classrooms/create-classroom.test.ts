@@ -10,12 +10,14 @@ import {
 	vi,
 } from 'vitest'
 import { UnauthorizedError } from '@/core/errors'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
+import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { invalidateCache } from '@/lib/cache/redis'
 import { createDbChain } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
 import { makeClassroom } from '@/test/factories/make-classroom'
 import { makeClassroomInput } from '@/test/factories/make-classroom-input'
+import { classroomListCacheKey } from './classroom-cache'
 
 describe('POST /classrooms', () => {
 	let app: FastifyInstance
@@ -61,6 +63,7 @@ describe('POST /classrooms', () => {
 				subject: payload.subject,
 			}),
 		)
+		expect(invalidateCache).toHaveBeenCalledWith(classroomListCacheKey(user.id))
 	})
 
 	it('cria a turma sem descrição quando o campo não é informado', async () => {

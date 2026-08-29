@@ -14,10 +14,11 @@ import { invalidateCache } from '@/lib/cache/redis'
 import { createDbChain } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
-import { makeClassroom } from '@/test/factories/make-classroom'
-import { classroomCacheKey, classroomListCacheKey } from './classroom-cache'
+import { makeExam } from '@/test/factories/make-exam'
+import { makeQuestion } from '@/test/factories/make-question'
+import { examCacheKey, examListCacheKey } from './exam-cache'
 
-describe('DELETE /classrooms/:id', () => {
+describe('DELETE /exams/:examId/questions/:questionId', () => {
 	let app: FastifyInstance
 	const user = makeAuthenticatedUser()
 
@@ -34,54 +35,63 @@ describe('DELETE /classrooms/:id', () => {
 		vi.mocked(getAuthenticatedUser).mockResolvedValue(user as never)
 	})
 
-	it('exclui a turma quando ela pertence ao professor autenticado e retorna 204', async () => {
-		const existing = makeClassroom({ teacherId: user.id })
-		vi.mocked(db.select).mockReturnValue(createDbChain([existing]) as never)
+	it('exclui a questão da prova do professor autenticado e retorna 204', async () => {
+		const exam = makeExam({ creatorId: user.id })
+		const question = makeQuestion({ examId: exam.id })
+
+		vi.mocked(db.select)
+			.mockReturnValueOnce(createDbChain([exam]) as never)
+			.mockReturnValueOnce(createDbChain([question]) as never)
 		const deleteChain = createDbChain(undefined)
 		vi.mocked(db.delete).mockReturnValue(deleteChain as never)
 
 		const response = await app.inject({
 			method: 'DELETE',
-			url: `/classrooms/${existing.id}`,
+			url: `/exams/${exam.id}/questions/${question.id}`,
 		})
 
 		expect(response.statusCode).toBe(204)
 		expect(deleteChain.where).toHaveBeenCalled()
 		expect(invalidateCache).toHaveBeenCalledWith(
-			classroomCacheKey(existing.id),
-			classroomListCacheKey(user.id),
+			examCacheKey(exam.id),
+			examListCacheKey(exam.classroomId),
 		)
 	})
 
-	it('retorna 404 quando a turma não existe', async () => {
-		vi.mocked(db.select).mockReturnValue(createDbChain([]) as never)
+	it('retorna 404 quando a prova não pertence ao professor autenticado', async () => {
+		const exam = makeExam()
+		vi.mocked(db.select).mockReturnValueOnce(createDbChain([exam]) as never)
 
 		const response = await app.inject({
 			method: 'DELETE',
-			url: `/classrooms/${crypto.randomUUID()}`,
+			url: `/exams/${exam.id}/questions/${crypto.randomUUID()}`,
 		})
 
 		expect(response.statusCode).toBe(404)
 		expect(db.delete).not.toHaveBeenCalled()
 	})
 
-	it('retorna 404 quando a turma pertence a outro professor', async () => {
-		const existing = makeClassroom()
-		vi.mocked(db.select).mockReturnValue(createDbChain([existing]) as never)
+	it('retorna 404 quando a questão não pertence à prova', async () => {
+		const exam = makeExam({ creatorId: user.id })
+		const question = makeQuestion()
+
+		vi.mocked(db.select)
+			.mockReturnValueOnce(createDbChain([exam]) as never)
+			.mockReturnValueOnce(createDbChain([question]) as never)
 
 		const response = await app.inject({
 			method: 'DELETE',
-			url: `/classrooms/${existing.id}`,
+			url: `/exams/${exam.id}/questions/${question.id}`,
 		})
 
 		expect(response.statusCode).toBe(404)
 		expect(db.delete).not.toHaveBeenCalled()
 	})
 
-	it('retorna 400 quando o id não é um uuid válido', async () => {
+	it('retorna 400 quando os parâmetros de rota não são uuid válidos', async () => {
 		const response = await app.inject({
 			method: 'DELETE',
-			url: '/classrooms/id-invalido',
+			url: '/exams/id-invalido/questions/id-invalido',
 		})
 
 		expect(response.statusCode).toBe(400)

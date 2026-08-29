@@ -9,13 +9,15 @@ import {
 	it,
 	vi,
 } from 'vitest'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
+import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { invalidateCache } from '@/lib/cache/redis'
 import { createDbChain } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
 import { makeClassroom } from '@/test/factories/make-classroom'
 import { makeCreateExamInput } from '@/test/factories/make-create-exam-input'
 import { makeExam } from '@/test/factories/make-exam'
+import { examListCacheKey } from './exam-cache'
 
 describe('POST /exams', () => {
 	let app: FastifyInstance
@@ -69,6 +71,7 @@ describe('POST /exams', () => {
 				questions: [],
 			}),
 		)
+		expect(invalidateCache).toHaveBeenCalledWith(examListCacheKey(classroom.id))
 	})
 
 	it('retorna 404 quando a turma não existe', async () => {

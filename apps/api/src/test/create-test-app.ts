@@ -4,7 +4,7 @@ import {
 	validatorCompiler,
 	type ZodTypeProvider,
 } from 'fastify-type-provider-zod'
-import { registerErrorHandler } from '@/lib/register-error-handler'
+import { registerErrorHandler } from '@/lib/http/register-error-handler'
 import { classroomRoutes } from '@/modules/classrooms/classroom-routes'
 import { examRoutes } from '@/modules/exams/exam-routes'
 

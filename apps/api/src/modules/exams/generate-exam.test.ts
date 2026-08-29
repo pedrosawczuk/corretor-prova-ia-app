@@ -10,8 +10,9 @@ import {
 	vi,
 } from 'vitest'
 import { AiGenerationError } from '@/core/errors'
-import { generateExamQuestions } from '@/lib/gemini'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
+import { generateExamQuestions } from '@/lib/ai/gemini'
+import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { invalidateCache } from '@/lib/cache/redis'
 import { createDbChain, createDbTransactionMock } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
@@ -20,8 +21,9 @@ import { makeExam } from '@/test/factories/make-exam'
 import { makeGenerateExamInput } from '@/test/factories/make-generate-exam-input'
 import { makeQuestion } from '@/test/factories/make-question'
 import { makeQuestionOption } from '@/test/factories/make-question-option'
+import { examCacheKey, examListCacheKey } from './exam-cache'
 
-vi.mock('@/lib/gemini', () => ({
+vi.mock('@/lib/ai/gemini', () => ({
 	generateExamQuestions: vi.fn(),
 }))
 
@@ -119,6 +121,10 @@ describe('POST /exams/:examId/generate', () => {
 		expect(body.questions[0].options).toHaveLength(4)
 		expect(body.questions[0].options[1]).toEqual(
 			expect.objectContaining({ letter: 'B', isCorrect: true }),
+		)
+		expect(invalidateCache).toHaveBeenCalledWith(
+			examCacheKey(exam.id),
+			examListCacheKey(exam.classroomId),
 		)
 	})
 

@@ -9,8 +9,9 @@ import {
 	it,
 	vi,
 } from 'vitest'
-import { generateExamQuestions } from '@/lib/gemini'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
+import { generateExamQuestions } from '@/lib/ai/gemini'
+import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { invalidateCache } from '@/lib/cache/redis'
 import { createDbChain, createDbTransactionMock } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
@@ -18,8 +19,9 @@ import { makeClassroom } from '@/test/factories/make-classroom'
 import { makeExam } from '@/test/factories/make-exam'
 import { makeQuestion } from '@/test/factories/make-question'
 import { makeQuestionOption } from '@/test/factories/make-question-option'
+import { examCacheKey, examListCacheKey } from './exam-cache'
 
-vi.mock('@/lib/gemini', () => ({
+vi.mock('@/lib/ai/gemini', () => ({
 	generateExamQuestions: vi.fn(),
 }))
 
@@ -95,6 +97,10 @@ describe('POST /exams/:examId/questions/:questionId/regenerate', () => {
 			expect.objectContaining({ text: 'Alt A', isCorrect: true }),
 			expect.objectContaining({ text: 'Alt B', isCorrect: false }),
 		])
+		expect(invalidateCache).toHaveBeenCalledWith(
+			examCacheKey(exam.id),
+			examListCacheKey(exam.classroomId),
+		)
 	})
 
 	it('retorna 404 se a prova não for do usuário', async () => {

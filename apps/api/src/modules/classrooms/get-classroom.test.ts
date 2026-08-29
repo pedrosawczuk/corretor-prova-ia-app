@@ -9,7 +9,8 @@ import {
 	it,
 	vi,
 } from 'vitest'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
+import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { getOrSetCache } from '@/lib/cache/redis'
 import { createDbChain } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
@@ -45,6 +46,19 @@ describe('GET /classrooms/:id', () => {
 		expect(response.json()).toEqual(
 			expect.objectContaining({ id: classroom.id, name: classroom.name }),
 		)
+	})
+
+	it('retorna a turma do cache sem consultar o banco quando há valor em cache', async () => {
+		const classroom = makeClassroom({ teacherId: user.id })
+		vi.mocked(getOrSetCache).mockResolvedValueOnce(classroom)
+
+		const response = await app.inject({
+			method: 'GET',
+			url: `/classrooms/${classroom.id}`,
+		})
+
+		expect(response.statusCode).toBe(200)
+		expect(db.select).not.toHaveBeenCalled()
 	})
 
 	it('retorna 404 quando a turma não existe', async () => {

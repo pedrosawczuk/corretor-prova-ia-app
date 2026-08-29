@@ -9,7 +9,8 @@ import {
 	it,
 	vi,
 } from 'vitest'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
+import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { getOrSetCache } from '@/lib/cache/redis'
 import { createDbChain } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
@@ -55,6 +56,25 @@ describe('GET /exams', () => {
 		expect(body[0]).toEqual(
 			expect.objectContaining({ id: examA.id, questions: [] }),
 		)
+	})
+
+	it('retorna a lista do cache sem consultar provas quando há valor em cache', async () => {
+		const classroom = makeClassroom({ teacherId: user.id })
+		const exam = makeExam({ classroomId: classroom.id, creatorId: user.id })
+
+		vi.mocked(db.select).mockReturnValueOnce(
+			createDbChain([classroom]) as never,
+		)
+		vi.mocked(getOrSetCache).mockResolvedValueOnce([{ ...exam, questions: [] }])
+
+		const response = await app.inject({
+			method: 'GET',
+			url: `/exams?classroomId=${classroom.id}`,
+		})
+
+		expect(response.statusCode).toBe(200)
+		expect(response.json()).toHaveLength(1)
+		expect(db.select).toHaveBeenCalledTimes(1)
 	})
 
 	it('retorna 404 quando a turma não existe', async () => {

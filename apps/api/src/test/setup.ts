@@ -3,7 +3,7 @@ import {
 	sendNewLoginEmail,
 	sendPasswordResetEmail,
 	sendWelcomeEmail,
-} from '@/lib/mail'
+} from '@/lib/mail/mail'
 
 vi.mock('@app/db', () => ({
 	classroomsTable: {},
@@ -23,11 +23,11 @@ vi.mock('@app/db', () => ({
 	inArray: vi.fn(),
 }))
 
-vi.mock('@/lib/get-authenticated-user', () => ({
+vi.mock('@/lib/auth/get-authenticated-user', () => ({
 	getAuthenticatedUser: vi.fn(),
 }))
 
-vi.mock('@/lib/auth', () => ({
+vi.mock('@/lib/auth/auth', () => ({
 	auth: {
 		api: {
 			changePassword: vi.fn(),
@@ -51,10 +51,18 @@ vi.mock('@/lib/auth', () => ({
 	},
 }))
 
-vi.mock('@/lib/mail', () => ({
+vi.mock('@/lib/mail/mail', () => ({
 	sendNewLoginEmail: vi.fn().mockResolvedValue(undefined),
 	sendPasswordResetEmail: vi.fn().mockResolvedValue(undefined),
 	sendWelcomeEmail: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock('@/lib/cache/redis', () => ({
+	redis: { get: vi.fn(), set: vi.fn(), del: vi.fn(), on: vi.fn() },
+	getOrSetCache: vi.fn((_key: string, _ttl: number, fetcher: () => unknown) =>
+		fetcher(),
+	),
+	invalidateCache: vi.fn().mockResolvedValue(undefined),
 }))
 
 beforeEach(() => {

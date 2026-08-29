@@ -9,12 +9,14 @@ import {
 	it,
 	vi,
 } from 'vitest'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
+import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { invalidateCache } from '@/lib/cache/redis'
 import { createDbChain } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
 import { makeClassroom } from '@/test/factories/make-classroom'
 import { makeClassroomInput } from '@/test/factories/make-classroom-input'
+import { classroomCacheKey, classroomListCacheKey } from './classroom-cache'
 
 describe('PATCH /classrooms/:id', () => {
 	let app: FastifyInstance
@@ -59,6 +61,10 @@ describe('PATCH /classrooms/:id', () => {
 		)
 		expect(response.json()).toEqual(
 			expect.objectContaining({ id: existing.id, name: payload.name }),
+		)
+		expect(invalidateCache).toHaveBeenCalledWith(
+			classroomCacheKey(existing.id),
+			classroomListCacheKey(user.id),
 		)
 	})
 
