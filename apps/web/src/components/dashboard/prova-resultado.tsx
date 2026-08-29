@@ -2,6 +2,15 @@
 
 import type { Exam, Question } from '@app/shared'
 import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogMedia,
+	AlertDialogTitle,
 	Button,
 	Card,
 	CardContent,
@@ -72,6 +81,7 @@ function QuestionCard({ examId, question }: QuestionCardProps) {
 	const deleteQuestion = useDeleteQuestion(examId, question.id)
 
 	const [isEditing, setIsEditing] = React.useState(false)
+	const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false)
 	const [editStatement, setEditStatement] = React.useState(question.statement)
 	const [editOptions, setEditOptions] = React.useState(
 		question.options.map((o) => ({ id: o.id, text: o.text, letter: o.letter })),
@@ -133,16 +143,15 @@ function QuestionCard({ examId, question }: QuestionCardProps) {
 	}
 
 	function handleDelete() {
-		if (window.confirm('Tem certeza que deseja excluir esta questão?')) {
-			deleteQuestion.mutate(undefined, {
-				onSuccess: () => {
-					toast.success('Questão excluída.')
-				},
-				onError: (error) => {
-					toastApiError(error, 'Falha ao excluir questão.')
-				},
-			})
-		}
+		deleteQuestion.mutate(undefined, {
+			onSuccess: () => {
+				setShowDeleteConfirm(false)
+				toast.success('Questão excluída.')
+			},
+			onError: (error) => {
+				toastApiError(error, 'Falha ao excluir questão.')
+			},
+		})
 	}
 
 	const isProcessing =
@@ -209,7 +218,7 @@ function QuestionCard({ examId, question }: QuestionCardProps) {
 								variant="destructive"
 								size="icon"
 								className="h-8 w-8"
-								onClick={handleDelete}
+								onClick={() => setShowDeleteConfirm(true)}
 								title="Excluir"
 							>
 								<Trash2 className="size-4" />
@@ -309,6 +318,36 @@ function QuestionCard({ examId, question }: QuestionCardProps) {
 					)}
 				</div>
 			</CardContent>
+
+			<AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+				<AlertDialogContent>
+					<AlertDialogMedia variant="destructive">
+						<Trash2 />
+					</AlertDialogMedia>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Excluir esta questão?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Essa ação não pode ser desfeita. A questão e suas alternativas
+							serão removidas permanentemente da prova.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={deleteQuestion.isPending}>
+							Cancelar
+						</AlertDialogCancel>
+						<AlertDialogAction
+							variant="destructive"
+							disabled={deleteQuestion.isPending}
+							onClick={(event) => {
+								event.preventDefault()
+								handleDelete()
+							}}
+						>
+							{deleteQuestion.isPending ? 'Excluindo...' : 'Excluir questão'}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</Card>
 	)
 }
