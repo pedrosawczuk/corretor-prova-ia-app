@@ -8,7 +8,8 @@ import {
 import type { UpdateQuestionBody, UpdateQuestionParams } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { NotFoundError } from '@/core/errors'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
+import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { invalidateExamCache } from './exam-cache'
 
 export async function updateQuestionModule(
 	request: FastifyRequest<{
@@ -57,6 +58,8 @@ export async function updateQuestionModule(
 		.select()
 		.from(questionOptionsTable)
 		.where(eq(questionOptionsTable.questionId, questionId))
+
+	await invalidateExamCache(examId, exam.classroomId)
 
 	return reply.status(200).send({
 		id: question.id,

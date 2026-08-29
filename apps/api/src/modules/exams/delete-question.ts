@@ -2,7 +2,8 @@ import { db, eq, examsTable, questionsTable } from '@app/db'
 import type { UpdateQuestionParams } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { NotFoundError } from '@/core/errors'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
+import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { invalidateExamCache } from './exam-cache'
 
 export async function deleteQuestionModule(
 	request: FastifyRequest<{
@@ -32,6 +33,8 @@ export async function deleteQuestionModule(
 	}
 
 	await db.delete(questionsTable).where(eq(questionsTable.id, questionId))
+
+	await invalidateExamCache(examId, exam.classroomId)
 
 	return reply.status(204).send()
 }

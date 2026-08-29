@@ -7,7 +7,8 @@ import {
 } from '@app/db'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { NotFoundError } from '@/core/errors'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
+import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { invalidateExamCache } from './exam-cache'
 import type {
 	UpdateCorrectOptionBody,
 	UpdateCorrectOptionParams,
@@ -67,6 +68,8 @@ export async function updateCorrectOptionModule(
 		.select()
 		.from(questionOptionsTable)
 		.where(eq(questionOptionsTable.questionId, questionId))
+
+	await invalidateExamCache(examId, exam.classroomId)
 
 	return reply.status(200).send({
 		id: question.id,

@@ -9,8 +9,9 @@ import {
 import type { GenerateExamInput } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { NotFoundError } from '@/core/errors'
-import { generateExamQuestions } from '@/lib/gemini'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
+import { generateExamQuestions } from '@/lib/ai/gemini'
+import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { invalidateExamCache } from './exam-cache'
 import type { ExamParams } from './exam-params-schema'
 import { fetchExamDetail } from './fetch-exam-detail'
 
@@ -77,6 +78,8 @@ export async function generateExamModule(
 			.set({ totalPoints: questionCount.toFixed(2) })
 			.where(eq(examsTable.id, examId))
 	})
+
+	await invalidateExamCache(examId, exam.classroomId)
 
 	const updatedExam = await fetchExamDetail(examId)
 

@@ -2,7 +2,9 @@ import { classroomsTable, db, eq, examsTable } from '@app/db'
 import type { CreateExamInput } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { NotFoundError } from '@/core/errors'
-import { getAuthenticatedUser } from '@/lib/get-authenticated-user'
+import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { invalidateCache } from '@/lib/cache/redis'
+import { examListCacheKey } from './exam-cache'
 
 export async function createExamModule(
 	request: FastifyRequest<{ Body: CreateExamInput }>,
@@ -31,6 +33,8 @@ export async function createExamModule(
 			creatorId: user.id,
 		})
 		.returning()
+
+	await invalidateCache(examListCacheKey(classroomId))
 
 	return reply.status(201).send({ ...exam, questions: [] })
 }
