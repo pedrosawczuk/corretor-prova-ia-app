@@ -6,6 +6,8 @@ const AUTH_ROUTES = [
 	'/criar-conta',
 	'/recuperar-senha',
 	'/redefinir-senha',
+	'/verificar-email',
+	'/erro-autenticacao',
 ]
 const PUBLIC_INFORMATIVE_ROUTES = ['/', '/privacidade', '/termos', '/sair']
 

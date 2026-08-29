@@ -47,6 +47,9 @@ export const auth = betterAuth({
 			},
 		},
 	},
+	onAPIError: {
+		errorURL: `${env.WEB_URL}/erro-autenticacao`,
+	},
 	socialProviders: {
 		google: {
 			clientId: env.GOOGLE_CLIENT_ID || '',
