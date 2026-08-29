@@ -37,6 +37,7 @@ import type {
 	ValueType,
 } from 'recharts/types/component/DefaultTooltipContent'
 import { type Classroom, useClassrooms } from '@/hooks/use-classrooms'
+import { useExamsCounts } from '@/hooks/use-exams'
 import { formatRelativeDate } from '@/lib/date'
 
 const GROWTH_MONTHS = 6
@@ -111,6 +112,13 @@ export function DashboardOverview() {
 	const totalTurmas = classrooms?.length ?? 0
 	const totalMaterias = new Set((classrooms ?? []).map((c) => c.subject)).size
 
+	const classroomIds = React.useMemo(
+		() => (classrooms ?? []).map((c) => c.id),
+		[classrooms],
+	)
+	const { total: totalProvas, isLoading: isProvasLoading } =
+		useExamsCounts(classroomIds)
+
 	if (isError) {
 		return (
 			<div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
@@ -171,18 +179,17 @@ export function DashboardOverview() {
 
 				<Card>
 					<CardContent className="flex items-center gap-3 pt-4 sm:pt-6">
-						<div className="size-10 rounded-xl bg-muted text-muted-foreground flex items-center justify-center shrink-0">
+						<div className="size-10 rounded-xl bg-success/10 text-success flex items-center justify-center shrink-0">
 							<FileText className="size-5" />
 						</div>
 						<div>
-							<div className="flex items-center gap-2">
+							{isLoading || isProvasLoading ? (
+								<Skeleton className="h-7 w-10" />
+							) : (
 								<p className="text-2xl font-bold tracking-tight text-foreground">
-									0
+									{totalProvas}
 								</p>
-								<Badge variant="subtle" size="sm">
-									Em breve
-								</Badge>
-							</div>
+							)}
 							<p className="text-xs text-muted-foreground">Provas</p>
 						</div>
 					</CardContent>
@@ -368,7 +375,7 @@ export function DashboardOverview() {
 									href={`/dashboard/turmas/${classroom.id}`}
 								>
 									<Card variant="subtle" interactive className="h-full">
-										<CardContent className="flex flex-col gap-2">
+										<CardContent className="flex flex-col gap-2 pt-4 sm:pt-6">
 											<div className="flex items-center justify-between gap-2">
 												<div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
 													<Users className="size-4" />

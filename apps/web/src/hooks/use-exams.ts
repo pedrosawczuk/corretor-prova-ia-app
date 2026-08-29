@@ -6,7 +6,12 @@ import type {
 	RegenerateQuestionBody,
 	UpdateQuestionBody,
 } from '@app/shared'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+	useMutation,
+	useQueries,
+	useQuery,
+	useQueryClient,
+} from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 
 const examsKeys = {
@@ -20,6 +25,21 @@ export function useExams(classroomId: string) {
 		queryFn: () => apiClient<Exam[]>(`/exams?classroomId=${classroomId}`),
 		enabled: Boolean(classroomId),
 	})
+}
+
+export function useExamsCounts(classroomIds: string[]) {
+	const queries = useQueries({
+		queries: classroomIds.map((classroomId) => ({
+			queryKey: examsKeys.list(classroomId),
+			queryFn: () => apiClient<Exam[]>(`/exams?classroomId=${classroomId}`),
+			enabled: Boolean(classroomId),
+		})),
+	})
+
+	return {
+		total: queries.reduce((sum, query) => sum + (query.data?.length ?? 0), 0),
+		isLoading: queries.some((query) => query.isLoading),
+	}
 }
 
 export function useExam(examId: string) {
