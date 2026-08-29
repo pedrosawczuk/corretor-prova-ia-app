@@ -11,7 +11,9 @@
 	},
 	"scripts": {
 		"storybook": "storybook dev -p 6006",
-		"build-storybook": "storybook build"
+		"build-storybook": "storybook build",
+		"test": "vitest run",
+		"test:watch": "vitest"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^5.9.1",
@@ -53,14 +55,20 @@
 		"@storybook/test": "^8.6.4",
 		"@tailwindcss/postcss": "^4.3.3",
 		"@tailwindcss/vite": "^4.3.3",
+		"@testing-library/jest-dom": "^6.9.1",
+		"@testing-library/react": "^16.3.0",
+		"@testing-library/user-event": "^14.6.1",
 		"@types/node": "^26.2.0",
 		"@types/react": "^19.2.18",
 		"@types/react-dom": "^19.2.5",
+		"@vitejs/plugin-react": "^4.4.1",
+		"jsdom": "^26.1.0",
 		"react": "^19.2.8",
 		"react-dom": "^19.2.8",
 		"storybook": "^8.6.4",
 		"tailwindcss": "^4.3.3",
 		"typescript": "^7.0.2",
-		"vite": "^6.2.1"
+		"vite": "^6.2.1",
+		"vitest": "^4.1.11"
 	}
 }
