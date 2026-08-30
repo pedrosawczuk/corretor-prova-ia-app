@@ -1,6 +1,14 @@
 import { db } from '@app/db'
 import type { FastifyInstance } from 'fastify'
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+	afterAll,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from 'vitest'
 import { getAuthenticatedAdmin } from '@/lib/auth/get-authenticated-admin'
 import { createDbChain } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
@@ -44,7 +52,10 @@ describe('PATCH /admin/subjects/:id', () => {
 
 		expect(response.statusCode).toBe(200)
 		expect(updateChain.set).toHaveBeenCalledWith(
-			expect.objectContaining({ name: payload.name, updatedAt: expect.any(Date) }),
+			expect.objectContaining({
+				name: payload.name,
+				updatedAt: expect.any(Date),
+			}),
 		)
 	})
 

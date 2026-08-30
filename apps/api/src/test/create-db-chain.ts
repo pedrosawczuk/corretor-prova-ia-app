@@ -7,6 +7,9 @@ const CHAIN_METHODS = [
 	'values',
 	'set',
 	'returning',
+	'innerJoin',
+	'limit',
+	'offset',
 ] as const
 
 export function createDbChain(result: unknown) {

@@ -28,7 +28,10 @@ export function CriarDisciplinaDialog() {
 				setOpen(false)
 			},
 			onError: (error) => {
-				toastApiError(error, 'Não foi possível criar a disciplina. Tente novamente.')
+				toastApiError(
+					error,
+					'Não foi possível criar a disciplina. Tente novamente.',
+				)
 			},
 		})
 	}
@@ -48,8 +51,8 @@ export function CriarDisciplinaDialog() {
 						Criar nova disciplina
 					</DialogTitle>
 					<DialogDescription>
-						Disciplinas ficam disponíveis para todos os professores
-						organizarem suas turmas.
+						Disciplinas ficam disponíveis para todos os professores organizarem
+						suas turmas.
 					</DialogDescription>
 				</DialogHeader>
 

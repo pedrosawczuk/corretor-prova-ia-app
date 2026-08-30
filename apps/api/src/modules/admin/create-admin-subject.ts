@@ -20,10 +20,7 @@ export async function createAdminSubjectModule(
 		throw new ConflictError('Já existe uma disciplina com esse nome.')
 	}
 
-	const [subject] = await db
-		.insert(subjectsTable)
-		.values({ name })
-		.returning()
+	const [subject] = await db.insert(subjectsTable).values({ name }).returning()
 
 	return reply.status(201).send(subject)
 }

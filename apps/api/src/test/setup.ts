@@ -10,6 +10,7 @@ vi.mock('@app/db', () => ({
 	examsTable: {},
 	questionsTable: {},
 	questionOptionsTable: {},
+	subjectsTable: {},
 	user: {},
 	db: {
 		delete: vi.fn(),
@@ -18,6 +19,8 @@ vi.mock('@app/db', () => ({
 		transaction: vi.fn(),
 		update: vi.fn(),
 	},
+	asc: vi.fn(),
+	count: vi.fn(),
 	desc: vi.fn(),
 	eq: vi.fn(),
 	inArray: vi.fn(),
@@ -26,6 +29,10 @@ vi.mock('@app/db', () => ({
 
 vi.mock('@/lib/auth/get-authenticated-user', () => ({
 	getAuthenticatedUser: vi.fn(),
+}))
+
+vi.mock('@/lib/auth/get-authenticated-admin', () => ({
+	getAuthenticatedAdmin: vi.fn(),
 }))
 
 vi.mock('@/lib/auth/auth', () => ({

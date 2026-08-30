@@ -5,9 +5,6 @@ import { ApiError } from './api-client'
 const CONNECTION_ERROR_MESSAGE =
 	'Não foi possível conectar ao servidor. Verifique sua conexão.'
 
-// better-auth returns these error messages in English. Map the codes we
-// actually surface to the user to a pt-br message instead of showing the
-// raw upstream text.
 const KNOWN_ERROR_CODE_MESSAGES: Record<string, string> = {
 	INVALID_PASSWORD: 'Senha atual incorreta.',
 	INVALID_CODE: 'Código inválido. Tente novamente.',

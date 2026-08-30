@@ -57,10 +57,19 @@ export const env = envSchema.parse(process.env)
 - Não usamos comentários para explicar o que o código faz. Se o código precisa de explicação, o nome das funções/variáveis deve ser refatorado ou a lógica dividida.
 - **Única exceção permitida:** `// TODO:` e `// FIXME:` para marcar pendências técnicas conhecidas.
 
+> ⚠️ **REGRA CRÍTICA — Nunca usar `biome-ignore`**
+>
+> Suprimir um erro de lint com `biome-ignore` esconde o problema em vez de resolvê-lo. Se o Biome aponta algo, a causa raiz deve ser corrigida (trocar `<img>` por `<Image unoptimized />`, gerar chaves estáveis em vez de usar o índice do array, etc.). Nenhum PR deve introduzir `biome-ignore`, independentemente da regra apontada.
+>
+> ⚠️ **REGRA CRÍTICA — Nunca escrever comentários explicativos**
+>
+> Reforçando o ponto acima: comentários do tipo `// isso faz X` nunca devem ser adicionados, nem como atalho para justificar um `biome-ignore` nem em qualquer outro contexto.
+
 ---
 
 ## 5. O que este projeto explicitamente NÃO faz (Regras Gerais)
 
+- Não usamos `biome-ignore` em nenhuma hipótese — corrigimos a causa raiz do lint.
 - Não usamos `any` nem `unknown` para tipar dados.
 - Não usamos `moment.js` — usar `day.js` apenas.
 - Não usamos `export default` (exceto em arquivos obrigatórios do Next.js como `page.tsx` e `layout.tsx`).

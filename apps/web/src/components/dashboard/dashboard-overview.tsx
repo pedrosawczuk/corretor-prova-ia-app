@@ -61,8 +61,7 @@ export function DashboardOverview() {
 	)
 
 	const totalTurmas = classrooms?.length ?? 0
-	const totalMaterias = new Set((classrooms ?? []).map((c) => c.subjectId))
-		.size
+	const totalMaterias = new Set((classrooms ?? []).map((c) => c.subjectId)).size
 
 	const classroomIds = React.useMemo(
 		() => (classrooms ?? []).map((c) => c.id),

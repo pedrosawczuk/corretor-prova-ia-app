@@ -1,6 +1,14 @@
 import { db } from '@app/db'
 import type { FastifyInstance } from 'fastify'
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+	afterAll,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from 'vitest'
 import { getAuthenticatedAdmin } from '@/lib/auth/get-authenticated-admin'
 import { createDbChain } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'

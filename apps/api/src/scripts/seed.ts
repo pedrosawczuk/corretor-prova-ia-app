@@ -7,6 +7,7 @@ import {
 	examsTable,
 	questionOptionsTable,
 	questionsTable,
+	subjectsTable,
 	user as userTable,
 } from '@app/db'
 import { env } from '@app/env'
@@ -15,16 +16,6 @@ import { hashPassword } from 'better-auth/crypto'
 
 const CREDENTIAL_ISSUER = 'local:credential'
 const SEED_PASSWORD = 'teste123@'
-
-const SUBJECTS = [
-	'Matemática',
-	'Português',
-	'História',
-	'Geografia',
-	'Física',
-	'Química',
-	'Biologia',
-]
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D']
 const QUESTION_TYPES = ['multiple_choice', 'true_false'] as const
@@ -86,12 +77,12 @@ async function seedTeacher() {
 	return { id: userId, name, email }
 }
 
-async function seedClassroom(teacherId: string) {
+async function seedClassroom(teacherId: string, subjectIds: string[]) {
 	const [classroom] = await db
 		.insert(classroomsTable)
 		.values({
 			name: `Turma ${faker.string.alpha({ length: 1, casing: 'upper' })} - ${faker.word.noun()}`,
-			subject: faker.helpers.arrayElement(SUBJECTS),
+			subjectId: faker.helpers.arrayElement(subjectIds),
 			description: faker.lorem.sentence(),
 			teacherId,
 		})
@@ -153,6 +144,16 @@ async function seed() {
 	const createdTeachers: { name: string; email: string }[] = []
 
 	try {
+		const subjects = await db.select().from(subjectsTable)
+		const subjectIds = subjects.map((subject) => subject.id)
+
+		if (subjectIds.length === 0) {
+			console.error(
+				'❌ Nenhuma disciplina cadastrada. Rode as migrations antes do seed.',
+			)
+			process.exit(1)
+		}
+
 		const teacherCount = faker.number.int({ min: 3, max: 6 })
 
 		for (let i = 0; i < teacherCount; i++) {
@@ -161,7 +162,7 @@ async function seed() {
 
 			const classroomCount = faker.number.int({ min: 1, max: 4 })
 			for (let c = 0; c < classroomCount; c++) {
-				const classroom = await seedClassroom(teacher.id)
+				const classroom = await seedClassroom(teacher.id, subjectIds)
 
 				const examCount = faker.number.int({ min: 1, max: 3 })
 				for (let e = 0; e < examCount; e++) {
