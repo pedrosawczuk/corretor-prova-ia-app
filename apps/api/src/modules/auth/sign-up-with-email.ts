@@ -31,6 +31,13 @@ export async function signUpWithEmailModule(
 
 	forwardWebResponse(response, reply)
 
-	const data = await response.json()
+	const data = (await response.json()) as {
+		user?: { id: string; email: string }
+	}
+
+	if (data.user?.id && data.user?.email) {
+		request.currentUser = { id: data.user.id, email: data.user.email }
+	}
+
 	return reply.status(response.status).send(data)
 }

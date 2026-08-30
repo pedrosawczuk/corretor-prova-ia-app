@@ -19,7 +19,10 @@ export const updateQuestionBodySchema = z.strictObject({
 					.string()
 					.trim()
 					.min(1, 'O texto da alternativa não pode ser vazio.')
-					.max(500, 'O texto da alternativa deve ter no máximo 500 caracteres.'),
+					.max(
+						500,
+						'O texto da alternativa deve ter no máximo 500 caracteres.',
+					),
 			}),
 		)
 		.min(2, 'A questão deve ter pelo menos 2 alternativas.')

@@ -114,7 +114,8 @@ const Slider = React.forwardRef<
 			? currentValues
 			: [currentValues]
 		const thumbIds = React.useMemo(
-			() => Array.from({ length: valuesArray.length }, () => crypto.randomUUID()),
+			() =>
+				Array.from({ length: valuesArray.length }, () => crypto.randomUUID()),
 			[valuesArray.length],
 		)
 

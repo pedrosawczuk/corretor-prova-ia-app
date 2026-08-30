@@ -17,6 +17,9 @@ export async function uploadAvatarModule(
 	const session = await auth.api.getSession({ headers })
 	if (!session) throw new UnauthorizedError()
 
+	request.currentUser = { id: session.user.id, email: session.user.email }
+	request.currentSessionId = session.session.id
+
 	const file = await request.file().catch((error) => {
 		if (error.code === 'FST_REQ_FILE_TOO_LARGE') {
 			throw new BadRequestError('A imagem deve ter no máximo 5MB.')

@@ -14,7 +14,7 @@ import {
 	verifyTotpSchema,
 	verifyTwoFactorOtpSchema,
 } from '@app/shared'
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, RouteShorthandOptions } from 'fastify'
 import { deleteAccountModule } from './delete-account'
 import { disableTwoFactorModule } from './disable-two-factor'
 import { enableTwoFactorModule } from './enable-two-factor'
@@ -36,13 +36,16 @@ import { verifyEmailModule } from './verify-email'
 import { verifyTotpModule } from './verify-totp'
 import { verifyTwoFactorOtpModule } from './verify-two-factor-otp'
 
+function strictRateLimit(max: number): RouteShorthandOptions['config'] {
+	return { rateLimit: { max, timeWindow: '1 minute', ban: 3 } }
+}
+
 export function authRoutes(app: FastifyInstance) {
 	app.post(
 		'/sign-up',
 		{
-			schema: {
-				body: signUpWithEmailSchema,
-			},
+			schema: { body: signUpWithEmailSchema },
+			config: strictRateLimit(5),
 		},
 		signUpWithEmailModule,
 	)
@@ -50,9 +53,8 @@ export function authRoutes(app: FastifyInstance) {
 	app.post(
 		'/sign-in',
 		{
-			schema: {
-				body: signInWithEmailSchema,
-			},
+			schema: { body: signInWithEmailSchema },
+			config: strictRateLimit(8),
 		},
 		signInWithEmailModule,
 	)
@@ -60,9 +62,8 @@ export function authRoutes(app: FastifyInstance) {
 	app.post(
 		'/sign-in/social',
 		{
-			schema: {
-				body: signInWithSocialSchema,
-			},
+			schema: { body: signInWithSocialSchema },
+			config: strictRateLimit(15),
 		},
 		signInWithSocialModule,
 	)
@@ -70,9 +71,8 @@ export function authRoutes(app: FastifyInstance) {
 	app.post(
 		'/forgot-password',
 		{
-			schema: {
-				body: forgotPasswordSchema,
-			},
+			schema: { body: forgotPasswordSchema },
+			config: strictRateLimit(5),
 		},
 		forgotPasswordModule,
 	)
@@ -80,9 +80,8 @@ export function authRoutes(app: FastifyInstance) {
 	app.post(
 		'/reset-password',
 		{
-			schema: {
-				body: resetPasswordSchema,
-			},
+			schema: { body: resetPasswordSchema },
+			config: strictRateLimit(8),
 		},
 		resetPasswordModule,
 	)
@@ -92,21 +91,22 @@ export function authRoutes(app: FastifyInstance) {
 	app.post(
 		'/update-profile',
 		{
-			schema: {
-				body: updateProfileSchema,
-			},
+			schema: { body: updateProfileSchema },
 		},
 		updateProfileModule,
 	)
 
-	app.post('/upload-avatar', uploadAvatarModule)
+	app.post(
+		'/upload-avatar',
+		{ config: strictRateLimit(15) },
+		uploadAvatarModule,
+	)
 
 	app.post(
 		'/update-password',
 		{
-			schema: {
-				body: updatePasswordSchema,
-			},
+			schema: { body: updatePasswordSchema },
+			config: strictRateLimit(5),
 		},
 		updatePasswordModule,
 	)
@@ -114,9 +114,7 @@ export function authRoutes(app: FastifyInstance) {
 	app.post(
 		'/revoke-session',
 		{
-			schema: {
-				body: revokeSessionSchema,
-			},
+			schema: { body: revokeSessionSchema },
 		},
 		revokeSessionModule,
 	)
@@ -126,9 +124,8 @@ export function authRoutes(app: FastifyInstance) {
 	app.post(
 		'/resend-verification-email',
 		{
-			schema: {
-				body: resendVerificationEmailSchema,
-			},
+			schema: { body: resendVerificationEmailSchema },
+			config: strictRateLimit(3),
 		},
 		resendVerificationEmailModule,
 	)
@@ -136,9 +133,8 @@ export function authRoutes(app: FastifyInstance) {
 	app.get(
 		'/verify-email',
 		{
-			schema: {
-				querystring: verifyEmailQuerySchema,
-			},
+			schema: { querystring: verifyEmailQuerySchema },
+			config: strictRateLimit(15),
 		},
 		verifyEmailModule,
 	)
@@ -146,9 +142,8 @@ export function authRoutes(app: FastifyInstance) {
 	app.post(
 		'/two-factor/enable',
 		{
-			schema: {
-				body: enableTwoFactorSchema,
-			},
+			schema: { body: enableTwoFactorSchema },
+			config: strictRateLimit(5),
 		},
 		enableTwoFactorModule,
 	)
@@ -156,9 +151,8 @@ export function authRoutes(app: FastifyInstance) {
 	app.post(
 		'/two-factor/disable',
 		{
-			schema: {
-				body: disableTwoFactorSchema,
-			},
+			schema: { body: disableTwoFactorSchema },
+			config: strictRateLimit(5),
 		},
 		disableTwoFactorModule,
 	)
@@ -166,21 +160,23 @@ export function authRoutes(app: FastifyInstance) {
 	app.post(
 		'/two-factor/verify-totp',
 		{
-			schema: {
-				body: verifyTotpSchema,
-			},
+			schema: { body: verifyTotpSchema },
+			config: strictRateLimit(5),
 		},
 		verifyTotpModule,
 	)
 
-	app.post('/two-factor/send-otp', sendTwoFactorOtpModule)
+	app.post(
+		'/two-factor/send-otp',
+		{ config: strictRateLimit(3) },
+		sendTwoFactorOtpModule,
+	)
 
 	app.post(
 		'/two-factor/verify-otp',
 		{
-			schema: {
-				body: verifyTwoFactorOtpSchema,
-			},
+			schema: { body: verifyTwoFactorOtpSchema },
+			config: strictRateLimit(5),
 		},
 		verifyTwoFactorOtpModule,
 	)
@@ -188,9 +184,8 @@ export function authRoutes(app: FastifyInstance) {
 	app.post(
 		'/delete-account',
 		{
-			schema: {
-				body: deleteAccountSchema,
-			},
+			schema: { body: deleteAccountSchema },
+			config: strictRateLimit(3),
 		},
 		deleteAccountModule,
 	)

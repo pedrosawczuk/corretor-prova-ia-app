@@ -13,10 +13,6 @@ import { env } from '@app/env'
 import { faker } from '@faker-js/faker'
 import { hashPassword } from 'better-auth/crypto'
 
-/**
- * `local:credential` matches better-auth's `createLocalAccountIssuer('credential')`
- * (@better-auth/core/db) — the synthetic issuer it stamps on password accounts.
- */
 const CREDENTIAL_ISSUER = 'local:credential'
 const SEED_PASSWORD = 'teste123@'
 

@@ -13,8 +13,6 @@ export default defineConfig({
 		environment: 'jsdom',
 		include: ['src/**/*.test.{ts,tsx}'],
 		setupFiles: ['./src/test/setup.ts'],
-		// Forking a child process hangs in some sandboxed shells (CI containers,
-		// restricted dev environments); worker threads don't need that syscall.
 		pool: 'threads',
 	},
 })

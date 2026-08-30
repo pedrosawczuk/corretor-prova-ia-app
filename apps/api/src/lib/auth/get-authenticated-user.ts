@@ -14,5 +14,8 @@ export async function getAuthenticatedUser(request: FastifyRequest) {
 		)
 	}
 
+	request.currentUser = { id: session.user.id, email: session.user.email }
+	request.currentSessionId = session.session.id
+
 	return session.user
 }

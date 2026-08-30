@@ -10,20 +10,14 @@ const CHAIN_METHODS = [
 ] as const
 
 export function createDbChain(result: unknown) {
-	const chain: Record<string, unknown> = {}
+	const chain = Object.assign(
+		Promise.resolve(result),
+		{} as Record<string, unknown>,
+	)
 
 	for (const method of CHAIN_METHODS) {
 		chain[method] = vi.fn(() => chain)
 	}
-
-	// biome-ignore lint/suspicious/noThenProperty: Drizzle query chain is thenable
-	chain.then = (
-		onFulfilled: (value: unknown) => unknown,
-		onRejected?: (reason: unknown) => unknown,
-	) => Promise.resolve(result).then(onFulfilled, onRejected)
-
-	chain.catch = (onRejected: (reason: unknown) => unknown) =>
-		Promise.resolve(result).catch(onRejected)
 
 	return chain
 }

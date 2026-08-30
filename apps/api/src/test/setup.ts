@@ -21,6 +21,7 @@ vi.mock('@app/db', () => ({
 	desc: vi.fn(),
 	eq: vi.fn(),
 	inArray: vi.fn(),
+	sql: vi.fn(),
 }))
 
 vi.mock('@/lib/auth/get-authenticated-user', () => ({

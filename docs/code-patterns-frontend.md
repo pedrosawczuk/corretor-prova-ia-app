@@ -156,7 +156,45 @@ export const config = {
 
 ---
 
-## 9. O que este projeto explicitamente NÃO faz (Frontend)
+## 9. Organização de Componentes e Responsabilidade Única
+
+- **Regra de Ouro:** Um arquivo `.tsx` de componente contém **apenas** o componente (JSX + estado + handlers que chamam outras funções). Ele não é o lugar para funções puras (cálculo, formatação, agrupamento de dados) nem para subcomponentes de apresentação genéricos.
+- **Colocation de helpers (`*.utils.ts`):** Funções puras usadas só por aquele componente vivem em um arquivo irmão `nome-do-componente.utils.ts`, no mesmo diretório. O componente importa dali.
+- **Subcomponentes de apresentação:** Um pedaço de UI reaproveitável dentro de uma página (ex: um card de estatística, um item de lista) vira seu próprio arquivo de componente — nunca uma função declarada dentro do arquivo principal.
+- **Nunca duplicar entre arquivos:** Se a mesma função ou subcomponente (ex: um tooltip de gráfico) aparece em mais de uma tela, ele sai dos dois arquivos e vira um componente/util compartilhado (ex: `components/charts/chart-tooltip.tsx`).
+- **Teste rápido:** ao abrir um `.tsx`, se existe um `function algumaCoisa(...)` que não retorna JSX do componente principal, essa função pertence a um `.utils.ts` ao lado.
+
+```
+components/admin/
+  admin-activity-charts.tsx        # só o componente (JSX, estado, hooks)
+  admin-activity-charts.utils.ts   # buildLoginsPerDay, outcomeBadgeVariant, constantes
+  stat-card.tsx                    # subcomponente de apresentação, próprio arquivo
+
+components/charts/
+  chart-tooltip.tsx                # tooltip de gráfico compartilhado entre várias telas
+```
+
+```typescript
+// admin-activity-charts.utils.ts — função pura, sem JSX
+export function buildLoginsPerDay(createdAtDates: string[]) {
+  // agrupa por dia e retorna os dados prontos para o gráfico
+}
+```
+
+```typescript
+// admin-activity-charts.tsx — só o componente
+import { buildLoginsPerDay } from './admin-activity-charts.utils'
+import { ChartTooltip } from '@/components/charts/chart-tooltip'
+
+export function AdminActivityCharts() {
+  const loginsPerDay = React.useMemo(() => buildLoginsPerDay(dates), [dates])
+  // ...
+}
+```
+
+---
+
+## 10. O que este projeto explicitamente NÃO faz (Frontend)
 
 - Não usamos `'use client'` em páginas ou layouts inteiros sem necessidade.
 - Não controlamos formulários com múltiplos `useState` manuais — sempre React Hook Form + Zod.
@@ -167,3 +205,5 @@ export const config = {
 - Não misturamos bibliotecas de ícones — usar estritamente `lucide-react`.
 - Não criamos componentes primitivos de design system fora de `packages/ui`.
 - Não usamos Context API para gerenciar estados globais com mutações frequentes — usamos `zustand`.
+- Não deixamos funções puras (helpers, formatadores, builders de dados de gráfico) declaradas dentro do arquivo do componente — elas vão para um `*.utils.ts` colocado ao lado.
+- Não duplicamos subcomponentes de apresentação genéricos (ex: tooltip de gráfico, card de estatística) entre arquivos — extraímos para um componente compartilhado ou colocado.

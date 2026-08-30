@@ -10,11 +10,6 @@ redis.on('error', (error) => {
 	console.error('[redis] connection error:', error.message)
 })
 
-/**
- * Cache-aside: retorna o valor em cache se existir; caso contrário, executa
- * `fetcher`, grava o resultado no cache com TTL e retorna. Falhas no Redis
- * nunca derrubam a requisição — o fetcher (DB) é usado como fallback.
- */
 export async function getOrSetCache<T>(
 	key: string,
 	ttlSeconds: number,
