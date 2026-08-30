@@ -2,10 +2,15 @@ import { MonitorSmartphone, ShieldCheck, Trash2, UserRound } from 'lucide-react'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { DeletarContaSection } from '@/components/dashboard/configuracoes/deletar-conta-section'
+import { DoisFatoresSection } from '@/components/dashboard/configuracoes/dois-fatores-section'
 import { PerfilSection } from '@/components/dashboard/configuracoes/perfil-section'
 import { SegurancaSection } from '@/components/dashboard/configuracoes/seguranca-section'
 import { SessoesSection } from '@/components/dashboard/configuracoes/sessoes-section'
-import { getAuthSession, getAuthSessionsList } from '@/lib/auth-server'
+import {
+	getAuthAccountsList,
+	getAuthSession,
+	getAuthSessionsList,
+} from '@/lib/auth-server'
 
 export const metadata: Metadata = {
 	title: 'Configurações — Gabarita.app',
@@ -19,14 +24,24 @@ const NAV_ITEMS = [
 	{ id: 'deletar-conta', label: 'Deletar Conta', icon: Trash2 },
 ]
 
-export default async function ConfiguracoesPage() {
+interface ConfiguracoesPageProps {
+	searchParams: Promise<{ 'ativar-2fa'?: string }>
+}
+
+export default async function ConfiguracoesPage({
+	searchParams,
+}: ConfiguracoesPageProps) {
 	const authSession = await getAuthSession()
 
 	if (!authSession) {
 		redirect('/entrar')
 	}
 
+	const { 'ativar-2fa': ativar2fa } = await searchParams
 	const sessions = await getAuthSessionsList()
+	const accounts = await getAuthAccountsList()
+	const hasPassword =
+		accounts?.some((account) => account.providerId === 'credential') ?? true
 
 	return (
 		<div className="flex flex-1 flex-col gap-6 p-6 bg-muted/20">
@@ -71,8 +86,13 @@ export default async function ConfiguracoesPage() {
 						<PerfilSection user={authSession.user} />
 					</section>
 
-					<section id="seguranca" className="scroll-mt-6">
+					<section id="seguranca" className="scroll-mt-6 flex flex-col gap-4">
 						<SegurancaSection />
+						<DoisFatoresSection
+							initialEnabled={Boolean(authSession.user.twoFactorEnabled)}
+							highlightAdminRequirement={ativar2fa === 'admin'}
+							hasPassword={hasPassword}
+						/>
 					</section>
 
 					<section id="sessoes" className="scroll-mt-6">
