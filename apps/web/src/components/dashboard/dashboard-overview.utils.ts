@@ -4,11 +4,15 @@ import type { Classroom } from '@/hooks/use-classrooms'
 export const GROWTH_MONTHS = 6
 export const MAX_SUBJECTS = 6
 
-export function buildSubjectData(classrooms: Classroom[]) {
+export function buildSubjectData(
+	classrooms: Classroom[],
+	subjectNameById: Map<string, string>,
+) {
 	const counts = new Map<string, number>()
 
 	for (const classroom of classrooms) {
-		counts.set(classroom.subject, (counts.get(classroom.subject) ?? 0) + 1)
+		const name = subjectNameById.get(classroom.subjectId) ?? '—'
+		counts.set(name, (counts.get(name) ?? 0) + 1)
 	}
 
 	return Array.from(counts.entries())

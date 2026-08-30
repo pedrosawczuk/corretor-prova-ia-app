@@ -5,7 +5,7 @@ import { apiClient } from '@/lib/api-client'
 export interface Classroom {
 	id: string
 	name: string
-	subject: string
+	subjectId: string
 	description: string | null
 	teacherId: string
 	createdAt: string

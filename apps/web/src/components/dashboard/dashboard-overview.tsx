@@ -33,16 +33,18 @@ import {
 } from 'recharts'
 import { ChartTooltip } from '@/components/charts/chart-tooltip'
 import { useClassrooms } from '@/hooks/use-classrooms'
-import { useExamsCounts } from '@/hooks/use-exams'
+import { useAllExams } from '@/hooks/use-exams'
+import { useSubjectNameMap } from '@/hooks/use-subjects'
 import { formatRelativeDate } from '@/lib/date'
 import { buildGrowthData, buildSubjectData } from './dashboard-overview.utils'
 
 export function DashboardOverview() {
 	const { data: classrooms, isLoading, isError } = useClassrooms()
+	const subjectNameById = useSubjectNameMap()
 
 	const subjectData = React.useMemo(
-		() => buildSubjectData(classrooms ?? []),
-		[classrooms],
+		() => buildSubjectData(classrooms ?? [], subjectNameById),
+		[classrooms, subjectNameById],
 	)
 
 	const growthData = React.useMemo(
@@ -59,14 +61,28 @@ export function DashboardOverview() {
 	)
 
 	const totalTurmas = classrooms?.length ?? 0
-	const totalMaterias = new Set((classrooms ?? []).map((c) => c.subject)).size
+	const totalMaterias = new Set((classrooms ?? []).map((c) => c.subjectId))
+		.size
 
 	const classroomIds = React.useMemo(
 		() => (classrooms ?? []).map((c) => c.id),
 		[classrooms],
 	)
-	const { total: totalProvas, isLoading: isProvasLoading } =
-		useExamsCounts(classroomIds)
+	const { exams, isLoading: isProvasLoading } = useAllExams(classroomIds)
+	const totalProvas = exams.length
+
+	const classroomsById = React.useMemo(
+		() => new Map((classrooms ?? []).map((c) => [c.id, c])),
+		[classrooms],
+	)
+
+	const recentProvas = React.useMemo(
+		() =>
+			[...exams]
+				.sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)))
+				.slice(0, 3),
+		[exams],
+	)
 
 	if (isError) {
 		return (
@@ -329,7 +345,7 @@ export function DashboardOverview() {
 													<Users className="size-4" />
 												</div>
 												<Badge variant="subtle" size="sm">
-													{classroom.subject}
+													{subjectNameById.get(classroom.subjectId) ?? '—'}
 												</Badge>
 											</div>
 											<p className="text-sm font-semibold text-foreground truncate">
@@ -348,18 +364,72 @@ export function DashboardOverview() {
 				</CardContent>
 			</Card>
 
-			<div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-card p-12 text-center">
-				<div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-					<FileText className="size-6" />
-				</div>
-				<h2 className="text-base font-semibold text-foreground">Provas</h2>
-				<p className="max-w-sm text-sm text-muted-foreground">
-					Gere provas com a IA do Gabarita.app a partir de cada turma.
-				</p>
-				<Button variant="outline" size="sm" asChild rightIcon={<ArrowRight />}>
-					<Link href="/dashboard/turmas">Ver turmas</Link>
-				</Button>
-			</div>
+			<Card>
+				<CardHeader>
+					<CardTitle>
+						Provas
+						<Button
+							variant="ghost"
+							size="sm"
+							asChild
+							rightIcon={<ArrowRight />}
+						>
+							<Link href="/dashboard/turmas">Ver todas</Link>
+						</Button>
+					</CardTitle>
+				</CardHeader>
+				<CardContent>
+					{isLoading || isProvasLoading ? (
+						<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+							<Skeleton className="h-24 rounded-xl" />
+							<Skeleton className="h-24 rounded-xl" />
+							<Skeleton className="h-24 rounded-xl" />
+						</div>
+					) : recentProvas.length === 0 ? (
+						<div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-card p-8 text-center">
+							<div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+								<FileText className="size-6" />
+							</div>
+							<h2 className="text-sm font-semibold text-foreground">
+								Nenhuma prova criada ainda
+							</h2>
+							<p className="max-w-sm text-xs text-muted-foreground">
+								Gere provas com a IA do Gabarita.app a partir de cada turma.
+							</p>
+						</div>
+					) : (
+						<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+							{recentProvas.map((exam) => (
+								<Link
+									key={exam.id}
+									href={`/dashboard/turmas/${exam.classroomId}/provas/${exam.id}`}
+								>
+									<Card variant="subtle" interactive className="h-full">
+										<CardContent className="flex flex-col gap-2 pt-4 sm:pt-6">
+											<div className="flex items-center justify-between gap-2">
+												<div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+													<FileText className="size-4" />
+												</div>
+												<Badge variant="subtle" size="sm">
+													{classroomsById.get(exam.classroomId)?.name ??
+														'Turma'}
+												</Badge>
+											</div>
+											<p className="text-sm font-semibold text-foreground truncate">
+												{exam.title}
+											</p>
+											<p className="flex items-center gap-1 text-xs text-muted-foreground">
+												<Clock className="size-3" />
+												{formatRelativeDate(exam.createdAt)}
+											</p>
+										</CardContent>
+									</Card>
+								</Link>
+							))}
+						</div>
+					)}
+				</CardContent>
+			</Card>
 		</div>
 	)
 }

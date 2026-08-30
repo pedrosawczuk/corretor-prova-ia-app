@@ -1,18 +1,10 @@
 'use client'
 
-import {
-	Badge,
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-	Skeleton,
-} from '@app/ui'
-import { LayoutDashboard, Users } from 'lucide-react'
-import Link from 'next/link'
+import { Skeleton } from '@app/ui'
+import { LayoutDashboard } from 'lucide-react'
 import { useClassrooms } from '@/hooks/use-classrooms'
-import { formatDate } from '@/lib/date'
 import { CriarTurmaDialog } from './criar-turma-dialog'
+import { TurmaCard } from './turma-card'
 
 export function TurmasList() {
 	const { data: classrooms, isLoading, isError } = useClassrooms()
@@ -58,30 +50,7 @@ export function TurmasList() {
 	return (
 		<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 			{classrooms.map((classroom) => (
-				<Link key={classroom.id} href={`/dashboard/turmas/${classroom.id}`}>
-					<Card variant="default" interactive className="h-full">
-						<CardHeader>
-							<div className="flex items-center justify-between gap-2">
-								<div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-									<Users className="size-5" />
-								</div>
-								<Badge variant="subtle" size="sm">
-									{classroom.subject}
-								</Badge>
-							</div>
-							<CardTitle className="mt-1">{classroom.name}</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<p className="line-clamp-2 wrap-break-word text-sm text-muted-foreground">
-								{classroom.description || 'Sem descrição.'}
-							</p>
-							<p className="mt-3 text-xs text-muted-foreground">
-								Criada em{' '}
-								{formatDate(classroom.createdAt, 'DD [de] MMM [de] YYYY')}
-							</p>
-						</CardContent>
-					</Card>
-				</Link>
+				<TurmaCard key={classroom.id} classroom={classroom} />
 			))}
 		</div>
 	)

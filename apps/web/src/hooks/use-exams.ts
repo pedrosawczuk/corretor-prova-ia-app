@@ -42,6 +42,21 @@ export function useExamsCounts(classroomIds: string[]) {
 	}
 }
 
+export function useAllExams(classroomIds: string[]) {
+	const queries = useQueries({
+		queries: classroomIds.map((classroomId) => ({
+			queryKey: examsKeys.list(classroomId),
+			queryFn: () => apiClient<Exam[]>(`/exams?classroomId=${classroomId}`),
+			enabled: Boolean(classroomId),
+		})),
+	})
+
+	return {
+		exams: queries.flatMap((query) => query.data ?? []),
+		isLoading: queries.some((query) => query.isLoading),
+	}
+}
+
 export function useExam(examId: string) {
 	return useQuery({
 		queryKey: examsKeys.detail(examId),

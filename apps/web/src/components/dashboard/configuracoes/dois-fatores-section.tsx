@@ -14,6 +14,7 @@ import {
 	toast,
 } from '@app/ui'
 import { Check, Copy, KeyRound, ShieldAlert, ShieldCheck } from 'lucide-react'
+import Image from 'next/image'
 import QRCode from 'qrcode'
 import * as React from 'react'
 import { apiClient } from '@/lib/api-client'
@@ -321,12 +322,12 @@ export function DoisFatoresSection({
 
 						{qrCodeDataUrl && (
 							<div className="flex justify-center rounded-lg border border-border bg-white p-4">
-								{/* biome-ignore lint/performance/noImgElement: data URL gerada localmente, next/image não se aplica */}
-								<img
+								<Image
 									src={qrCodeDataUrl}
 									alt="QR code para configurar o aplicativo autenticador"
 									width={200}
 									height={200}
+									unoptimized
 								/>
 							</div>
 						)}
