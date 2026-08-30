@@ -8,6 +8,10 @@ export const user = pgTable('user', {
 	image: text('image'),
 	phoneNumber: text('phone_number'),
 	twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
+	role: text('role'),
+	banned: boolean('banned').notNull().default(false),
+	banReason: text('ban_reason'),
+	banExpires: timestamp('ban_expires'),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })

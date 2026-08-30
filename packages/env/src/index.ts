@@ -22,6 +22,7 @@ export const apiEnvSchema = dbEnvSchema.extend({
 	NODE_ENV: z.enum(['dev', 'prod', 'test']),
 	PORT: z.coerce.number(),
 	HOST: z.string(),
+	TRUST_PROXY: z.stringbool().default(false),
 	REDIS_URL: z.url(),
 	REDIS_HOST: z.string(),
 	REDIS_PORT: z.coerce.number(),
