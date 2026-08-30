@@ -13,6 +13,7 @@ import {
 import Link from 'next/link'
 import * as React from 'react'
 import { useClassroom } from '@/hooks/use-classrooms'
+import { useSubjectNameMap } from '@/hooks/use-subjects'
 import { ApiError } from '@/lib/api-client'
 import { formatDate } from '@/lib/date'
 import { CriarProvaDialog } from './criar-prova-dialog'
@@ -26,6 +27,7 @@ interface TurmaDetailProps {
 
 export function TurmaDetail({ id }: TurmaDetailProps) {
 	const { data: classroom, isLoading, error } = useClassroom(id)
+	const subjectNameById = useSubjectNameMap()
 	const [editOpen, setEditOpen] = React.useState(false)
 	const [deleteOpen, setDeleteOpen] = React.useState(false)
 	const [criarProvaOpen, setCriarProvaOpen] = React.useState(false)
@@ -108,7 +110,7 @@ export function TurmaDetail({ id }: TurmaDetailProps) {
 								</h1>
 								<div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
 									<BookOpen className="size-3.5" />
-									<span>{classroom.subject}</span>
+									<span>{subjectNameById.get(classroom.subjectId) ?? '—'}</span>
 								</div>
 							</div>
 						</div>

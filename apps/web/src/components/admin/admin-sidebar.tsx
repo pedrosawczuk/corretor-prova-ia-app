@@ -14,6 +14,7 @@ import {
 import {
 	Activity,
 	ArrowLeft,
+	BookOpen,
 	LayoutDashboard,
 	LogOut,
 	MonitorSmartphone,
@@ -25,6 +26,7 @@ import { usePathname } from 'next/navigation'
 const NAV_ITEMS = [
 	{ title: 'Visão Geral', href: '/admin', icon: LayoutDashboard },
 	{ title: 'Usuários', href: '/admin/usuarios', icon: Users },
+	{ title: 'Disciplinas', href: '/admin/disciplinas', icon: BookOpen },
 	{ title: 'Sessões', href: '/admin/sessoes', icon: MonitorSmartphone },
 	{ title: 'Atividade', href: '/admin/atividade', icon: Activity },
 ]

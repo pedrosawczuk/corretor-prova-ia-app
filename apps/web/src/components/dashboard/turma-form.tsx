@@ -11,11 +11,13 @@ import {
 	FormLabel,
 	FormMessage,
 	Input,
+	Select,
+	SelectItem,
 	Textarea,
 } from '@app/ui'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { BookOpen } from 'lucide-react'
 import { useForm } from 'react-hook-form'
+import { useSubjects } from '@/hooks/use-subjects'
 
 interface TurmaFormProps {
 	defaultValues?: CreateClassroomInput
@@ -32,11 +34,13 @@ export function TurmaForm({
 	isPending,
 	submitLabel,
 }: TurmaFormProps) {
+	const { data: subjects, isLoading: isLoadingSubjects } = useSubjects()
+
 	const form = useForm<CreateClassroomInput>({
 		resolver: zodResolver(createClassroomSchema),
 		defaultValues: defaultValues ?? {
 			name: '',
-			subject: '',
+			subjectId: '',
 			description: '',
 		},
 	})
@@ -58,25 +62,39 @@ export function TurmaForm({
 					)}
 				/>
 
-				<FormField
-					control={form.control}
-					name="subject"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel required leftIcon={<BookOpen className="size-3.5" />}>
-								Disciplina
-							</FormLabel>
-							<FormControl>
-								<Input
-									placeholder="História Geral"
-									disabled={isPending}
-									{...field}
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+				<div className="flex flex-col gap-1.5">
+					<FormField
+						control={form.control}
+						name="subjectId"
+						render={({ field, fieldState }) => (
+							<Select
+								label="Disciplina"
+								required
+								placeholder="Selecione a disciplina"
+								value={field.value}
+								onValueChange={field.onChange}
+								disabled={isPending || isLoadingSubjects}
+								errorMessage={fieldState.error?.message}
+							>
+								{subjects?.map((subject) => (
+									<SelectItem key={subject.id} value={subject.id}>
+										{subject.name}
+									</SelectItem>
+								))}
+							</Select>
+						)}
+					/>
+					<p className="text-xs text-muted-foreground">
+						Não encontrou a disciplina?{' '}
+						<a
+							href="mailto:contato@gabarita.app?subject=Nova%20disciplina"
+							className="text-primary hover:underline"
+						>
+							Peça pra gente adicionar
+						</a>
+						.
+					</p>
+				</div>
 
 				<FormField
 					control={form.control}

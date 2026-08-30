@@ -59,7 +59,7 @@ export function EditarTurmaDialog({
 				<TurmaForm
 					defaultValues={{
 						name: classroom.name,
-						subject: classroom.subject,
+						subjectId: classroom.subjectId,
 						description: classroom.description ?? '',
 					}}
 					onSubmit={onSubmit}
