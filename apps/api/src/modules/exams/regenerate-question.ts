@@ -15,6 +15,7 @@ import { NotFoundError } from '@/core/errors'
 import { generateExamQuestions } from '@/lib/ai/gemini'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
 import { invalidateExamCache } from './exam-cache'
+import { questionOptionsOrderBy } from './question-option-order'
 
 export async function regenerateQuestionModule(
 	request: FastifyRequest<{
@@ -92,6 +93,7 @@ export async function regenerateQuestionModule(
 		.select()
 		.from(questionOptionsTable)
 		.where(eq(questionOptionsTable.questionId, questionId))
+		.orderBy(questionOptionsOrderBy)
 
 	await invalidateExamCache(examId, exam.classroomId)
 

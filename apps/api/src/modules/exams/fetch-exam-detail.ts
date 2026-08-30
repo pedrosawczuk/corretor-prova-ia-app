@@ -6,6 +6,7 @@ import {
 	questionOptionsTable,
 	questionsTable,
 } from '@app/db'
+import { questionOptionsOrderBy } from './question-option-order'
 
 export async function fetchQuestionsWithOptions(examId: string) {
 	const questions = await db
@@ -21,6 +22,7 @@ export async function fetchQuestionsWithOptions(examId: string) {
 				.select()
 				.from(questionOptionsTable)
 				.where(inArray(questionOptionsTable.questionId, questionIds))
+				.orderBy(questionOptionsOrderBy)
 		: []
 
 	return questions.map((question) => ({

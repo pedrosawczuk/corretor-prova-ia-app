@@ -1,6 +1,6 @@
 'use client'
 
-import type { Exam, Question } from '@app/shared'
+import { type Exam, letterForOptionIndex, type Question } from '@app/shared'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -29,6 +29,7 @@ import {
 import {
 	Check,
 	CheckCircle2,
+	GripVertical,
 	Loader2,
 	Pencil,
 	Sparkles,
@@ -84,19 +85,28 @@ function QuestionCard({ examId, question }: QuestionCardProps) {
 	const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false)
 	const [editStatement, setEditStatement] = React.useState(question.statement)
 	const [editOptions, setEditOptions] = React.useState(
-		question.options.map((o) => ({ id: o.id, text: o.text, letter: o.letter })),
+		question.options.map((o) => ({ id: o.id, text: o.text })),
 	)
+	const [dragIndex, setDragIndex] = React.useState<number | null>(null)
+	const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null)
 
 	React.useEffect(() => {
 		setEditStatement(question.statement)
-		setEditOptions(
-			question.options.map((o) => ({
-				id: o.id,
-				text: o.text,
-				letter: o.letter,
-			})),
-		)
+		setEditOptions(question.options.map((o) => ({ id: o.id, text: o.text })))
 	}, [question])
+
+	function handleOptionDrop(targetIndex: number) {
+		setEditOptions((prev) => {
+			if (dragIndex === null || dragIndex === targetIndex) return prev
+
+			const next = [...prev]
+			const [moved] = next.splice(dragIndex, 1)
+			next.splice(targetIndex, 0, moved)
+			return next
+		})
+		setDragIndex(null)
+		setDragOverIndex(null)
+	}
 
 	function handleSelect(optionId: string) {
 		if (
@@ -253,54 +263,106 @@ function QuestionCard({ examId, question }: QuestionCardProps) {
 				<div className="flex flex-col gap-3">
 					{isEditing && (
 						<span className="text-sm text-muted-foreground font-medium">
-							Alternativas:
+							Alternativas: arraste{' '}
+							<GripVertical className="inline size-3.5 -mt-0.5" /> para
+							reordenar.
 						</span>
 					)}
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-						{question.options.map((option) => {
-							const editOpt = editOptions.find((o) => o.id === option.id)
-							return isEditing ? (
-								<div key={option.id} className="flex items-center gap-2">
-									<span className="font-semibold text-muted-foreground shrink-0 w-5">
-										{option.letter})
-									</span>
-									<Input
-										value={editOpt?.text || ''}
-										onChange={(e) => {
-											setEditOptions((prev) =>
-												prev.map((o) =>
-													o.id === option.id
-														? { ...o, text: e.target.value }
-														: o,
-												),
-											)
-										}}
-									/>
-								</div>
-							) : (
-								<button
-									key={option.id}
-									type="button"
-									onClick={() => handleSelect(option.id)}
-									className={`flex items-start gap-2 rounded-xl border p-3 text-left text-sm transition-colors disabled:cursor-not-allowed ${
-										option.isCorrect
-											? 'border-success bg-success/5 text-foreground cursor-default ring-1 ring-success/20'
-											: 'border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted/30 cursor-pointer'
-									}`}
-								>
-									{option.isCorrect ? (
-										<CheckCircle2 className="size-4 shrink-0 text-success mt-0.5" />
-									) : (
-										<span className="size-4 shrink-0 mt-0.5" />
-									)}
-									<span className="leading-snug">
-										<span className="font-semibold mr-1">{option.letter})</span>
-										{option.text}
-									</span>
-								</button>
-							)
-						})}
-					</div>
+					<ul className="grid list-none grid-cols-1 gap-2 p-0 sm:grid-cols-2">
+						{isEditing
+							? editOptions.map((option, index) => {
+									const isCorrect = question.options.find(
+										(o) => o.id === option.id,
+									)?.isCorrect
+									const isDragging = dragIndex === index
+									const isDropTarget =
+										dragOverIndex === index &&
+										dragIndex !== null &&
+										dragIndex !== index
+
+									return (
+										<li
+											key={option.id}
+											aria-roledescription="alternativa arrastável"
+											draggable
+											onDragStart={() => setDragIndex(index)}
+											onDragOver={(e) => {
+												e.preventDefault()
+												setDragOverIndex(index)
+											}}
+											onDragLeave={() =>
+												setDragOverIndex((prev) =>
+													prev === index ? null : prev,
+												)
+											}
+											onDrop={(e) => {
+												e.preventDefault()
+												handleOptionDrop(index)
+											}}
+											onDragEnd={() => {
+												setDragIndex(null)
+												setDragOverIndex(null)
+											}}
+											className={`flex items-center gap-2 rounded-lg border p-1 transition-colors ${
+												isDropTarget
+													? 'border-primary bg-primary/5'
+													: 'border-transparent'
+											} ${isDragging ? 'opacity-40' : ''}`}
+										>
+											<span
+												className="cursor-grab text-muted-foreground shrink-0 active:cursor-grabbing"
+												title="Arrastar para reordenar"
+											>
+												<GripVertical className="size-4" />
+											</span>
+											<span
+												className={`font-semibold shrink-0 w-5 ${isCorrect ? 'text-success' : 'text-muted-foreground'}`}
+											>
+												{letterForOptionIndex(question.type, index)})
+											</span>
+											<Input
+												value={option.text}
+												onChange={(e) => {
+													const value = e.target.value
+													setEditOptions((prev) =>
+														prev.map((o, i) =>
+															i === index ? { ...o, text: value } : o,
+														),
+													)
+												}}
+											/>
+											{isCorrect && (
+												<CheckCircle2 className="size-4 shrink-0 text-success" />
+											)}
+										</li>
+									)
+								})
+							: question.options.map((option) => (
+									<li key={option.id}>
+										<button
+											type="button"
+											onClick={() => handleSelect(option.id)}
+											className={`flex w-full items-start gap-2 rounded-xl border p-3 text-left text-sm transition-colors disabled:cursor-not-allowed ${
+												option.isCorrect
+													? 'border-success bg-success/5 text-foreground cursor-default ring-1 ring-success/20'
+													: 'border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted/30 cursor-pointer'
+											}`}
+										>
+											{option.isCorrect ? (
+												<CheckCircle2 className="size-4 shrink-0 text-success mt-0.5" />
+											) : (
+												<span className="size-4 shrink-0 mt-0.5" />
+											)}
+											<span className="leading-snug">
+												<span className="font-semibold mr-1">
+													{option.letter})
+												</span>
+												{option.text}
+											</span>
+										</button>
+									</li>
+								))}
+					</ul>
 
 					{isEditing && (
 						<div className="flex items-center justify-end gap-2 mt-4 pt-4 border-t border-border">

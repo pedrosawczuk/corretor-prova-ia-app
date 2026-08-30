@@ -6,10 +6,12 @@ import {
 	questionsTable,
 } from '@app/db'
 import type { UpdateQuestionBody, UpdateQuestionParams } from '@app/shared'
+import { letterForOptionIndex } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { NotFoundError } from '@/core/errors'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
 import { invalidateExamCache } from './exam-cache'
+import { questionOptionsOrderBy } from './question-option-order'
 
 export async function updateQuestionModule(
 	request: FastifyRequest<{
@@ -46,10 +48,13 @@ export async function updateQuestionModule(
 			.set({ statement })
 			.where(eq(questionsTable.id, questionId))
 
-		for (const option of options) {
+		for (const [index, option] of options.entries()) {
 			await tx
 				.update(questionOptionsTable)
-				.set({ text: option.text })
+				.set({
+					text: option.text,
+					letter: letterForOptionIndex(question.type, index),
+				})
 				.where(eq(questionOptionsTable.id, option.id))
 		}
 	})
@@ -58,6 +63,7 @@ export async function updateQuestionModule(
 		.select()
 		.from(questionOptionsTable)
 		.where(eq(questionOptionsTable.questionId, questionId))
+		.orderBy(questionOptionsOrderBy)
 
 	await invalidateExamCache(examId, exam.classroomId)
 

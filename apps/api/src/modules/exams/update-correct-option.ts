@@ -9,6 +9,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 import { NotFoundError } from '@/core/errors'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
 import { invalidateExamCache } from './exam-cache'
+import { questionOptionsOrderBy } from './question-option-order'
 import type {
 	UpdateCorrectOptionBody,
 	UpdateCorrectOptionParams,
@@ -68,6 +69,7 @@ export async function updateCorrectOptionModule(
 		.select()
 		.from(questionOptionsTable)
 		.where(eq(questionOptionsTable.questionId, questionId))
+		.orderBy(questionOptionsOrderBy)
 
 	await invalidateExamCache(examId, exam.classroomId)
 

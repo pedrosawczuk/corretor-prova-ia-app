@@ -76,13 +76,86 @@ describe('PATCH /exams/:examId/questions/:questionId', () => {
 		expect(updateStatementChain.set).toHaveBeenCalledWith({
 			statement: 'Novo enunciado',
 		})
-		expect(updateOptionAChain.set).toHaveBeenCalledWith({ text: 'Nova A' })
-		expect(updateOptionBChain.set).toHaveBeenCalledWith({ text: 'Nova B' })
+		expect(updateOptionAChain.set).toHaveBeenCalledWith({
+			text: 'Nova A',
+			letter: 'A',
+		})
+		expect(updateOptionBChain.set).toHaveBeenCalledWith({
+			text: 'Nova B',
+			letter: 'B',
+		})
 		expect(response.json().statement).toBe('Novo enunciado')
 		expect(invalidateCache).toHaveBeenCalledWith(
 			examCacheKey(exam.id),
 			examListCacheKey(exam.classroomId),
 		)
+	})
+
+	it('reatribui as letras conforme a nova ordem das alternativas (arrastar e soltar)', async () => {
+		const exam = makeExam({ creatorId: user.id })
+		const question = makeQuestion({ examId: exam.id, type: 'multiple_choice' })
+		const optionA = makeQuestionOption({
+			questionId: question.id,
+			letter: 'A',
+			isCorrect: false,
+		})
+		const optionB = makeQuestionOption({
+			questionId: question.id,
+			letter: 'B',
+			isCorrect: true,
+		})
+
+		vi.mocked(db.select)
+			.mockReturnValueOnce(createDbChain([exam]) as never)
+			.mockReturnValueOnce(createDbChain([question]) as never)
+			.mockReturnValueOnce(
+				createDbChain([
+					{ ...optionB, letter: 'A' },
+					{ ...optionA, letter: 'B' },
+				]) as never,
+			)
+
+		const tx = { update: vi.fn() }
+		const updateStatementChain = createDbChain([])
+		const updateOptionBChain = createDbChain([])
+		const updateOptionAChain = createDbChain([])
+		tx.update
+			.mockReturnValueOnce(updateStatementChain)
+			.mockReturnValueOnce(updateOptionBChain)
+			.mockReturnValueOnce(updateOptionAChain)
+
+		vi.mocked(db.transaction).mockImplementation(
+			createDbTransactionMock(tx) as never,
+		)
+
+		const response = await app.inject({
+			method: 'PATCH',
+			url: `/exams/${exam.id}/questions/${question.id}`,
+			payload: {
+				statement: question.statement,
+				options: [
+					{ id: optionB.id, text: optionB.text },
+					{ id: optionA.id, text: optionA.text },
+				],
+			},
+		})
+
+		expect(response.statusCode).toBe(200)
+		expect(updateOptionBChain.set).toHaveBeenCalledWith({
+			text: optionB.text,
+			letter: 'A',
+		})
+		expect(updateOptionAChain.set).toHaveBeenCalledWith({
+			text: optionA.text,
+			letter: 'B',
+		})
+
+		const body = response.json()
+		const correctOption = body.options.find(
+			(option: { isCorrect: boolean }) => option.isCorrect,
+		)
+		expect(correctOption.letter).toBe('A')
+		expect(correctOption.id).toBe(optionB.id)
 	})
 
 	it('retorna 404 se a prova não for do usuário', async () => {
