@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 
 export interface AdminAuditLog {
@@ -19,13 +19,24 @@ export interface AdminAuditLog {
 	createdAt: string
 }
 
+export interface AdminTopSubject {
+	subject: string
+	classroomsCount: number
+	examsCount: number
+}
+
 export interface AdminOverview {
 	totalUsers: number
 	totalClassrooms: number
 	totalExams: number
+	totalSubjects: number
 	activeSessionsUsers: number
 	twoFactorEnabledUsers: number
+	finalizedExams: number
 	recentAuditLogs: AdminAuditLog[]
+	topSubjects: AdminTopSubject[]
+	examsCreatedAt: string[]
+	usersCreatedAt: string[]
 }
 
 export interface AdminUser {
@@ -40,6 +51,18 @@ export interface AdminUser {
 	classroomsCount: number
 	examsCount: number
 	lastSeenAt: string | null
+}
+
+export interface PaginationMeta {
+	page: number
+	pageSize: number
+	total: number
+	totalPages: number
+}
+
+export interface AdminUsersPage {
+	data: AdminUser[]
+	pagination: PaginationMeta
 }
 
 export interface AdminSession {
@@ -57,7 +80,8 @@ export interface AdminSession {
 
 const adminKeys = {
 	overview: ['admin', 'overview'] as const,
-	users: ['admin', 'users'] as const,
+	users: (page: number, pageSize: number) =>
+		['admin', 'users', page, pageSize] as const,
 	sessions: ['admin', 'sessions'] as const,
 	auditLogs: ['admin', 'audit-logs'] as const,
 }
@@ -69,10 +93,14 @@ export function useAdminOverview() {
 	})
 }
 
-export function useAdminUsers() {
+export function useAdminUsers(page = 1, pageSize = 20) {
 	return useQuery({
-		queryKey: adminKeys.users,
-		queryFn: () => apiClient<AdminUser[]>('/admin/users'),
+		queryKey: adminKeys.users(page, pageSize),
+		queryFn: () =>
+			apiClient<AdminUsersPage>(
+				`/admin/users?page=${page}&pageSize=${pageSize}`,
+			),
+		placeholderData: keepPreviousData,
 	})
 }
 

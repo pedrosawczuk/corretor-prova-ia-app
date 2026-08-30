@@ -32,6 +32,8 @@ import {
 	outcomeBadgeVariant,
 } from './admin-activity-charts.utils'
 
+const AUDIT_SKELETON_ROWS = Array.from({ length: 4 }, () => crypto.randomUUID())
+
 export function AdminActivityCharts() {
 	const { data: sessions, isLoading: isSessionsLoading } = useAdminSessions()
 	const { data: auditLogs, isLoading: isAuditLogsLoading } = useAdminAuditLogs()
@@ -170,9 +172,8 @@ export function AdminActivityCharts() {
 				<CardContent>
 					{isAuditLogsLoading ? (
 						<div className="space-y-2">
-							{Array.from({ length: 4 }).map((_, index) => (
-								// biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-								<Skeleton key={index} className="h-12 w-full rounded-lg" />
+							{AUDIT_SKELETON_ROWS.map((rowKey) => (
+								<Skeleton key={rowKey} className="h-12 w-full rounded-lg" />
 							))}
 						</div>
 					) : !auditLogs || auditLogs.length === 0 ? (

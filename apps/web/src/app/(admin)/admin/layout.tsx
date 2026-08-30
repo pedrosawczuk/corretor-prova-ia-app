@@ -4,7 +4,6 @@ import type * as React from 'react'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { getAuthSession } from '@/lib/auth-server'
 
-// Keep in sync with ADMIN_SESSION_FRESH_MINUTES in apps/api/src/lib/auth/get-authenticated-admin.ts
 const ADMIN_SESSION_FRESH_MINUTES = 30
 
 export default async function AdminLayout({

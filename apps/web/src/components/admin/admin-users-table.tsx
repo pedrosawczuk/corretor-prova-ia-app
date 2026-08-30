@@ -4,15 +4,23 @@ import {
 	Badge,
 	Card,
 	CardContent,
+	CardFooter,
 	CardHeader,
 	CardTitle,
+	Pagination,
 	Skeleton,
 } from '@app/ui'
+import * as React from 'react'
 import { useAdminUsers } from '@/hooks/use-admin'
 import { formatRelativeDate } from '@/lib/date'
 
+const SKELETON_ROWS = Array.from({ length: 6 }, () => crypto.randomUUID())
+
 export function AdminUsersTable() {
-	const { data: users, isLoading } = useAdminUsers()
+	const [page, setPage] = React.useState(1)
+	const { data: usersPage, isLoading } = useAdminUsers(page)
+	const users = usersPage?.data
+	const pagination = usersPage?.pagination
 
 	return (
 		<div className="flex flex-1 flex-col gap-6 p-6 bg-muted/20">
@@ -28,15 +36,14 @@ export function AdminUsersTable() {
 			<Card>
 				<CardHeader>
 					<CardTitle>
-						{users ? `${users.length} usuários` : 'Usuários'}
+						{pagination ? `${pagination.total} usuários` : 'Usuários'}
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="overflow-x-auto">
 					{isLoading ? (
 						<div className="space-y-2">
-							{Array.from({ length: 6 }).map((_, index) => (
-								// biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-								<Skeleton key={index} className="h-12 w-full rounded-lg" />
+							{SKELETON_ROWS.map((rowKey) => (
+								<Skeleton key={rowKey} className="h-12 w-full rounded-lg" />
 							))}
 						</div>
 					) : !users || users.length === 0 ? (
@@ -119,6 +126,15 @@ export function AdminUsersTable() {
 						</table>
 					)}
 				</CardContent>
+				{pagination && (
+					<CardFooter className="justify-center border-t border-border/60 pt-4 sm:pt-6">
+						<Pagination
+							page={pagination.page}
+							totalPages={pagination.totalPages}
+							onPageChange={setPage}
+						/>
+					</CardFooter>
+				)}
 			</Card>
 		</div>
 	)

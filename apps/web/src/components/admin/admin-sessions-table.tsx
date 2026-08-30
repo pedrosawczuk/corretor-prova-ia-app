@@ -13,6 +13,8 @@ import { useAdminSessions } from '@/hooks/use-admin'
 import { formatRelativeDate } from '@/lib/date'
 import { parseDevice } from '@/lib/device'
 
+const SKELETON_ROWS = Array.from({ length: 6 }, () => crypto.randomUUID())
+
 export function AdminSessionsTable() {
 	const { data: sessions, isLoading } = useAdminSessions()
 
@@ -40,9 +42,8 @@ export function AdminSessionsTable() {
 				<CardContent>
 					{isLoading ? (
 						<div className="space-y-2">
-							{Array.from({ length: 6 }).map((_, index) => (
-								// biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-								<Skeleton key={index} className="h-14 w-full rounded-xl" />
+							{SKELETON_ROWS.map((rowKey) => (
+								<Skeleton key={rowKey} className="h-14 w-full rounded-xl" />
 							))}
 						</div>
 					) : !sessions || sessions.length === 0 ? (
