@@ -1,8 +1,16 @@
 import { z } from 'zod'
 
-export const createClassroomSchema = z.object({
-	name: z.string().trim().min(2, 'Informe o nome da turma'),
-	subject: z.string().trim().min(2, 'Informe a disciplina'),
+export const createClassroomSchema = z.strictObject({
+	name: z
+		.string()
+		.trim()
+		.min(2, 'Informe o nome da turma')
+		.max(100, 'O nome deve ter no máximo 100 caracteres'),
+	subject: z
+		.string()
+		.trim()
+		.min(2, 'Informe a disciplina')
+		.max(100, 'A disciplina deve ter no máximo 100 caracteres'),
 	description: z
 		.string()
 		.trim()

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const examParamsSchema = z.object({
+export const examParamsSchema = z.strictObject({
 	examId: z.uuid('ID de prova inválido'),
 })
 

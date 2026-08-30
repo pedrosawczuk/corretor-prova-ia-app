@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const listExamsQuerySchema = z.object({
+export const listExamsQuerySchema = z.strictObject({
 	classroomId: z.uuid('ID de turma inválido'),
 })
 

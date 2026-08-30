@@ -113,6 +113,10 @@ const Slider = React.forwardRef<
 		const valuesArray = Array.isArray(currentValues)
 			? currentValues
 			: [currentValues]
+		const thumbIds = React.useMemo(
+			() => Array.from({ length: valuesArray.length }, () => crypto.randomUUID()),
+			[valuesArray.length],
+		)
 
 		const formatDisplay = (val: number) => {
 			if (formatValue) return formatValue(val)
@@ -158,8 +162,7 @@ const Slider = React.forwardRef<
 
 					{valuesArray.map((_, index) => (
 						<SliderPrimitive.Thumb
-							// biome-ignore lint/suspicious/noArrayIndexKey: slider thumb index
-							key={index}
+							key={thumbIds[index]}
 							className={sliderThumbVariants({ variant, size })}
 							aria-label={label ? String(label) : `Slider thumb ${index + 1}`}
 						/>

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
-export const verifyTwoFactorOtpSchema = z.object({
-	code: z.string().min(1, 'Informe o código recebido por e-mail'),
+export const verifyTwoFactorOtpSchema = z.strictObject({
+	code: z.string().regex(/^\d{6}$/, 'Informe o código de 6 dígitos recebido por e-mail'),
 	trustDevice: z.boolean().optional(),
 })
 

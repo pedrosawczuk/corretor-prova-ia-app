@@ -1,11 +1,12 @@
 import { env } from '@app/env'
 import { z } from 'zod'
 
-export const signInWithSocialSchema = z.object({
+export const signInWithSocialSchema = z.strictObject({
 	provider: z.enum(['google']),
 	callbackURL: z
 		.string()
 		.url()
+		.max(2048)
 		.refine(
 			(url) => {
 				const origin = new URL(url).origin

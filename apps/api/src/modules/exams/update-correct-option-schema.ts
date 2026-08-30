@@ -1,11 +1,11 @@
 import { z } from 'zod'
 
-export const updateCorrectOptionParamsSchema = z.object({
+export const updateCorrectOptionParamsSchema = z.strictObject({
 	examId: z.uuid('ID de prova inválido'),
 	questionId: z.uuid('ID de questão inválido'),
 })
 
-export const updateCorrectOptionBodySchema = z.object({
+export const updateCorrectOptionBodySchema = z.strictObject({
 	optionId: z.uuid('ID de alternativa inválido'),
 })
 
