@@ -2,6 +2,11 @@ import { z } from 'zod'
 
 export const generateExamSchema = z
 	.strictObject({
+		topic: z
+			.string()
+			.trim()
+			.min(3, 'Informe o conteúdo da prova (mínimo 3 caracteres).')
+			.max(500, 'O conteúdo da prova deve ter no máximo 500 caracteres.'),
 		difficulty: z.number().int().min(0).max(10),
 		questionCount: z.number().int().min(1).max(20),
 		questionType: z.enum(['multiple_choice', 'true_false', 'mixed']),

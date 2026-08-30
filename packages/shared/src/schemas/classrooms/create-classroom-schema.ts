@@ -6,11 +6,7 @@ export const createClassroomSchema = z.strictObject({
 		.trim()
 		.min(2, 'Informe o nome da turma')
 		.max(100, 'O nome deve ter no máximo 100 caracteres'),
-	subject: z
-		.string()
-		.trim()
-		.min(2, 'Informe a disciplina')
-		.max(100, 'A disciplina deve ter no máximo 100 caracteres'),
+	subjectId: z.uuid('Selecione uma disciplina'),
 	description: z
 		.string()
 		.trim()
