@@ -3,21 +3,11 @@ import { faker } from '@faker-js/faker'
 
 type Classroom = typeof classroomsTable.$inferSelect
 
-const SUBJECTS = [
-	'Matemática',
-	'Português',
-	'História',
-	'Geografia',
-	'Física',
-	'Química',
-	'Biologia',
-]
-
 export function makeClassroom(overrides: Partial<Classroom> = {}): Classroom {
 	return {
 		id: faker.string.uuid(),
 		name: `Turma ${faker.string.alpha({ length: 1, casing: 'upper' })} - ${faker.word.noun()}`,
-		subject: faker.helpers.arrayElement(SUBJECTS),
+		subjectId: faker.string.uuid(),
 		description: faker.lorem.sentence(),
 		teacherId: faker.string.uuid(),
 		createdAt: faker.date.recent(),

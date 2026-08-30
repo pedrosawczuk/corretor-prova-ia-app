@@ -1,5 +1,6 @@
 import { env } from '@app/env'
 import cors from '@fastify/cors'
+import helmet from '@fastify/helmet'
 import multipart from '@fastify/multipart'
 import rateLimit from '@fastify/rate-limit'
 import { toNodeHandler } from 'better-auth/node'
@@ -27,15 +28,26 @@ import { adminRoutes } from '@/modules/admin/admin-routes'
 import { authRoutes } from '@/modules/auth/auth-routes'
 import { classroomRoutes } from '@/modules/classrooms/classroom-routes'
 import { examRoutes } from '@/modules/exams/exam-routes'
+import { subjectRoutes } from '@/modules/subjects/subjects-routes'
 
 export const app = fastify({
 	trustProxy: env.TRUST_PROXY,
 }).withTypeProvider<ZodTypeProvider>()
 
 await app.register(cors, {
-	origin: [env.BETTER_AUTH_URL, 'http://localhost:3000'],
+	origin:
+		env.NODE_ENV === 'prod'
+			? [env.WEB_URL]
+			: [env.WEB_URL, 'http://localhost:3000'],
 	credentials: true,
 	methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+})
+
+await app.register(helmet, {
+	contentSecurityPolicy: {
+		directives: { defaultSrc: ["'none'"] },
+	},
+	frameguard: { action: 'deny' },
 })
 
 await app.register(multipart, {
@@ -91,6 +103,7 @@ app.all(
 app.register(authRoutes, { prefix: '/auth' })
 app.register(classroomRoutes, { prefix: '/classrooms' })
 app.register(examRoutes, { prefix: '/exams' })
+app.register(subjectRoutes, { prefix: '/subjects' })
 app.register(adminRoutes, { prefix: '/admin' })
 
 app.get('/', async () => {

@@ -54,7 +54,7 @@ describe('PATCH /classrooms/:id', () => {
 		expect(updateChain.set).toHaveBeenCalledWith(
 			expect.objectContaining({
 				name: payload.name,
-				subject: payload.subject,
+				subjectId: payload.subjectId,
 				description: payload.description,
 				updatedAt: expect.any(Date),
 			}),

@@ -10,13 +10,13 @@ export async function createClassroomModule(
 	reply: FastifyReply,
 ) {
 	const user = await getAuthenticatedUser(request)
-	const { name, subject, description } = request.body
+	const { name, subjectId, description } = request.body
 
 	const [classroom] = await db
 		.insert(classroomsTable)
 		.values({
 			name,
-			subject,
+			subjectId,
 			description,
 			teacherId: user.id,
 		})

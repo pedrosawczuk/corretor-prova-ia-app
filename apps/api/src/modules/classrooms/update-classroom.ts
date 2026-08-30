@@ -15,7 +15,7 @@ export async function updateClassroomModule(
 ) {
 	const user = await getAuthenticatedUser(request)
 	const { id } = request.params
-	const { name, subject, description } = request.body
+	const { name, subjectId, description } = request.body
 
 	const [existing] = await db
 		.select()
@@ -28,7 +28,7 @@ export async function updateClassroomModule(
 
 	const [classroom] = await db
 		.update(classroomsTable)
-		.set({ name, subject, description, updatedAt: new Date() })
+		.set({ name, subjectId, description, updatedAt: new Date() })
 		.where(eq(classroomsTable.id, id))
 		.returning()
 

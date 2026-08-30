@@ -52,7 +52,7 @@ describe('POST /classrooms', () => {
 		expect(response.statusCode).toBe(201)
 		expect(chain.values).toHaveBeenCalledWith({
 			name: payload.name,
-			subject: payload.subject,
+			subjectId: payload.subjectId,
 			description: payload.description,
 			teacherId: user.id,
 		})
@@ -60,7 +60,7 @@ describe('POST /classrooms', () => {
 			expect.objectContaining({
 				id: createdClassroom.id,
 				name: payload.name,
-				subject: payload.subject,
+				subjectId: payload.subjectId,
 			}),
 		)
 		expect(invalidateCache).toHaveBeenCalledWith(classroomListCacheKey(user.id))
@@ -82,7 +82,7 @@ describe('POST /classrooms', () => {
 		expect(response.statusCode).toBe(201)
 		expect(chain.values).toHaveBeenCalledWith({
 			name: payload.name,
-			subject: payload.subject,
+			subjectId: payload.subjectId,
 			description: undefined,
 			teacherId: user.id,
 		})
