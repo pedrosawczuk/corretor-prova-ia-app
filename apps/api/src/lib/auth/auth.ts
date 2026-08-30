@@ -3,7 +3,7 @@ import { db, eq, user as userTable } from '@app/db'
 import { env } from '@app/env'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { twoFactor } from 'better-auth/plugins'
+import { admin, twoFactor } from 'better-auth/plugins'
 import {
 	sendNewLoginEmail,
 	sendPasswordResetEmail,
@@ -57,8 +57,13 @@ export const auth = betterAuth({
 		},
 	},
 	plugins: [
+		admin({
+			defaultRole: 'user',
+			adminRoles: ['admin'],
+		}),
 		twoFactor({
 			issuer: 'gabarita.app',
+			allowPasswordless: true,
 			otpOptions: {
 				sendOTP: async ({ user, otp }) => {
 					await sendTwoFactorOtpEmail({

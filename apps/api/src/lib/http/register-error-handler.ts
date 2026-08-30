@@ -5,16 +5,24 @@ import { ZodError } from 'zod'
 import { AppError } from '@/core/errors'
 
 export function registerErrorHandler(app: FastifyInstance) {
-	app.setErrorHandler((error: FastifyError, _request, reply) => {
+	app.setErrorHandler((error: FastifyError, request, reply) => {
+		const send = (
+			statusCode: number,
+			body: { code: string; message: string; issues?: unknown },
+		) => {
+			request.auditErrorMessage = body.message
+			return reply.status(statusCode).send(body)
+		}
+
 		if (error instanceof AppError) {
-			return reply.status(error.statusCode).send({
+			return send(error.statusCode, {
 				code: error.errorCode,
 				message: error.message,
 			})
 		}
 
 		if (hasZodFastifySchemaValidationErrors(error)) {
-			return reply.status(400).send({
+			return send(400, {
 				code: 'VALIDATION_ERROR',
 				message: 'Falha na validação dos campos enviados.',
 				issues: error.validation,
@@ -22,7 +30,7 @@ export function registerErrorHandler(app: FastifyInstance) {
 		}
 
 		if (error instanceof ZodError) {
-			return reply.status(400).send({
+			return send(400, {
 				code: 'VALIDATION_ERROR',
 				message: 'Falha na validação dos campos enviados.',
 				issues: error.format(),
@@ -35,7 +43,7 @@ export function registerErrorHandler(app: FastifyInstance) {
 					? error.status
 					: Number(error.status) || 400
 
-			return reply.status(statusCode).send({
+			return send(statusCode, {
 				code: error.body?.code || 'AUTH_ERROR',
 				message: error.message,
 			})
@@ -44,13 +52,13 @@ export function registerErrorHandler(app: FastifyInstance) {
 		console.error(error)
 
 		if (error.statusCode && error.statusCode < 500) {
-			return reply.status(error.statusCode).send({
+			return send(error.statusCode, {
 				code: error.code || 'BAD_REQUEST',
 				message: error.message,
 			})
 		}
 
-		return reply.status(500).send({
+		return send(500, {
 			code: 'INTERNAL_SERVER_ERROR',
 			message: 'Erro interno do servidor.',
 		})
