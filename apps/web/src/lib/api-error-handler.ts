@@ -5,10 +5,40 @@ import { ApiError } from './api-client'
 const CONNECTION_ERROR_MESSAGE =
 	'Não foi possível conectar ao servidor. Verifique sua conexão.'
 
+// better-auth returns these error messages in English. Map the codes we
+// actually surface to the user to a pt-br message instead of showing the
+// raw upstream text.
+const KNOWN_ERROR_CODE_MESSAGES: Record<string, string> = {
+	INVALID_PASSWORD: 'Senha atual incorreta.',
+	INVALID_CODE: 'Código inválido. Tente novamente.',
+	INVALID_BACKUP_CODE: 'Código de backup inválido.',
+	INVALID_TWO_FACTOR_COOKIE:
+		'Sessão de verificação expirada. Faça login novamente.',
+	TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE:
+		'Muitas tentativas. Solicite um novo código.',
+	ACCOUNT_TEMPORARILY_LOCKED:
+		'Muitas tentativas incorretas. Sua conta foi bloqueada temporariamente. Tente novamente mais tarde.',
+	SESSION_NOT_FRESH: 'Por segurança, faça login novamente para continuar.',
+	INVALID_TOKEN: 'Este link expirou ou já foi utilizado.',
+	EMAIL_NOT_VERIFIED:
+		'Você precisa confirmar seu e-mail antes de continuar. Verifique sua caixa de entrada.',
+	USER_ALREADY_EXISTS: 'Este e-mail já está cadastrado no sistema.',
+	USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL:
+		'Este e-mail já está cadastrado no sistema.',
+	INVALID_CREDENTIALS: 'E-mail ou senha incorretos.',
+}
+
+function resolveErrorMessage(error: ApiError, fallback: string) {
+	if (error.code && error.code in KNOWN_ERROR_CODE_MESSAGES) {
+		return KNOWN_ERROR_CODE_MESSAGES[error.code]
+	}
+	return error.message || fallback
+}
+
 export function toastApiError(error: unknown, fallback: string) {
 	toast.error(
 		error instanceof ApiError
-			? error.message || fallback
+			? resolveErrorMessage(error, fallback)
 			: CONNECTION_ERROR_MESSAGE,
 	)
 }
@@ -75,5 +105,5 @@ export function applyApiErrorsToForm<TFieldValues extends FieldValues>(
 		return
 	}
 
-	toast.error(error.message || defaultMessage)
+	toast.error(resolveErrorMessage(error, defaultMessage))
 }

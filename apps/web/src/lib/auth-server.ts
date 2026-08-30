@@ -7,6 +7,8 @@ export interface AuthUser {
 	emailVerified: boolean
 	image?: string | null
 	phoneNumber?: string | null
+	role?: string | null
+	twoFactorEnabled?: boolean
 	createdAt: string
 	updatedAt: string
 }
@@ -25,6 +27,12 @@ export interface AuthSession {
 export interface AuthSessionData {
 	session: AuthSession
 	user: AuthUser
+}
+
+export interface AuthAccount {
+	id: string
+	providerId: string
+	accountId: string
 }
 
 async function authFetch(path: string) {
@@ -50,6 +58,16 @@ export async function getAuthSession(): Promise<AuthSessionData | null> {
 export async function getAuthSessionsList(): Promise<AuthSession[] | null> {
 	try {
 		const response = await authFetch('/list-sessions')
+		if (!response.ok) return null
+		return await response.json()
+	} catch {
+		return null
+	}
+}
+
+export async function getAuthAccountsList(): Promise<AuthAccount[] | null> {
+	try {
+		const response = await authFetch('/list-accounts')
 		if (!response.ok) return null
 		return await response.json()
 	} catch {
