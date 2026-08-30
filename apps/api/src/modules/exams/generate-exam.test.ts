@@ -128,6 +128,132 @@ describe('POST /exams/:examId/generate', () => {
 		)
 	})
 
+	it('gera uma prova mista combinando múltipla escolha e verdadeiro/falso', async () => {
+		const payload = makeGenerateExamInput({
+			questionType: 'mixed',
+			questionCount: 2,
+			multipleChoiceCount: 1,
+		})
+		const exam = makeExam({ creatorId: user.id })
+		const classroom = makeClassroom({
+			id: exam.classroomId,
+			teacherId: user.id,
+		})
+
+		const mcGenerated = [
+			{
+				statement: 'Quanto é 2 + 2?',
+				options: [
+					{ letter: 'A', text: '3', isCorrect: false },
+					{ letter: 'B', text: '4', isCorrect: true },
+					{ letter: 'C', text: '5', isCorrect: false },
+					{ letter: 'D', text: '6', isCorrect: false },
+				],
+			},
+		]
+		const tfGenerated = [
+			{
+				statement: 'A Terra é redonda.',
+				options: [
+					{ letter: 'V', text: 'Verdadeiro', isCorrect: true },
+					{ letter: 'F', text: 'Falso', isCorrect: false },
+				],
+			},
+		]
+		vi.mocked(generateExamQuestions)
+			.mockResolvedValueOnce(mcGenerated as never)
+			.mockResolvedValueOnce(tfGenerated as never)
+
+		const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0)
+
+		const tfQuestionRow = makeQuestion({
+			examId: exam.id,
+			order: 0,
+			type: 'true_false',
+		})
+		const mcQuestionRow = makeQuestion({
+			examId: exam.id,
+			order: 1,
+			type: 'multiple_choice',
+		})
+		const tfOptionRows = tfGenerated[0].options.map((option) =>
+			makeQuestionOption({ questionId: tfQuestionRow.id, ...option }),
+		)
+		const mcOptionRows = mcGenerated[0].options.map((option) =>
+			makeQuestionOption({ questionId: mcQuestionRow.id, ...option }),
+		)
+		const updatedExam = { ...exam, totalPoints: '2.00' }
+
+		vi.mocked(db.select)
+			.mockReturnValueOnce(createDbChain([exam]) as never)
+			.mockReturnValueOnce(createDbChain([classroom]) as never)
+			.mockReturnValueOnce(createDbChain([updatedExam]) as never)
+			.mockReturnValueOnce(
+				createDbChain([tfQuestionRow, mcQuestionRow]) as never,
+			)
+			.mockReturnValueOnce(
+				createDbChain([...tfOptionRows, ...mcOptionRows]) as never,
+			)
+
+		const tx = { delete: vi.fn(), insert: vi.fn(), update: vi.fn() }
+		tx.delete.mockReturnValue(createDbChain([]))
+		tx.insert
+			.mockReturnValueOnce(createDbChain([tfQuestionRow]))
+			.mockReturnValueOnce(createDbChain(tfOptionRows))
+			.mockReturnValueOnce(createDbChain([mcQuestionRow]))
+			.mockReturnValueOnce(createDbChain(mcOptionRows))
+		tx.update.mockReturnValue(createDbChain([]))
+
+		vi.mocked(db.transaction).mockImplementation(
+			createDbTransactionMock(tx) as never,
+		)
+
+		const response = await app.inject({
+			method: 'POST',
+			url: `/exams/${exam.id}/generate`,
+			payload,
+		})
+
+		randomSpy.mockRestore()
+
+		expect(response.statusCode).toBe(200)
+		expect(generateExamQuestions).toHaveBeenCalledWith({
+			subject: classroom.subject,
+			difficulty: payload.difficulty,
+			questionCount: 1,
+			questionType: 'multiple_choice',
+		})
+		expect(generateExamQuestions).toHaveBeenCalledWith({
+			subject: classroom.subject,
+			difficulty: payload.difficulty,
+			questionCount: 1,
+			questionType: 'true_false',
+		})
+		expect(tx.insert).toHaveBeenCalledTimes(4)
+
+		const body = response.json()
+		expect(body).toEqual(
+			expect.objectContaining({ id: exam.id, totalPoints: '2.00' }),
+		)
+		expect(body.questions).toHaveLength(2)
+	})
+
+	it('retorna 400 quando a prova mista não informa a quantidade de múltipla escolha', async () => {
+		const response = await app.inject({
+			method: 'POST',
+			url: `/exams/${crypto.randomUUID()}/generate`,
+			payload: {
+				difficulty: 5,
+				questionCount: 10,
+				questionType: 'mixed',
+			},
+		})
+
+		expect(response.statusCode).toBe(400)
+		expect(db.select).not.toHaveBeenCalled()
+		expect(generateExamQuestions).not.toHaveBeenCalled()
+	})
+
 	it('retorna 404 quando a prova não existe', async () => {
 		const payload = makeGenerateExamInput()
 		vi.mocked(db.select).mockReturnValueOnce(createDbChain([]) as never)

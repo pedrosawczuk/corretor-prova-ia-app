@@ -14,6 +14,7 @@ import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
 import { invalidateExamCache } from './exam-cache'
 import type { ExamParams } from './exam-params-schema'
 import { fetchExamDetail } from './fetch-exam-detail'
+import { generateMixedQuestions } from './generate-mixed-questions'
 
 export async function generateExamModule(
 	request: FastifyRequest<{ Params: ExamParams; Body: GenerateExamInput }>,
@@ -21,7 +22,8 @@ export async function generateExamModule(
 ) {
 	const user = await getAuthenticatedUser(request)
 	const { examId } = request.params
-	const { difficulty, questionCount, questionType } = request.body
+	const { difficulty, questionCount, questionType, multipleChoiceCount } =
+		request.body
 
 	const [exam] = await db
 		.select()
@@ -41,12 +43,22 @@ export async function generateExamModule(
 		throw new NotFoundError('Turma não encontrada.')
 	}
 
-	const generatedQuestions = await generateExamQuestions({
-		subject: classroom.subject,
-		difficulty,
-		questionCount,
-		questionType,
-	})
+	const generatedQuestions =
+		questionType === 'mixed'
+			? await generateMixedQuestions({
+					subject: classroom.subject,
+					difficulty,
+					questionCount,
+					multipleChoiceCount: multipleChoiceCount ?? 0,
+				})
+			: (
+					await generateExamQuestions({
+						subject: classroom.subject,
+						difficulty,
+						questionCount,
+						questionType,
+					})
+				).map((generated) => ({ ...generated, type: questionType }))
 
 	await db.transaction(async (tx) => {
 		await tx.delete(questionsTable).where(eq(questionsTable.examId, examId))
@@ -58,7 +70,7 @@ export async function generateExamModule(
 					examId,
 					order: index,
 					statement: generated.statement,
-					type: questionType,
+					type: generated.type,
 					maxPoints: '1.00',
 				})
 				.returning()

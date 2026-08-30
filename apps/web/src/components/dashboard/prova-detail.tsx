@@ -36,10 +36,20 @@ export function ProvaDetail({ turmaId, examId }: ProvaDetailProps) {
 	const [questionCount, setQuestionCount] = React.useState(10)
 	const [questionType, setQuestionType] =
 		React.useState<GenerateExamInput['questionType']>('multiple_choice')
+	const [multipleChoiceCount, setMultipleChoiceCount] = React.useState(5)
+
+	React.useEffect(() => {
+		setMultipleChoiceCount((prev) => Math.min(prev, questionCount))
+	}, [questionCount])
 
 	function handleGenerate() {
 		generateExam.mutate(
-			{ difficulty, questionCount, questionType },
+			{
+				difficulty,
+				questionCount,
+				questionType,
+				...(questionType === 'mixed' ? { multipleChoiceCount } : {}),
+			},
 			{
 				onSuccess: () => {
 					toast.success('Prova gerada com sucesso!')
@@ -155,7 +165,7 @@ export function ProvaDetail({ turmaId, examId }: ProvaDetailProps) {
 							setQuestionType(value as GenerateExamInput['questionType'])
 						}
 						orientation="horizontal"
-						className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+						className="grid grid-cols-1 sm:grid-cols-3 gap-3"
 						disabled={generateExam.isPending}
 					>
 						<RadioGroupItem
@@ -170,7 +180,29 @@ export function ProvaDetail({ turmaId, examId }: ProvaDetailProps) {
 							label="Verdadeiro ou falso"
 							description="2 alternativas, uma correta."
 						/>
+						<RadioGroupItem
+							asCard
+							value="mixed"
+							label="Mista"
+							description="Combina múltipla escolha e V/F."
+						/>
 					</RadioGroup>
+
+					{questionType === 'mixed' && (
+						<Slider
+							label="Divisão da prova mista"
+							min={0}
+							max={questionCount}
+							step={1}
+							showValue
+							value={[multipleChoiceCount]}
+							onValueChange={([value]) => setMultipleChoiceCount(value)}
+							formatValue={(value) =>
+								`${value} múltipla escolha • ${questionCount - value} V ou F`
+							}
+							disabled={generateExam.isPending}
+						/>
+					)}
 
 					<div>
 						<Button
@@ -207,6 +239,10 @@ export function ProvaDetail({ turmaId, examId }: ProvaDetailProps) {
 
 function ProvaResultadoSkeleton({ count }: { count: number }) {
 	const [visibleCount, setVisibleCount] = React.useState(1)
+	const keys = React.useMemo(
+		() => Array.from({ length: count }, () => crypto.randomUUID()),
+		[count],
+	)
 
 	React.useEffect(() => {
 		const interval = setInterval(() => {
@@ -217,10 +253,9 @@ function ProvaResultadoSkeleton({ count }: { count: number }) {
 
 	return (
 		<div className="flex flex-col gap-4">
-			{Array.from({ length: visibleCount }).map((_, i) => (
+			{keys.slice(0, visibleCount).map((key) => (
 				<Card
-					// biome-ignore lint/suspicious/noArrayIndexKey: animated skeleton items
-					key={i}
+					key={key}
 					className="animate-in fade-in slide-in-from-bottom-4 duration-500"
 				>
 					<CardHeader>
