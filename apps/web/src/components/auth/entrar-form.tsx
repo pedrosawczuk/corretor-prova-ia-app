@@ -62,7 +62,7 @@ export function EntrarForm() {
 			})
 
 			toast.success('Bem-vindo de volta ao Gabarita.app!')
-			router.push('/dashboard')
+			window.location.href = '/dashboard'
 		} catch (error) {
 			if (error instanceof ApiError && error.code === 'EMAIL_NOT_VERIFIED') {
 				router.push(

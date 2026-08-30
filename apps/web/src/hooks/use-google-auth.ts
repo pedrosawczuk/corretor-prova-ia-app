@@ -1,7 +1,6 @@
 'use client'
 
 import { toast } from '@app/ui'
-import { useRouter } from 'next/navigation'
 import * as React from 'react'
 import { ApiError, apiClient } from '@/lib/api-client'
 
@@ -14,7 +13,6 @@ export function useGoogleAuth({
 	startErrorMessage,
 	successMessage,
 }: UseGoogleAuthOptions) {
-	const router = useRouter()
 	const [isLoading, setIsLoading] = React.useState(false)
 
 	async function signInWithGoogle() {
@@ -35,7 +33,7 @@ export function useGoogleAuth({
 			}
 
 			toast.success(successMessage)
-			router.push('/dashboard')
+			window.location.href = '/dashboard'
 		} catch (error) {
 			toast.error(
 				error instanceof ApiError

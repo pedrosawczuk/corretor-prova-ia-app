@@ -8,6 +8,7 @@ import {
 	CardTitle,
 	toast,
 } from '@app/ui'
+import { useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import * as React from 'react'
@@ -16,6 +17,7 @@ import { apiClient } from '@/lib/api-client'
 export default function SairPage() {
 	const [isLoggingOut, setIsLoggingOut] = React.useState(true)
 	const hasSignedOutRef = React.useRef(false)
+	const queryClient = useQueryClient()
 
 	React.useEffect(() => {
 		if (hasSignedOutRef.current) return
@@ -25,6 +27,7 @@ export default function SairPage() {
 			try {
 				await apiClient('/auth/sign-out', { method: 'POST' })
 
+				queryClient.clear()
 				setIsLoggingOut(false)
 				toast.info('Sessão finalizada com sucesso.')
 			} catch {
@@ -34,7 +37,7 @@ export default function SairPage() {
 		}
 
 		handleSignOut()
-	}, [])
+	}, [queryClient])
 
 	return (
 		<div className="min-h-screen w-full flex items-center justify-center p-6 bg-background">

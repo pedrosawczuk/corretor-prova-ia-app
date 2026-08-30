@@ -23,10 +23,9 @@ export function ProvasList({ turmaId }: ProvasListProps) {
 	if (isLoading) {
 		return (
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				{Array.from({ length: 3 }).map((_, index) => (
-					// biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-					<Skeleton key={index} className="h-32 rounded-2xl" />
-				))}
+				<Skeleton className="h-32 rounded-2xl" />
+				<Skeleton className="h-32 rounded-2xl" />
+				<Skeleton className="h-32 rounded-2xl" />
 			</div>
 		)
 	}

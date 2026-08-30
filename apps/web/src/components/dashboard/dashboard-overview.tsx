@@ -28,65 +28,14 @@ import {
 	CartesianGrid,
 	Tooltip as RechartsTooltip,
 	ResponsiveContainer,
-	type TooltipContentProps,
 	XAxis,
 	YAxis,
 } from 'recharts'
-import type {
-	NameType,
-	ValueType,
-} from 'recharts/types/component/DefaultTooltipContent'
-import { type Classroom, useClassrooms } from '@/hooks/use-classrooms'
+import { ChartTooltip } from '@/components/charts/chart-tooltip'
+import { useClassrooms } from '@/hooks/use-classrooms'
 import { useExamsCounts } from '@/hooks/use-exams'
 import { formatRelativeDate } from '@/lib/date'
-
-const GROWTH_MONTHS = 6
-const MAX_SUBJECTS = 6
-
-function buildSubjectData(classrooms: Classroom[]) {
-	const counts = new Map<string, number>()
-
-	for (const classroom of classrooms) {
-		counts.set(classroom.subject, (counts.get(classroom.subject) ?? 0) + 1)
-	}
-
-	return Array.from(counts.entries())
-		.map(([subject, count]) => ({ subject, count }))
-		.sort((a, b) => b.count - a.count)
-		.slice(0, MAX_SUBJECTS)
-}
-
-function buildGrowthData(classrooms: Classroom[]) {
-	return Array.from({ length: GROWTH_MONTHS }).map((_, index) => {
-		const monthEnd = dayjs()
-			.subtract(GROWTH_MONTHS - 1 - index, 'month')
-			.endOf('month')
-
-		const total = classrooms.filter(
-			(classroom) => !dayjs(classroom.createdAt).isAfter(monthEnd),
-		).length
-
-		return { month: monthEnd.format('MMM'), total }
-	})
-}
-
-function ChartTooltip({
-	active,
-	payload,
-	label,
-	suffix = '',
-}: TooltipContentProps<ValueType, NameType> & { suffix?: string }) {
-	if (!active || !payload?.length) return null
-
-	return (
-		<div className="rounded-lg border border-border bg-popover px-3 py-2 shadow-md">
-			<p className="text-xs font-medium text-foreground">{label}</p>
-			<p className="text-xs text-muted-foreground">
-				{payload[0]?.value} {suffix}
-			</p>
-		</div>
-	)
-}
+import { buildGrowthData, buildSubjectData } from './dashboard-overview.utils'
 
 export function DashboardOverview() {
 	const { data: classrooms, isLoading, isError } = useClassrooms()
@@ -350,10 +299,9 @@ export function DashboardOverview() {
 				<CardContent>
 					{isLoading ? (
 						<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-							{Array.from({ length: 3 }).map((_, index) => (
-								// biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-								<Skeleton key={index} className="h-24 rounded-xl" />
-							))}
+							<Skeleton className="h-24 rounded-xl" />
+							<Skeleton className="h-24 rounded-xl" />
+							<Skeleton className="h-24 rounded-xl" />
 						</div>
 					) : recentTurmas.length === 0 ? (
 						<div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-card p-8 text-center">
