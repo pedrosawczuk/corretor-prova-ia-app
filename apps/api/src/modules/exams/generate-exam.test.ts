@@ -21,6 +21,7 @@ import { makeExam } from '@/test/factories/make-exam'
 import { makeGenerateExamInput } from '@/test/factories/make-generate-exam-input'
 import { makeQuestion } from '@/test/factories/make-question'
 import { makeQuestionOption } from '@/test/factories/make-question-option'
+import { makeSubject } from '@/test/factories/make-subject'
 import { examCacheKey, examListCacheKey } from './exam-cache'
 
 vi.mock('@/lib/ai/gemini', () => ({
@@ -54,6 +55,7 @@ describe('POST /exams/:examId/generate', () => {
 			id: exam.classroomId,
 			teacherId: user.id,
 		})
+		const subject = makeSubject()
 
 		const generated = [
 			{
@@ -80,7 +82,9 @@ describe('POST /exams/:examId/generate', () => {
 
 		vi.mocked(db.select)
 			.mockReturnValueOnce(createDbChain([exam]) as never)
-			.mockReturnValueOnce(createDbChain([classroom]) as never)
+			.mockReturnValueOnce(
+				createDbChain([{ ...classroom, subjectName: subject.name }]) as never,
+			)
 			.mockReturnValueOnce(createDbChain([updatedExam]) as never)
 			.mockReturnValueOnce(createDbChain([questionRow]) as never)
 			.mockReturnValueOnce(createDbChain(optionRows) as never)
@@ -104,7 +108,8 @@ describe('POST /exams/:examId/generate', () => {
 
 		expect(response.statusCode).toBe(200)
 		expect(generateExamQuestions).toHaveBeenCalledWith({
-			subject: classroom.subject,
+			subject: subject.name,
+			topic: payload.topic,
 			difficulty: payload.difficulty,
 			questionCount: payload.questionCount,
 			questionType: payload.questionType,
@@ -139,6 +144,7 @@ describe('POST /exams/:examId/generate', () => {
 			id: exam.classroomId,
 			teacherId: user.id,
 		})
+		const subject = makeSubject()
 
 		const mcGenerated = [
 			{
@@ -186,7 +192,9 @@ describe('POST /exams/:examId/generate', () => {
 
 		vi.mocked(db.select)
 			.mockReturnValueOnce(createDbChain([exam]) as never)
-			.mockReturnValueOnce(createDbChain([classroom]) as never)
+			.mockReturnValueOnce(
+				createDbChain([{ ...classroom, subjectName: subject.name }]) as never,
+			)
 			.mockReturnValueOnce(createDbChain([updatedExam]) as never)
 			.mockReturnValueOnce(
 				createDbChain([tfQuestionRow, mcQuestionRow]) as never,
@@ -218,13 +226,15 @@ describe('POST /exams/:examId/generate', () => {
 
 		expect(response.statusCode).toBe(200)
 		expect(generateExamQuestions).toHaveBeenCalledWith({
-			subject: classroom.subject,
+			subject: subject.name,
+			topic: payload.topic,
 			difficulty: payload.difficulty,
 			questionCount: 1,
 			questionType: 'multiple_choice',
 		})
 		expect(generateExamQuestions).toHaveBeenCalledWith({
-			subject: classroom.subject,
+			subject: subject.name,
+			topic: payload.topic,
 			difficulty: payload.difficulty,
 			questionCount: 1,
 			questionType: 'true_false',

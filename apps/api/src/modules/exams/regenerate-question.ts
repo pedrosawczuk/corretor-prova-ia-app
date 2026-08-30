@@ -5,6 +5,7 @@ import {
 	examsTable,
 	questionOptionsTable,
 	questionsTable,
+	subjectsTable,
 } from '@app/db'
 import type {
 	RegenerateQuestionBody,
@@ -38,8 +39,9 @@ export async function regenerateQuestionModule(
 	}
 
 	const [classroom] = await db
-		.select()
+		.select({ subjectName: subjectsTable.name })
 		.from(classroomsTable)
+		.innerJoin(subjectsTable, eq(classroomsTable.subjectId, subjectsTable.id))
 		.where(eq(classroomsTable.id, exam.classroomId))
 
 	if (!classroom) {
@@ -56,7 +58,7 @@ export async function regenerateQuestionModule(
 	}
 
 	const generatedQuestions = await generateExamQuestions({
-		subject: classroom.subject,
+		subject: classroom.subjectName,
 		difficulty,
 		questionCount: 1,
 		questionType: question.type,

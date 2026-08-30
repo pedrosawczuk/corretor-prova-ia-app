@@ -7,6 +7,7 @@ export type GeneratedQuestionWithType = GeneratedQuestion & {
 
 interface GenerateMixedQuestionsParams {
 	subject: string
+	topic: string
 	difficulty: number
 	questionCount: number
 	multipleChoiceCount: number
@@ -14,6 +15,7 @@ interface GenerateMixedQuestionsParams {
 
 export async function generateMixedQuestions({
 	subject,
+	topic,
 	difficulty,
 	questionCount,
 	multipleChoiceCount,
@@ -24,6 +26,7 @@ export async function generateMixedQuestions({
 		multipleChoiceCount > 0
 			? generateExamQuestions({
 					subject,
+					topic,
 					difficulty,
 					questionCount: multipleChoiceCount,
 					questionType: 'multiple_choice',
@@ -32,6 +35,7 @@ export async function generateMixedQuestions({
 		trueFalseCount > 0
 			? generateExamQuestions({
 					subject,
+					topic,
 					difficulty,
 					questionCount: trueFalseCount,
 					questionType: 'true_false',

@@ -5,6 +5,7 @@ import {
 	examsTable,
 	questionOptionsTable,
 	questionsTable,
+	subjectsTable,
 } from '@app/db'
 import type { GenerateExamInput } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
@@ -22,8 +23,13 @@ export async function generateExamModule(
 ) {
 	const user = await getAuthenticatedUser(request)
 	const { examId } = request.params
-	const { difficulty, questionCount, questionType, multipleChoiceCount } =
-		request.body
+	const {
+		topic,
+		difficulty,
+		questionCount,
+		questionType,
+		multipleChoiceCount,
+	} = request.body
 
 	const [exam] = await db
 		.select()
@@ -35,8 +41,9 @@ export async function generateExamModule(
 	}
 
 	const [classroom] = await db
-		.select()
+		.select({ subjectName: subjectsTable.name })
 		.from(classroomsTable)
+		.innerJoin(subjectsTable, eq(classroomsTable.subjectId, subjectsTable.id))
 		.where(eq(classroomsTable.id, exam.classroomId))
 
 	if (!classroom) {
@@ -46,14 +53,16 @@ export async function generateExamModule(
 	const generatedQuestions =
 		questionType === 'mixed'
 			? await generateMixedQuestions({
-					subject: classroom.subject,
+					subject: classroom.subjectName,
+					topic,
 					difficulty,
 					questionCount,
 					multipleChoiceCount: multipleChoiceCount ?? 0,
 				})
 			: (
 					await generateExamQuestions({
-						subject: classroom.subject,
+						subject: classroom.subjectName,
+						topic,
 						difficulty,
 						questionCount,
 						questionType,

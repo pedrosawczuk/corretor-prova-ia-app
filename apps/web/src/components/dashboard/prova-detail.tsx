@@ -13,6 +13,7 @@ import {
 	RadioGroupItem,
 	Skeleton,
 	Slider,
+	Textarea,
 	toast,
 } from '@app/ui'
 import { ArrowLeft, FileText, SearchX, Sparkles } from 'lucide-react'
@@ -32,19 +33,26 @@ export function ProvaDetail({ turmaId, examId }: ProvaDetailProps) {
 	const { data: exam, isLoading, error } = useExam(examId)
 	const generateExam = useGenerateExam(examId)
 
+	const [topic, setTopic] = React.useState('')
 	const [difficulty, setDifficulty] = React.useState(5)
 	const [questionCount, setQuestionCount] = React.useState(10)
 	const [questionType, setQuestionType] =
 		React.useState<GenerateExamInput['questionType']>('multiple_choice')
 	const [multipleChoiceCount, setMultipleChoiceCount] = React.useState(5)
 
+	const trimmedTopic = topic.trim()
+	const isTopicValid = trimmedTopic.length >= 3
+
 	React.useEffect(() => {
 		setMultipleChoiceCount((prev) => Math.min(prev, questionCount))
 	}, [questionCount])
 
 	function handleGenerate() {
+		if (!isTopicValid) return
+
 		generateExam.mutate(
 			{
+				topic: trimmedTopic,
 				difficulty,
 				questionCount,
 				questionType,
@@ -128,6 +136,24 @@ export function ProvaDetail({ turmaId, examId }: ProvaDetailProps) {
 					<CardTitle>Configurar geração</CardTitle>
 				</CardHeader>
 				<CardContent className="flex flex-col gap-5">
+					<div className="flex flex-col gap-1.5">
+						<span className="text-xs font-semibold tracking-wide text-foreground">
+							Conteúdo da prova
+						</span>
+						<Textarea
+							placeholder="Ex: Frações, MDC e MMC, operações com números decimais..."
+							size="sm"
+							showCount
+							maxLength={500}
+							value={topic}
+							disabled={generateExam.isPending}
+							onChange={(e) => setTopic(e.target.value)}
+						/>
+						<span className="text-xs text-muted-foreground">
+							Descreva os tópicos que a IA deve cobrir ao gerar as questões.
+						</span>
+					</div>
+
 					<Slider
 						label="Dificuldade"
 						min={0}
@@ -208,6 +234,7 @@ export function ProvaDetail({ turmaId, examId }: ProvaDetailProps) {
 						<Button
 							leftIcon={<Sparkles />}
 							isLoading={generateExam.isPending}
+							disabled={!isTopicValid}
 							onClick={handleGenerate}
 						>
 							{hasQuestions ? 'Gerar novamente' : 'Gerar'}
@@ -229,7 +256,7 @@ export function ProvaDetail({ turmaId, examId }: ProvaDetailProps) {
 						Nenhuma questão gerada ainda
 					</h2>
 					<p className="max-w-sm text-sm text-muted-foreground">
-						Configure a dificuldade e a quantidade acima e clique em "Gerar".
+						Informe o conteúdo da prova e clique em "Gerar".
 					</p>
 				</div>
 			)}

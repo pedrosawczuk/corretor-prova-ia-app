@@ -19,6 +19,7 @@ import { makeClassroom } from '@/test/factories/make-classroom'
 import { makeExam } from '@/test/factories/make-exam'
 import { makeQuestion } from '@/test/factories/make-question'
 import { makeQuestionOption } from '@/test/factories/make-question-option'
+import { makeSubject } from '@/test/factories/make-subject'
 import { examCacheKey, examListCacheKey } from './exam-cache'
 
 vi.mock('@/lib/ai/gemini', () => ({
@@ -44,13 +45,16 @@ describe('POST /exams/:examId/questions/:questionId/regenerate', () => {
 
 	it('regera uma questão e retorna 200', async () => {
 		const classroom = makeClassroom()
+		const subject = makeSubject()
 		const exam = makeExam({ creatorId: user.id, classroomId: classroom.id })
 		const question = makeQuestion({ examId: exam.id, type: 'multiple_choice' })
 		const option = makeQuestionOption()
 
 		vi.mocked(db.select)
 			.mockReturnValueOnce(createDbChain([exam]) as never)
-			.mockReturnValueOnce(createDbChain([classroom]) as never)
+			.mockReturnValueOnce(
+				createDbChain([{ ...classroom, subjectName: subject.name }]) as never,
+			)
 			.mockReturnValueOnce(createDbChain([question]) as never)
 			.mockReturnValueOnce(createDbChain([question]) as never)
 			.mockReturnValueOnce(createDbChain([option]) as never)
@@ -85,7 +89,7 @@ describe('POST /exams/:examId/questions/:questionId/regenerate', () => {
 
 		expect(response.statusCode).toBe(200)
 		expect(generateExamQuestions).toHaveBeenCalledWith({
-			subject: classroom.subject,
+			subject: subject.name,
 			difficulty: 7,
 			questionCount: 1,
 			questionType: 'multiple_choice',
