@@ -21,6 +21,15 @@ export class ApiError extends Error {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
 
+async function throwApiError(response: Response): Promise<never> {
+	const errorData = await response.json().catch(() => ({}))
+	throw new ApiError(
+		errorData.message || 'Ocorreu um erro ao processar a solicitação.',
+		errorData.code,
+		errorData.issues,
+	)
+}
+
 export async function apiClient<T>(
 	path: string,
 	init?: RequestInit,
@@ -39,12 +48,7 @@ export async function apiClient<T>(
 	})
 
 	if (!response.ok) {
-		const errorData = await response.json().catch(() => ({}))
-		throw new ApiError(
-			errorData.message || 'Ocorreu um erro ao processar a solicitação.',
-			errorData.code,
-			errorData.issues,
-		)
+		return throwApiError(response)
 	}
 
 	if (response.status === 204) {
@@ -52,4 +56,40 @@ export async function apiClient<T>(
 	}
 
 	return response.json()
+}
+
+function filenameFromContentDisposition(
+	contentDisposition: string | null,
+	fallback: string,
+): string {
+	const match = contentDisposition?.match(/filename="([^"]+)"/)
+	return match?.[1] || fallback
+}
+
+export async function downloadFile(
+	path: string,
+	fallbackFilename = 'download',
+): Promise<void> {
+	const response = await fetch(`${API_URL}${path}`, {
+		credentials: 'include',
+	})
+
+	if (!response.ok) {
+		return throwApiError(response)
+	}
+
+	const filename = filenameFromContentDisposition(
+		response.headers.get('content-disposition'),
+		fallbackFilename,
+	)
+	const blob = await response.blob()
+	const url = URL.createObjectURL(blob)
+
+	const link = document.createElement('a')
+	link.href = url
+	link.download = filename
+	document.body.appendChild(link)
+	link.click()
+	link.remove()
+	URL.revokeObjectURL(url)
 }
