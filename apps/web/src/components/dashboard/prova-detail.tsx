@@ -8,6 +8,10 @@ import {
 	CardContent,
 	CardHeader,
 	CardTitle,
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
 	Input,
 	RadioGroup,
 	RadioGroupItem,
@@ -16,10 +20,17 @@ import {
 	Textarea,
 	toast,
 } from '@app/ui'
-import { ArrowLeft, FileText, SearchX, Sparkles } from 'lucide-react'
+import {
+	ArrowLeft,
+	Download,
+	FileText,
+	ScanLine,
+	SearchX,
+	Sparkles,
+} from 'lucide-react'
 import Link from 'next/link'
 import * as React from 'react'
-import { useExam, useGenerateExam } from '@/hooks/use-exams'
+import { useExam, useExportExam, useGenerateExam } from '@/hooks/use-exams'
 import { ApiError } from '@/lib/api-client'
 import { toastApiError } from '@/lib/api-error-handler'
 import { ProvaResultado } from './prova-resultado'
@@ -32,6 +43,7 @@ interface ProvaDetailProps {
 export function ProvaDetail({ turmaId, examId }: ProvaDetailProps) {
 	const { data: exam, isLoading, error } = useExam(examId)
 	const generateExam = useGenerateExam(examId)
+	const exportExam = useExportExam(examId)
 
 	const [topic, setTopic] = React.useState('')
 	const [difficulty, setDifficulty] = React.useState(5)
@@ -105,6 +117,14 @@ export function ProvaDetail({ turmaId, examId }: ProvaDetailProps) {
 
 	const hasQuestions = exam.questions.length > 0
 
+	function handleExport(format: 'pdf' | 'docx') {
+		exportExam.mutate(format, {
+			onError: (err) => {
+				toastApiError(err, 'Não foi possível baixar a prova. Tente novamente.')
+			},
+		})
+	}
+
 	return (
 		<div className="flex flex-1 flex-col gap-6 p-6 bg-muted/20">
 			<Link
@@ -115,19 +135,54 @@ export function ProvaDetail({ turmaId, examId }: ProvaDetailProps) {
 				Voltar para a turma
 			</Link>
 
-			<div>
-				<div className="flex items-center gap-2">
-					<h1 className="text-xl font-bold tracking-tight text-foreground">
-						{exam.title}
-					</h1>
-					<Badge variant="subtle" size="sm">
-						{exam.status === 'draft' ? 'Rascunho' : 'Finalizada'}
-					</Badge>
+			<div className="flex items-start justify-between gap-4">
+				<div>
+					<div className="flex items-center gap-2">
+						<h1 className="text-xl font-bold tracking-tight text-foreground">
+							{exam.title}
+						</h1>
+						<Badge variant="subtle" size="sm">
+							{exam.status === 'draft' ? 'Rascunho' : 'Finalizada'}
+						</Badge>
+					</div>
+					{exam.description && (
+						<p className="mt-1 text-sm text-muted-foreground">
+							{exam.description}
+						</p>
+					)}
 				</div>
-				{exam.description && (
-					<p className="mt-1 text-sm text-muted-foreground">
-						{exam.description}
-					</p>
+
+				{hasQuestions && (
+					<div className="flex items-center gap-2">
+						<Button variant="default" size="sm" asChild leftIcon={<ScanLine />}>
+							<Link
+								href={`/dashboard/turmas/${turmaId}/provas/${examId}/corrigir`}
+							>
+								Corrigir por foto
+							</Link>
+						</Button>
+
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant="outline"
+									size="sm"
+									leftIcon={<Download />}
+									isLoading={exportExam.isPending}
+								>
+									Baixar
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuItem onClick={() => handleExport('pdf')}>
+									Baixar prova (PDF)
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={() => handleExport('docx')}>
+									Baixar prova (DOCX)
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</div>
 				)}
 			</div>
 

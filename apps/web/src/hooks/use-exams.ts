@@ -12,7 +12,7 @@ import {
 	useQuery,
 	useQueryClient,
 } from '@tanstack/react-query'
-import { apiClient } from '@/lib/api-client'
+import { apiClient, downloadFile } from '@/lib/api-client'
 
 const examsKeys = {
 	list: (classroomId: string) => ['exams', classroomId] as const,
@@ -94,6 +94,20 @@ export function useGenerateExam(examId: string) {
 			queryClient.invalidateQueries({
 				queryKey: examsKeys.list(exam.classroomId),
 			})
+		},
+	})
+}
+
+export function useExportExam(examId: string) {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (format: 'pdf' | 'docx') =>
+			downloadFile(`/exams/${examId}/export/${format}`, `prova.${format}`),
+		onSuccess: () => {
+			// Exportar em PDF trava o gabarito de correção por foto (páginas e
+			// coordenadas das alternativas) — o detalhe da prova muda.
+			queryClient.invalidateQueries({ queryKey: examsKeys.detail(examId) })
 		},
 	})
 }
