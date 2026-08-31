@@ -9,6 +9,7 @@ import { adminRoutes } from '@/modules/admin/admin-routes'
 import { classroomRoutes } from '@/modules/classrooms/classroom-routes'
 import { examRoutes } from '@/modules/exams/exam-routes'
 import { subjectRoutes } from '@/modules/subjects/subjects-routes'
+import { submissionRoutes } from '@/modules/submissions/submission-routes'
 
 export function createTestApp() {
 	const app = fastify().withTypeProvider<ZodTypeProvider>()
@@ -22,6 +23,7 @@ export function createTestApp() {
 	app.register(examRoutes, { prefix: '/exams' })
 	app.register(subjectRoutes, { prefix: '/subjects' })
 	app.register(adminRoutes, { prefix: '/admin' })
+	app.register(submissionRoutes)
 
 	return app
 }

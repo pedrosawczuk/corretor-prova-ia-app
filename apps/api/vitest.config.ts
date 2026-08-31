@@ -15,5 +15,13 @@ export default defineConfig({
 		sequence: {
 			concurrent: false,
 		},
+		server: {
+			// O runtime WASM do OpenCV.js expõe um export CJS que confunde o
+			// transform de SSR do Vite (thenable mal interpretado) — carregar
+			// via require() nativo do Node evita o problema.
+			deps: {
+				external: [/@techstark\/opencv-js/],
+			},
+		},
 	},
 })

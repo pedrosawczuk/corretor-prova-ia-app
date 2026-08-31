@@ -11,6 +11,9 @@ vi.mock('@app/db', () => ({
 	questionsTable: {},
 	questionOptionsTable: {},
 	subjectsTable: {},
+	submissionsTable: {},
+	submissionPagesTable: {},
+	submissionAnswersTable: {},
 	user: {},
 	db: {
 		delete: vi.fn(),

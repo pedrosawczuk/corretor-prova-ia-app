@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { type Mock, vi } from 'vitest'
 
 const CHAIN_METHODS = [
 	'from',
@@ -12,11 +12,10 @@ const CHAIN_METHODS = [
 	'offset',
 ] as const
 
+type DbChain = Record<(typeof CHAIN_METHODS)[number], Mock>
+
 export function createDbChain(result: unknown) {
-	const chain = Object.assign(
-		Promise.resolve(result),
-		{} as Record<string, unknown>,
-	)
+	const chain = Object.assign(Promise.resolve(result), {} as DbChain)
 
 	for (const method of CHAIN_METHODS) {
 		chain[method] = vi.fn(() => chain)
