@@ -22,6 +22,8 @@ export interface Exam {
 	status: 'draft' | 'finalized'
 	classroomId: string
 	creatorId: string
+	/** Número de páginas da versão impressa travada — null se a prova nunca foi exportada. */
+	templatePageCount: number | null
 	createdAt: string
 	updatedAt: string
 	questions: Question[]

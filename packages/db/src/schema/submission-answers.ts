@@ -7,6 +7,7 @@ import {
 	timestamp,
 	uuid,
 } from 'drizzle-orm/pg-core'
+import { questionOptionsTable } from './question-options'
 import { questionsTable } from './questions'
 import { submissionsTable } from './submissions'
 import { user } from './users'
@@ -21,6 +22,10 @@ export const submissionAnswersTable = pgTable(
 		questionId: uuid('question_id')
 			.notNull()
 			.references(() => questionsTable.id, { onDelete: 'cascade' }),
+		markedOptionId: uuid('marked_option_id').references(
+			() => questionOptionsTable.id,
+			{ onDelete: 'set null' },
+		),
 		extractedText: text('extracted_text'),
 		aiScore: numeric('ai_score', { precision: 5, scale: 2 }),
 		finalScore: numeric('final_score', { precision: 5, scale: 2 }),

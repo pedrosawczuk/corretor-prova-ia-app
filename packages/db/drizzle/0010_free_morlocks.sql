@@ -1,0 +1,2 @@
+ALTER TABLE "submission_answers" ADD COLUMN "marked_option_id" uuid;--> statement-breakpoint
+ALTER TABLE "submission_answers" ADD CONSTRAINT "submission_answers_marked_option_id_question_options_id_fk" FOREIGN KEY ("marked_option_id") REFERENCES "public"."question_options"("id") ON DELETE set null ON UPDATE no action;

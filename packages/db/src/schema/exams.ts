@@ -1,5 +1,6 @@
 import {
 	index,
+	integer,
 	numeric,
 	pgEnum,
 	pgTable,
@@ -27,6 +28,15 @@ export const examsTable = pgTable(
 			.notNull()
 			.references(() => user.id, { onDelete: 'cascade' }),
 		templatePdfUrl: text('template_pdf_url'),
+		/**
+		 * Página impressa "trava" (bytes + coordenadas dos marcadores de
+		 * alternativa em question_options) sempre que a prova é exportada.
+		 * Correção por foto só é permitida contra essa versão travada — se a
+		 * prova for editada depois, `templateLockedAt` fica desatualizado em
+		 * relação a `updatedAt` e o template é regerado no próximo export.
+		 */
+		templatePageCount: integer('template_page_count'),
+		templateLockedAt: timestamp('template_locked_at'),
 		createdAt: timestamp('created_at').notNull().defaultNow(),
 		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
