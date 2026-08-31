@@ -13,6 +13,8 @@ export function makeExam(overrides: Partial<Exam> = {}): Exam {
 		classroomId: faker.string.uuid(),
 		creatorId: faker.string.uuid(),
 		templatePdfUrl: null,
+		templatePageCount: null,
+		templateLockedAt: null,
 		createdAt: faker.date.recent(),
 		updatedAt: faker.date.recent(),
 		...overrides,

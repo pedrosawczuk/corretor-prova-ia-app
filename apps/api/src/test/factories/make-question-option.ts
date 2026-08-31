@@ -12,6 +12,9 @@ export function makeQuestionOption(
 		letter: 'A',
 		text: faker.lorem.words(3),
 		isCorrect: false,
+		markerPage: null,
+		markerX: null,
+		markerY: null,
 		...overrides,
 	}
 }

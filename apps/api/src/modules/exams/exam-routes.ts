@@ -10,6 +10,8 @@ import type { FastifyInstance } from 'fastify'
 import { createExamModule } from './create-exam'
 import { deleteQuestionModule } from './delete-question'
 import { examParamsSchema } from './exam-params-schema'
+import { exportExamDocxModule } from './export-exam-docx'
+import { exportExamPdfModule } from './export-exam-pdf'
 import { generateExamModule } from './generate-exam'
 import { getExamModule } from './get-exam'
 import { listExamsModule } from './list-exams'
@@ -51,6 +53,26 @@ export function examRoutes(app: FastifyInstance) {
 			},
 		},
 		getExamModule,
+	)
+
+	app.get(
+		'/:examId/export/pdf',
+		{
+			schema: {
+				params: examParamsSchema,
+			},
+		},
+		exportExamPdfModule,
+	)
+
+	app.get(
+		'/:examId/export/docx',
+		{
+			schema: {
+				params: examParamsSchema,
+			},
+		},
+		exportExamDocxModule,
 	)
 
 	app.post(
