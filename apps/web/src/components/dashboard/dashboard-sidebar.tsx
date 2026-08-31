@@ -16,9 +16,24 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const NAV_ITEMS = [
-	{ title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-	{ title: 'Turmas', href: '/dashboard/turmas', icon: Users },
-	{ title: 'Configurações', href: '/dashboard/configuracoes', icon: Settings },
+	{
+		title: 'Dashboard',
+		href: '/dashboard',
+		icon: LayoutDashboard,
+		tourId: 'nav-dashboard',
+	},
+	{
+		title: 'Turmas',
+		href: '/dashboard/turmas',
+		icon: Users,
+		tourId: 'nav-turmas',
+	},
+	{
+		title: 'Configurações',
+		href: '/dashboard/configuracoes',
+		icon: Settings,
+		tourId: 'nav-configuracoes',
+	},
 ]
 
 export function DashboardSidebar() {
@@ -29,6 +44,7 @@ export function DashboardSidebar() {
 			<SidebarHeader>
 				<Link
 					href="/dashboard"
+					data-tour="brand"
 					className="flex items-center gap-2.5 px-1 py-1 min-w-0"
 				>
 					<div className="size-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
@@ -53,7 +69,7 @@ export function DashboardSidebar() {
 								return (
 									<SidebarMenuItem key={item.href}>
 										<SidebarMenuButton asChild isActive={isActive}>
-											<Link href={item.href}>
+											<Link href={item.href} data-tour={item.tourId}>
 												<item.icon />
 												<span>{item.title}</span>
 											</Link>

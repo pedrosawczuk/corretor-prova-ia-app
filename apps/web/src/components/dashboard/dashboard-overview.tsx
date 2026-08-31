@@ -37,6 +37,7 @@ import { useAllExams } from '@/hooks/use-exams'
 import { useSubjectNameMap } from '@/hooks/use-subjects'
 import { formatRelativeDate } from '@/lib/date'
 import { buildGrowthData, buildSubjectData } from './dashboard-overview.utils'
+import { OnboardingTour } from './onboarding-tour'
 
 export function DashboardOverview() {
 	const { data: classrooms, isLoading, isError } = useClassrooms()
@@ -95,6 +96,8 @@ export function DashboardOverview() {
 
 	return (
 		<div className="flex flex-1 flex-col gap-6 p-6 bg-muted/20">
+			<OnboardingTour />
+
 			<div>
 				<h1 className="text-xl font-bold tracking-tight text-foreground">
 					Dashboard
@@ -104,7 +107,7 @@ export function DashboardOverview() {
 				</p>
 			</div>
 
-			<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+			<div data-tour="stats" className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 				<Card>
 					<CardContent className="flex items-center gap-3 pt-4 sm:pt-6">
 						<div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
@@ -297,7 +300,7 @@ export function DashboardOverview() {
 				</Card>
 			</div>
 
-			<Card>
+			<Card data-tour="turmas-section">
 				<CardHeader>
 					<CardTitle>
 						Turmas
@@ -363,7 +366,7 @@ export function DashboardOverview() {
 				</CardContent>
 			</Card>
 
-			<Card>
+			<Card data-tour="provas-section">
 				<CardHeader>
 					<CardTitle>
 						Provas
