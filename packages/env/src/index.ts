@@ -41,6 +41,9 @@ export const apiEnvSchema = dbEnvSchema.extend({
 	MINIO_ACCESS_KEY: z.string().min(1),
 	MINIO_SECRET_KEY: z.string().min(1),
 	MINIO_BUCKET: z.string().min(1),
+	ABACATEPAY_API_KEY: z.string().min(1),
+	ABACATEPAY_WEBHOOK_SECRET: z.string().min(1),
+	ABACATEPAY_API_BASE_URL: z.url().default('https://api.abacatepay.com/v2'),
 })
 
 export type ApiEnv = z.infer<typeof apiEnvSchema>
