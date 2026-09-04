@@ -26,6 +26,7 @@ import {
 } from '@/lib/storage/storage'
 import { adminRoutes } from '@/modules/admin/admin-routes'
 import { authRoutes } from '@/modules/auth/auth-routes'
+import { billingRoutes } from '@/modules/billing/billing-routes'
 import { classroomRoutes } from '@/modules/classrooms/classroom-routes'
 import { examRoutes } from '@/modules/exams/exam-routes'
 import { subjectRoutes } from '@/modules/subjects/subjects-routes'
@@ -102,6 +103,7 @@ app.all(
 )
 
 app.register(authRoutes, { prefix: '/auth' })
+app.register(billingRoutes, { prefix: '/billing' })
 app.register(classroomRoutes, { prefix: '/classrooms' })
 app.register(examRoutes, { prefix: '/exams' })
 app.register(subjectRoutes, { prefix: '/subjects' })

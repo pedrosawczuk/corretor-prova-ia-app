@@ -10,6 +10,8 @@ const CHAIN_METHODS = [
 	'innerJoin',
 	'limit',
 	'offset',
+	'onConflictDoNothing',
+	'onConflictDoUpdate',
 ] as const
 
 type DbChain = Record<(typeof CHAIN_METHODS)[number], Mock>

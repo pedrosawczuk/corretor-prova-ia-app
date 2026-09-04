@@ -6,6 +6,7 @@ import {
 } from 'fastify-type-provider-zod'
 import { registerErrorHandler } from '@/lib/http/register-error-handler'
 import { adminRoutes } from '@/modules/admin/admin-routes'
+import { billingRoutes } from '@/modules/billing/billing-routes'
 import { classroomRoutes } from '@/modules/classrooms/classroom-routes'
 import { examRoutes } from '@/modules/exams/exam-routes'
 import { subjectRoutes } from '@/modules/subjects/subjects-routes'
@@ -23,6 +24,7 @@ export function createTestApp() {
 	app.register(examRoutes, { prefix: '/exams' })
 	app.register(subjectRoutes, { prefix: '/subjects' })
 	app.register(adminRoutes, { prefix: '/admin' })
+	app.register(billingRoutes, { prefix: '/billing' })
 	app.register(submissionRoutes)
 
 	return app

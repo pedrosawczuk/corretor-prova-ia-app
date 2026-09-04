@@ -6,14 +6,18 @@ import {
 } from '@/lib/mail/mail'
 
 vi.mock('@app/db', () => ({
+	billingEventsTable: {},
 	classroomsTable: {},
+	correctionCreditsTable: {},
 	examsTable: {},
+	plansTable: {},
 	questionsTable: {},
 	questionOptionsTable: {},
 	subjectsTable: {},
 	submissionsTable: {},
 	submissionPagesTable: {},
 	submissionAnswersTable: {},
+	subscriptionsTable: {},
 	user: {},
 	db: {
 		delete: vi.fn(),
@@ -22,11 +26,14 @@ vi.mock('@app/db', () => ({
 		transaction: vi.fn(),
 		update: vi.fn(),
 	},
+	and: vi.fn(),
 	asc: vi.fn(),
 	count: vi.fn(),
 	desc: vi.fn(),
 	eq: vi.fn(),
+	gte: vi.fn(),
 	inArray: vi.fn(),
+	lte: vi.fn(),
 	sql: vi.fn(),
 }))
 
