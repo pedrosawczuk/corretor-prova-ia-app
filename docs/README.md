@@ -14,6 +14,7 @@ Bem-vindo à documentação oficial do **Corretor de Prova IA** — uma platafor
 | [**Padrões de Código — Backend**](./code-patterns-backend.md) | Arquitetura de camadas, casos de uso, transações e tratamento de erros do Fastify/Drizzle. |
 | [**Padrões de Código — Frontend**](./code-patterns-frontend.md) | Convenções do Next.js, formulários, data fetching e design system. |
 | [**Design System**](./design-system.md) | Tokens visuais e componentes do `packages/ui`. |
+| [**Pagamentos — AbacatePay**](./billing-abacatepay.md) | Endpoints, webhook e credenciais da integração de cobrança (planos Avulso, Essencial, Pro). |
 
 ---
 
