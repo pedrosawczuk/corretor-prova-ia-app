@@ -40,7 +40,7 @@ services:
     image: minio/minio:latest
     container_name: corretor_prova_minio
     restart: unless-stopped
-    command: server /data --console-address ":9001"
+    command: server /data --address ":9000" --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
@@ -68,3 +68,6 @@ volumes:
 networks:
   app-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 10.200.200.0/24
