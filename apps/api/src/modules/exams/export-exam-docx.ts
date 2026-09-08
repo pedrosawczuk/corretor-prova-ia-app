@@ -2,6 +2,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 import { NotFoundError } from '@/core/errors'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
 import { getOrSetCache } from '@/lib/cache/redis'
+import { assertDocxExportAllowed } from '@/modules/billing/assert-docx-export-allowed'
 import { buildExamDocx } from './build-exam-docx'
 import { EXAM_CACHE_TTL_SECONDS, examCacheKey } from './exam-cache'
 import { buildExamExportFilename } from './exam-export-data'
@@ -25,6 +26,8 @@ export async function exportExamDocxModule(
 	if (!exam || exam.creatorId !== user.id) {
 		throw new NotFoundError('Prova não encontrada.')
 	}
+
+	await assertDocxExportAllowed(user.id)
 
 	const headerInfo = await fetchExamHeaderInfo(exam.classroomId, exam.creatorId)
 	const buffer = await buildExamDocx({ ...exam, ...headerInfo })

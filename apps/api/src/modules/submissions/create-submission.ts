@@ -2,6 +2,7 @@ import { db, eq, examsTable, submissionsTable } from '@app/db'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { NotFoundError } from '@/core/errors'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { assertCorrectionQuotaAvailable } from '@/modules/billing/assert-correction-quota-available'
 import type { CreateSubmissionBody } from './create-submission-schema'
 import type { ExamSubmissionsParams } from './submission-params-schema'
 
@@ -25,14 +26,20 @@ export async function createSubmissionModule(
 		throw new NotFoundError('Prova não encontrada.')
 	}
 
-	const [submission] = await db
-		.insert(submissionsTable)
-		.values({
-			examId,
-			studentIdentifier,
-			status: 'pending_processing',
-		})
-		.returning()
+	const submission = await db.transaction(async (tx) => {
+		await assertCorrectionQuotaAvailable(tx, user.id)
+
+		const [created] = await tx
+			.insert(submissionsTable)
+			.values({
+				examId,
+				studentIdentifier,
+				status: 'pending_processing',
+			})
+			.returning()
+
+		return created
+	})
 
 	return reply.status(201).send({ ...submission, pages: [], answers: [] })
 }

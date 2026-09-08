@@ -9,13 +9,19 @@ import {
 	it,
 	vi,
 } from 'vitest'
+import { PaymentRequiredError } from '@/core/errors'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { assertDocxExportAllowed } from '@/modules/billing/assert-docx-export-allowed'
 import { createDbChain } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
 import { makeExam } from '@/test/factories/make-exam'
 import { makeQuestion } from '@/test/factories/make-question'
 import { makeQuestionOption } from '@/test/factories/make-question-option'
+
+vi.mock('@/modules/billing/assert-docx-export-allowed', () => ({
+	assertDocxExportAllowed: vi.fn(),
+}))
 
 describe('GET /exams/:examId/export/docx', () => {
 	let app: FastifyInstance
@@ -32,6 +38,7 @@ describe('GET /exams/:examId/export/docx', () => {
 
 	beforeEach(() => {
 		vi.mocked(getAuthenticatedUser).mockResolvedValue(user as never)
+		vi.mocked(assertDocxExportAllowed).mockResolvedValue(undefined)
 	})
 
 	it('retorna o DOCX da prova com status 200', async () => {
@@ -96,5 +103,25 @@ describe('GET /exams/:examId/export/docx', () => {
 
 		expect(response.statusCode).toBe(400)
 		expect(db.select).not.toHaveBeenCalled()
+	})
+
+	it('retorna 402 quando o plano do usuário não permite exportação em DOCX', async () => {
+		const exam = makeExam({ creatorId: user.id })
+
+		vi.mocked(db.select)
+			.mockReturnValueOnce(createDbChain([exam]) as never)
+			.mockReturnValueOnce(createDbChain([]) as never)
+		vi.mocked(assertDocxExportAllowed).mockRejectedValue(
+			new PaymentRequiredError(
+				'A exportação em DOCX está disponível apenas no plano Pro.',
+			),
+		)
+
+		const response = await app.inject({
+			method: 'GET',
+			url: `/exams/${exam.id}/export/docx`,
+		})
+
+		expect(response.statusCode).toBe(402)
 	})
 })

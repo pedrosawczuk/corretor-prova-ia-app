@@ -9,12 +9,18 @@ import {
 	it,
 	vi,
 } from 'vitest'
+import { PaymentRequiredError } from '@/core/errors'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
-import { createDbChain } from '@/test/create-db-chain'
+import { assertCorrectionQuotaAvailable } from '@/modules/billing/assert-correction-quota-available'
+import { createDbChain, createDbTransactionMock } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
 import { makeExam } from '@/test/factories/make-exam'
 import { makeSubmission } from '@/test/factories/make-submission'
+
+vi.mock('@/modules/billing/assert-correction-quota-available', () => ({
+	assertCorrectionQuotaAvailable: vi.fn(),
+}))
 
 describe('POST /exams/:examId/submissions', () => {
 	let app: FastifyInstance
@@ -31,6 +37,7 @@ describe('POST /exams/:examId/submissions', () => {
 
 	beforeEach(() => {
 		vi.mocked(getAuthenticatedUser).mockResolvedValue(user as never)
+		vi.mocked(assertCorrectionQuotaAvailable).mockResolvedValue(undefined)
 	})
 
 	it('cria a submissão pendente de processamento para a prova do professor autenticado e retorna 201', async () => {
@@ -41,8 +48,9 @@ describe('POST /exams/:examId/submissions', () => {
 		})
 
 		vi.mocked(db.select).mockReturnValueOnce(createDbChain([exam]) as never)
-		vi.mocked(db.insert).mockReturnValue(
-			createDbChain([submissionRow]) as never,
+		const insert = vi.fn().mockReturnValue(createDbChain([submissionRow]))
+		vi.mocked(db.transaction).mockImplementation(
+			createDbTransactionMock({ insert }) as never,
 		)
 
 		const response = await app.inject({
@@ -60,6 +68,10 @@ describe('POST /exams/:examId/submissions', () => {
 				pages: [],
 				answers: [],
 			}),
+		)
+		expect(assertCorrectionQuotaAvailable).toHaveBeenCalledWith(
+			expect.objectContaining({ insert }),
+			user.id,
 		)
 	})
 
@@ -100,5 +112,27 @@ describe('POST /exams/:examId/submissions', () => {
 
 		expect(response.statusCode).toBe(400)
 		expect(db.select).not.toHaveBeenCalled()
+	})
+
+	it('retorna 402 quando a cota de correções do usuário está esgotada', async () => {
+		const exam = makeExam({ creatorId: user.id })
+
+		vi.mocked(db.select).mockReturnValueOnce(createDbChain([exam]) as never)
+		const insert = vi.fn()
+		vi.mocked(db.transaction).mockImplementation(
+			createDbTransactionMock({ insert }) as never,
+		)
+		vi.mocked(assertCorrectionQuotaAvailable).mockRejectedValue(
+			new PaymentRequiredError(),
+		)
+
+		const response = await app.inject({
+			method: 'POST',
+			url: `/exams/${exam.id}/submissions`,
+			payload: { studentIdentifier: 'Aluno 12' },
+		})
+
+		expect(response.statusCode).toBe(402)
+		expect(insert).not.toHaveBeenCalled()
 	})
 })
