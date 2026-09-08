@@ -1,6 +1,7 @@
 import { db, eq, submissionPagesTable } from '@app/db'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { fileTypeFromBuffer } from 'file-type'
+import heicConvert from 'heic-convert'
 import sharp from 'sharp'
 import { BadRequestError, ConflictError } from '@/core/errors'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
@@ -13,7 +14,25 @@ import { fetchOwnedSubmission } from './fetch-owned-submission'
 import type { SubmissionParams } from './submission-params-schema'
 
 const MAX_PAGE_DIMENSION = 1600
+const MIN_PAGE_DIMENSION = 900
 const NON_UPLOADABLE_STATUSES = new Set(['processing', 'completed'])
+const HEIC_MIME_TYPES = new Set(['image/heic', 'image/heif'])
+const MAX_INPUT_PIXELS = 30_000_000
+
+async function decodeToJpegCompatibleBuffer(
+	buffer: Buffer,
+	mime: string,
+): Promise<Buffer> {
+	if (!HEIC_MIME_TYPES.has(mime)) return buffer
+
+	const converted = await heicConvert({
+		buffer,
+		format: 'JPEG',
+		quality: 0.92,
+	})
+
+	return Buffer.from(converted)
+}
 
 export async function uploadSubmissionPageModule(
 	request: FastifyRequest<{ Params: SubmissionParams }>,
@@ -53,10 +72,32 @@ export async function uploadSubmissionPageModule(
 		throw new BadRequestError('O arquivo enviado precisa ser uma imagem.')
 	}
 
+	const decodableBuffer = await decodeToJpegCompatibleBuffer(
+		originalBuffer,
+		fileType.mime,
+	)
+
+	const { width, height } = await sharp(decodableBuffer, {
+		limitInputPixels: MAX_INPUT_PIXELS,
+	})
+		.metadata()
+		.catch(() => {
+			throw new BadRequestError(
+				'A imagem enviada é grande demais para ser processada.',
+			)
+		})
+	if (!width || !height || Math.min(width, height) < MIN_PAGE_DIMENSION) {
+		throw new BadRequestError(
+			'A foto está com resolução muito baixa para leitura confiável — tire a foto mais de perto ou com mais qualidade.',
+		)
+	}
+
 	// Folhas de resposta são preto-e-branco por natureza: grayscale corta o
 	// peso do arquivo (upload, storage e download antes da IA) sem perder
 	// nenhuma informação relevante para identificar a marcação do aluno.
-	const normalizedBuffer = await sharp(originalBuffer)
+	const normalizedBuffer = await sharp(decodableBuffer, {
+		limitInputPixels: MAX_INPUT_PIXELS,
+	})
 		.rotate()
 		.resize(MAX_PAGE_DIMENSION, MAX_PAGE_DIMENSION, {
 			fit: 'inside',

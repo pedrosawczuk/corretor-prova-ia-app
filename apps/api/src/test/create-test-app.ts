@@ -1,3 +1,4 @@
+import multipart from '@fastify/multipart'
 import fastify from 'fastify'
 import {
 	serializerCompiler,
@@ -14,6 +15,8 @@ import { submissionRoutes } from '@/modules/submissions/submission-routes'
 
 export function createTestApp() {
 	const app = fastify().withTypeProvider<ZodTypeProvider>()
+
+	app.register(multipart)
 
 	app.setValidatorCompiler(validatorCompiler)
 	app.setSerializerCompiler(serializerCompiler)
