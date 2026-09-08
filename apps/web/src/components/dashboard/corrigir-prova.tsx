@@ -2,6 +2,7 @@
 
 import { Badge, Button, Card, CardContent, Skeleton, toast } from '@app/ui'
 import {
+	AlertTriangle,
 	ArrowLeft,
 	Camera,
 	CheckCircle2,
@@ -21,7 +22,11 @@ import {
 } from '@/hooks/use-submissions'
 import { ApiError } from '@/lib/api-client'
 import { toastApiError } from '@/lib/api-error-handler'
-import { countPendingReview } from './corrigir-prova.utils'
+import {
+	buildMisalignedPagesWarning,
+	countPendingReview,
+	getMisalignedPageNumbers,
+} from './corrigir-prova.utils'
 import { CorrigirProvaCamera } from './corrigir-prova-camera'
 import { CorrigirProvaResultado } from './corrigir-prova-resultado'
 import { CorrigirProvaScanAnimation } from './corrigir-prova-scan-animation'
@@ -284,6 +289,7 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 	}
 
 	const pending = countPendingReview(submission)
+	const misalignedPages = getMisalignedPageNumbers(submission)
 
 	return (
 		<div className="flex flex-1 flex-col gap-6 p-6 bg-muted/20">
@@ -294,6 +300,13 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 				<ArrowLeft className="size-3.5" />
 				Voltar para a prova
 			</Link>
+
+			{misalignedPages.length > 0 && (
+				<div className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning/5 p-3 text-sm text-warning">
+					<AlertTriangle className="size-4 shrink-0 mt-0.5" />
+					<p>{buildMisalignedPagesWarning(misalignedPages)}</p>
+				</div>
+			)}
 
 			<Card variant="subtle">
 				<CardContent className="flex items-center justify-between gap-4 pt-4 sm:pt-6">

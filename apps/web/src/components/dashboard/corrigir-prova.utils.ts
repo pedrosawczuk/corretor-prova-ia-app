@@ -20,3 +20,18 @@ export function pairQuestionsWithAnswers(
 export function countPendingReview(submission: Submission): number {
 	return submission.answers.filter((answer) => answer.requiresReview).length
 }
+
+export function getMisalignedPageNumbers(submission: Submission): number[] {
+	return submission.pages
+		.filter((page) => page.markersFound === false)
+		.map((page) => page.pageNumber)
+		.sort((a, b) => a - b)
+}
+
+export function buildMisalignedPagesWarning(pageNumbers: number[]): string {
+	if (pageNumbers.length === 1) {
+		return `A página ${pageNumbers[0]} não pôde ser alinhada automaticamente — todas as questões dela precisam de revisão manual.`
+	}
+
+	return `As páginas ${pageNumbers.join(', ')} não puderam ser alinhadas automaticamente — todas as questões delas precisam de revisão manual.`
+}
