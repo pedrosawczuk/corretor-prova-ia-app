@@ -15,6 +15,7 @@ import {
 } from '@app/db'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { reconcileSubscriptionStatus } from './reconcile-subscription-status'
 
 export async function getBillingStatusModule(
 	request: FastifyRequest,
@@ -22,12 +23,15 @@ export async function getBillingStatusModule(
 ) {
 	const user = await getAuthenticatedUser(request)
 
-	const [subscription] = await db
+	const [subscriptionRow] = await db
 		.select({
+			id: subscriptionsTable.id,
+			userId: subscriptionsTable.userId,
 			status: subscriptionsTable.status,
 			currentPeriodStart: subscriptionsTable.currentPeriodStart,
 			currentPeriodEnd: subscriptionsTable.currentPeriodEnd,
 			cancelAtPeriodEnd: subscriptionsTable.cancelAtPeriodEnd,
+			updatedAt: subscriptionsTable.updatedAt,
 			planSlug: plansTable.slug,
 			planName: plansTable.name,
 			monthlyCorrectionsLimit: plansTable.monthlyCorrectionsLimit,
@@ -43,6 +47,12 @@ export async function getBillingStatusModule(
 		)
 		.orderBy(desc(subscriptionsTable.createdAt))
 		.limit(1)
+
+	const reconciled = subscriptionRow
+		? await reconcileSubscriptionStatus(subscriptionRow)
+		: undefined
+	const subscription =
+		reconciled?.status === 'canceled' ? undefined : reconciled
 
 	const [{ correctionsUsed }] = subscription
 		? await db

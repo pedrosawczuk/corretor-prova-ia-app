@@ -1,7 +1,9 @@
 import { env } from '@app/env'
 import { Resend } from 'resend'
 import { NewLoginEmail } from './templates/new-login-email'
+import { PaymentFailedEmail } from './templates/payment-failed-email'
 import { ResetPasswordEmail } from './templates/reset-password-email'
+import { SubscriptionCancelledEmail } from './templates/subscription-cancelled-email'
 import { TwoFactorOtpEmail } from './templates/two-factor-otp-email'
 import { VerifyEmail } from './templates/verify-email'
 import { WelcomeEmail } from './templates/welcome-email'
@@ -121,5 +123,53 @@ export async function sendNewLoginEmail({
 		to,
 		subject: 'Novo login detectado — gabarita.app',
 		react: NewLoginEmail({ name, device, ipAddress, dateTime, securityUrl }),
+	})
+}
+
+interface SendPaymentFailedEmailParams {
+	to: string
+	name: string
+}
+
+export async function sendPaymentFailedEmail({
+	to,
+	name,
+}: SendPaymentFailedEmailParams) {
+	if (!env.RESEND_API_KEY || !env.MAIL_FROM) {
+		return
+	}
+
+	await resend.emails.send({
+		from: env.MAIL_FROM,
+		to,
+		subject: 'Não conseguimos confirmar seu pagamento — gabarita.app',
+		react: PaymentFailedEmail({
+			name,
+			manageUrl: `${env.WEB_URL}/dashboard/configuracoes`,
+		}),
+	})
+}
+
+interface SendSubscriptionCancelledEmailParams {
+	to: string
+	name: string
+}
+
+export async function sendSubscriptionCancelledEmail({
+	to,
+	name,
+}: SendSubscriptionCancelledEmailParams) {
+	if (!env.RESEND_API_KEY || !env.MAIL_FROM) {
+		return
+	}
+
+	await resend.emails.send({
+		from: env.MAIL_FROM,
+		to,
+		subject: 'Sua assinatura foi cancelada — gabarita.app',
+		react: SubscriptionCancelledEmail({
+			name,
+			manageUrl: `${env.WEB_URL}/dashboard/configuracoes`,
+		}),
 	})
 }

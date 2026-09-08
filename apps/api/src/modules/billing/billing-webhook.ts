@@ -3,6 +3,7 @@ import {
 	correctionCreditsTable,
 	db,
 	eq,
+	inArray,
 	plansTable,
 	subscriptionsTable,
 } from '@app/db'
@@ -10,6 +11,12 @@ import { env } from '@app/env'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { verifyAbacatePayWebhookSignature } from '@/lib/billing/verify-webhook-signature'
 import { billingWebhookPayloadSchema } from './billing-webhook-schema'
+import {
+	type BillingNotification,
+	sendBillingNotificationEmail,
+} from './send-billing-notification-email'
+
+const AUTOMATIC_CANCELLATION_REASON = 'max_payment_retries_exceeded'
 
 function addOneMonth(date: Date) {
 	const next = new Date(date)
@@ -27,6 +34,11 @@ function extractMetadataField(data: Record<string, unknown>, field: string) {
 	if (!metadata || typeof metadata !== 'object') return undefined
 	const value = (metadata as Record<string, unknown>)[field]
 	return typeof value === 'string' ? value : undefined
+}
+
+function extractNumberField(data: Record<string, unknown>, field: string) {
+	const value = data[field]
+	return typeof value === 'number' ? value : undefined
 }
 
 export async function billingWebhookModule(
@@ -72,6 +84,7 @@ export async function billingWebhookModule(
 	}
 
 	const payload = parsed.data
+	let notification: BillingNotification | null = null
 
 	await db.transaction(async (tx) => {
 		const [inserted] = await tx
@@ -144,6 +157,56 @@ export async function billingWebhookModule(
 					)
 
 				if (existingSubscription) {
+					let planId = existingSubscription.planId
+					let pendingPlanId = existingSubscription.pendingPlanId
+
+					if (existingSubscription.pendingPlanId) {
+						const plans = await tx
+							.select()
+							.from(plansTable)
+							.where(
+								inArray(plansTable.id, [
+									existingSubscription.planId,
+									existingSubscription.pendingPlanId,
+								]),
+							)
+
+						const currentPlan = plans.find(
+							(candidate) => candidate.id === existingSubscription.planId,
+						)
+						const pendingPlan = plans.find(
+							(candidate) =>
+								candidate.id === existingSubscription.pendingPlanId,
+						)
+						const chargedAmountCents = extractNumberField(
+							payload.data,
+							'amount',
+						)
+						const isDowngradeOrLateral =
+							currentPlan != null &&
+							pendingPlan != null &&
+							pendingPlan.priceCents <= currentPlan.priceCents
+						const chargeMatchesPendingPlan =
+							pendingPlan != null &&
+							chargedAmountCents === pendingPlan.priceCents
+
+						if (
+							pendingPlan &&
+							(isDowngradeOrLateral || chargeMatchesPendingPlan)
+						) {
+							planId = pendingPlan.id
+							pendingPlanId = null
+						} else {
+							console.warn(
+								'[billing webhook] Troca de plano pendente não promovida: valor cobrado não corresponde ao plano pendente.',
+								{
+									eventId: payload.id,
+									subscriptionId: existingSubscription.id,
+								},
+							)
+						}
+					}
+
 					await tx
 						.update(subscriptionsTable)
 						.set({
@@ -151,6 +214,8 @@ export async function billingWebhookModule(
 							currentPeriodStart,
 							currentPeriodEnd,
 							updatedAt: new Date(),
+							planId,
+							pendingPlanId,
 						})
 						.where(eq(subscriptionsTable.id, existingSubscription.id))
 					break
@@ -191,6 +256,58 @@ export async function billingWebhookModule(
 				break
 			}
 
+			case 'subscription.cancelled': {
+				const abacatepayBillingId = extractStringField(payload.data, 'id')
+
+				if (!abacatepayBillingId) {
+					console.error(
+						'[billing webhook] subscription.cancelled sem data.id.',
+						{ eventId: payload.id },
+					)
+					break
+				}
+
+				const [existingSubscription] = await tx
+					.select()
+					.from(subscriptionsTable)
+					.where(
+						eq(subscriptionsTable.abacatepayBillingId, abacatepayBillingId),
+					)
+
+				if (!existingSubscription) {
+					console.error(
+						'[billing webhook] subscription.cancelled para assinatura desconhecida.',
+						{ eventId: payload.id, abacatepayBillingId },
+					)
+					break
+				}
+
+				if (existingSubscription.cancelAtPeriodEnd) {
+					break
+				}
+
+				const cancelledDueTo = extractStringField(
+					payload.data,
+					'cancelledDueTo',
+				)
+				const isPaymentFailure =
+					cancelledDueTo === AUTOMATIC_CANCELLATION_REASON
+
+				await tx
+					.update(subscriptionsTable)
+					.set({
+						status: isPaymentFailure ? 'past_due' : 'canceled',
+						updatedAt: new Date(),
+					})
+					.where(eq(subscriptionsTable.id, existingSubscription.id))
+
+				notification = {
+					type: isPaymentFailure ? 'payment_failed' : 'subscription_canceled',
+					userId: existingSubscription.userId,
+				}
+				break
+			}
+
 			default:
 				console.warn(
 					'[billing webhook] Evento recebido sem tratamento mapeado.',
@@ -203,6 +320,15 @@ export async function billingWebhookModule(
 			.set({ processedAt: new Date() })
 			.where(eq(billingEventsTable.id, inserted.id))
 	})
+
+	if (notification) {
+		await sendBillingNotificationEmail(notification).catch((error) => {
+			console.error(
+				'[billing webhook] Falha ao enviar e-mail de notificação de cobrança.',
+				error,
+			)
+		})
+	}
 
 	return reply.status(200).send({ received: true })
 }

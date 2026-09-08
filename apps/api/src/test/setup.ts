@@ -2,6 +2,8 @@ import { beforeEach, vi } from 'vitest'
 import {
 	sendNewLoginEmail,
 	sendPasswordResetEmail,
+	sendPaymentFailedEmail,
+	sendSubscriptionCancelledEmail,
 	sendWelcomeEmail,
 } from '@/lib/mail/mail'
 
@@ -72,6 +74,8 @@ vi.mock('@/lib/auth/auth', () => ({
 vi.mock('@/lib/mail/mail', () => ({
 	sendNewLoginEmail: vi.fn().mockResolvedValue(undefined),
 	sendPasswordResetEmail: vi.fn().mockResolvedValue(undefined),
+	sendPaymentFailedEmail: vi.fn().mockResolvedValue(undefined),
+	sendSubscriptionCancelledEmail: vi.fn().mockResolvedValue(undefined),
 	sendWelcomeEmail: vi.fn().mockResolvedValue(undefined),
 }))
 
@@ -88,4 +92,6 @@ beforeEach(() => {
 	vi.mocked(sendWelcomeEmail).mockResolvedValue(undefined)
 	vi.mocked(sendPasswordResetEmail).mockResolvedValue(undefined)
 	vi.mocked(sendNewLoginEmail).mockResolvedValue(undefined)
+	vi.mocked(sendPaymentFailedEmail).mockResolvedValue(undefined)
+	vi.mocked(sendSubscriptionCancelledEmail).mockResolvedValue(undefined)
 })

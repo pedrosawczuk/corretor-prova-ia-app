@@ -26,7 +26,7 @@ export async function createAbacatePayBilling(
 	const body: Record<string, unknown> = {
 		items: [{ id: params.productId, quantity: 1 }],
 		customerId: params.customerId,
-		methods: ['PIX', 'CARD'],
+		methods: params.billingType === 'recurring' ? ['CARD'] : ['PIX', 'CARD'],
 		returnUrl: params.returnUrl,
 		completionUrl: params.completionUrl,
 		metadata: params.metadata,

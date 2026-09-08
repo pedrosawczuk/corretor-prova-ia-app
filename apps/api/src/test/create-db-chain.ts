@@ -12,6 +12,7 @@ const CHAIN_METHODS = [
 	'offset',
 	'onConflictDoNothing',
 	'onConflictDoUpdate',
+	'for',
 ] as const
 
 type DbChain = Record<(typeof CHAIN_METHODS)[number], Mock>
