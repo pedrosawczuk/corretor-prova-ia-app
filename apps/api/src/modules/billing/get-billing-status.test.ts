@@ -173,7 +173,10 @@ describe('GET /billing/status', () => {
 		})
 
 		expect(response.statusCode).toBe(200)
-		expect(response.json()).toMatchObject({ plan: null, subscriptionStatus: null })
+		expect(response.json()).toMatchObject({
+			plan: null,
+			subscriptionStatus: null,
+		})
 		expect(db.update).toHaveBeenCalled()
 	})
 

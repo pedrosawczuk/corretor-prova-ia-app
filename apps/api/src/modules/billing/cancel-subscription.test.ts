@@ -50,7 +50,10 @@ describe('POST /billing/cancel', () => {
 		vi.mocked(db.update).mockReturnValue(createDbChain([]) as never)
 		vi.mocked(cancelAbacatePaySubscription).mockResolvedValue(undefined)
 
-		const response = await app.inject({ method: 'POST', url: '/billing/cancel' })
+		const response = await app.inject({
+			method: 'POST',
+			url: '/billing/cancel',
+		})
 
 		expect(response.statusCode).toBe(200)
 		expect(response.json()).toEqual({
@@ -73,7 +76,10 @@ describe('POST /billing/cancel', () => {
 			createDbChain([subscription]) as never,
 		)
 
-		const response = await app.inject({ method: 'POST', url: '/billing/cancel' })
+		const response = await app.inject({
+			method: 'POST',
+			url: '/billing/cancel',
+		})
 
 		expect(response.statusCode).toBe(200)
 		expect(cancelAbacatePaySubscription).not.toHaveBeenCalled()
@@ -83,7 +89,10 @@ describe('POST /billing/cancel', () => {
 	it('retorna 404 quando não há assinatura ativa', async () => {
 		vi.mocked(db.select).mockReturnValueOnce(createDbChain([]) as never)
 
-		const response = await app.inject({ method: 'POST', url: '/billing/cancel' })
+		const response = await app.inject({
+			method: 'POST',
+			url: '/billing/cancel',
+		})
 
 		expect(response.statusCode).toBe(404)
 	})
@@ -101,7 +110,10 @@ describe('POST /billing/cancel', () => {
 			new BillingProviderError('Provedor indisponível.'),
 		)
 
-		const response = await app.inject({ method: 'POST', url: '/billing/cancel' })
+		const response = await app.inject({
+			method: 'POST',
+			url: '/billing/cancel',
+		})
 
 		expect(response.statusCode).toBe(502)
 		expect(db.update).not.toHaveBeenCalled()
