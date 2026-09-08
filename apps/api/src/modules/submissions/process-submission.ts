@@ -8,8 +8,14 @@ import {
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { BadRequestError, ConflictError } from '@/core/errors'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
-import { downloadSubmissionPage } from '@/lib/storage/storage'
-import { readSubmissionAnswers } from '@/lib/vision/read-submission-answers'
+import {
+	downloadSubmissionPage,
+	getSubmissionPageSignedUrl,
+} from '@/lib/storage/storage'
+import {
+	extractMarkersFound,
+	readSubmissionAnswers,
+} from '@/lib/vision/read-submission-answers'
 import { fetchQuestionsWithOptions } from '@/modules/exams/fetch-exam-detail'
 import { computeSubmissionTotals } from './compute-submission-totals'
 import { fetchOwnedSubmission } from './fetch-owned-submission'
@@ -78,7 +84,10 @@ export async function processSubmissionModule(
 			})),
 		)
 
-		const extracted = await readSubmissionAnswers(pageImages, questions)
+		const { answers: extracted, pageDiagnostics } = await readSubmissionAnswers(
+			pageImages,
+			questions,
+		)
 
 		const graded = gradeSubmissionAnswers(questions, extracted)
 
@@ -95,6 +104,16 @@ export async function processSubmissionModule(
 				.update(submissionsTable)
 				.set(computeSubmissionTotals(graded))
 				.where(eq(submissionsTable.id, submissionId))
+
+			for (const page of pages) {
+				const diagnostics = pageDiagnostics.get(page.pageNumber)
+				if (!diagnostics) continue
+
+				await tx
+					.update(submissionPagesTable)
+					.set({ rawOcrPayload: diagnostics })
+					.where(eq(submissionPagesTable.id, page.id))
+			}
 		})
 	} catch (error) {
 		await db
@@ -115,5 +134,24 @@ export async function processSubmissionModule(
 		.from(submissionAnswersTable)
 		.where(eq(submissionAnswersTable.submissionId, submissionId))
 
-	return reply.status(200).send({ ...updatedSubmission, answers })
+	const updatedPages = await db
+		.select()
+		.from(submissionPagesTable)
+		.where(eq(submissionPagesTable.submissionId, submissionId))
+		.orderBy(submissionPagesTable.pageNumber)
+
+	const pagesWithUrl = await Promise.all(
+		updatedPages.map(async (page) => {
+			const { rawOcrPayload, ...pageFields } = page
+			return {
+				...pageFields,
+				imageUrl: await getSubmissionPageSignedUrl(page.imageUrl),
+				markersFound: extractMarkersFound(rawOcrPayload),
+			}
+		}),
+	)
+
+	return reply
+		.status(200)
+		.send({ ...updatedSubmission, pages: pagesWithUrl, answers })
 }

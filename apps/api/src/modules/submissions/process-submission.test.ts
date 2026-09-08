@@ -10,7 +10,10 @@ import {
 	vi,
 } from 'vitest'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
-import { downloadSubmissionPage } from '@/lib/storage/storage'
+import {
+	downloadSubmissionPage,
+	getSubmissionPageSignedUrl,
+} from '@/lib/storage/storage'
 import { readSubmissionAnswers } from '@/lib/vision/read-submission-answers'
 import { createDbChain, createDbTransactionMock } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
@@ -23,10 +26,22 @@ import { makeSubmissionPage } from '@/test/factories/make-submission-page'
 
 vi.mock('@/lib/vision/read-submission-answers', () => ({
 	readSubmissionAnswers: vi.fn(),
+	extractMarkersFound: vi.fn((rawOcrPayload: unknown) => {
+		if (
+			!rawOcrPayload ||
+			typeof rawOcrPayload !== 'object' ||
+			typeof (rawOcrPayload as { markersFound?: unknown }).markersFound !==
+				'boolean'
+		) {
+			return null
+		}
+		return (rawOcrPayload as { markersFound: boolean }).markersFound
+	}),
 }))
 
 vi.mock('@/lib/storage/storage', () => ({
 	downloadSubmissionPage: vi.fn(),
+	getSubmissionPageSignedUrl: vi.fn(),
 }))
 
 describe('POST /submissions/:submissionId/process', () => {
@@ -45,6 +60,9 @@ describe('POST /submissions/:submissionId/process', () => {
 	beforeEach(() => {
 		vi.mocked(getAuthenticatedUser).mockResolvedValue(user as never)
 		vi.mocked(downloadSubmissionPage).mockResolvedValue(Buffer.from('fake'))
+		vi.mocked(getSubmissionPageSignedUrl).mockResolvedValue(
+			'https://minio.local/signed-url',
+		)
 		vi.mocked(db.update).mockReturnValue(createDbChain([]) as never)
 	})
 
@@ -99,11 +117,19 @@ describe('POST /submissions/:submissionId/process', () => {
 				createDbChain([{ ...submission, status: 'needs_review' }]) as never,
 			)
 			.mockReturnValueOnce(createDbChain([]) as never)
+			.mockReturnValueOnce(
+				createDbChain([
+					{ ...page, rawOcrPayload: { markersFound: true } },
+				]) as never,
+			)
 
-		vi.mocked(readSubmissionAnswers).mockResolvedValue([
-			{ order: 0, detectedLetter: 'B', confidence: 0.95 },
-			{ order: 1, detectedLetter: 'A', confidence: 0.4 },
-		])
+		vi.mocked(readSubmissionAnswers).mockResolvedValue({
+			answers: [
+				{ order: 0, detectedLetter: 'B', confidence: 0.95 },
+				{ order: 1, detectedLetter: 'A', confidence: 0.4 },
+			],
+			pageDiagnostics: new Map([[1, { markersFound: true }]]),
+		})
 
 		const insertChain = createDbChain([])
 		const updateChain = createDbChain([])
@@ -144,6 +170,15 @@ describe('POST /submissions/:submissionId/process', () => {
 		expect(submissionUpdate).toEqual(
 			expect.objectContaining({ status: 'needs_review', totalScore: '3.00' }),
 		)
+
+		const body = response.json()
+		expect(body.pages).toEqual([
+			expect.objectContaining({
+				id: page.id,
+				imageUrl: 'https://minio.local/signed-url',
+				markersFound: true,
+			}),
+		])
 	})
 
 	it('marca a submissão como falha quando a leitura por visão computacional falha', async () => {

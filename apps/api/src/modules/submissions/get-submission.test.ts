@@ -43,7 +43,10 @@ describe('GET /submissions/:submissionId', () => {
 	it('retorna a submissão com páginas (URL assinada) e respostas', async () => {
 		const exam = makeExam({ creatorId: user.id })
 		const submission = makeSubmission({ examId: exam.id })
-		const page = makeSubmissionPage({ submissionId: submission.id })
+		const page = makeSubmissionPage({
+			submissionId: submission.id,
+			rawOcrPayload: { markersFound: false },
+		})
 		const answer = makeSubmissionAnswer({ submissionId: submission.id })
 
 		vi.mocked(db.select)
@@ -66,8 +69,10 @@ describe('GET /submissions/:submissionId', () => {
 			expect.objectContaining({
 				id: page.id,
 				imageUrl: 'https://minio.local/signed-url',
+				markersFound: false,
 			}),
 		])
+		expect(body.pages[0].rawOcrPayload).toBeUndefined()
 		expect(body.answers).toEqual([expect.objectContaining({ id: answer.id })])
 	})
 

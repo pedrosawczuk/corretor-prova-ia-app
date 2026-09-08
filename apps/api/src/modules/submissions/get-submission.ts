@@ -2,6 +2,7 @@ import { db, eq, submissionAnswersTable, submissionPagesTable } from '@app/db'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
 import { getSubmissionPageSignedUrl } from '@/lib/storage/storage'
+import { extractMarkersFound } from '@/lib/vision/read-submission-answers'
 import { fetchOwnedSubmission } from './fetch-owned-submission'
 import type { SubmissionParams } from './submission-params-schema'
 
@@ -26,10 +27,14 @@ export async function getSubmissionModule(
 		.where(eq(submissionAnswersTable.submissionId, submissionId))
 
 	const pagesWithUrl = await Promise.all(
-		pages.map(async (page) => ({
-			...page,
-			imageUrl: await getSubmissionPageSignedUrl(page.imageUrl),
-		})),
+		pages.map(async (page) => {
+			const { rawOcrPayload, ...pageFields } = page
+			return {
+				...pageFields,
+				imageUrl: await getSubmissionPageSignedUrl(page.imageUrl),
+				markersFound: extractMarkersFound(rawOcrPayload),
+			}
+		}),
 	)
 
 	return reply.status(200).send({ ...submission, pages: pagesWithUrl, answers })
