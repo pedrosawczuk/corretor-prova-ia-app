@@ -172,7 +172,9 @@ async function seed() {
 		}
 
 		console.log(`\n✅ Seed concluído! ${teacherCount} professores criados.`)
-		console.log(`   Senha de todas as contas: ${SEED_PASSWORD}`)
+		console.log(
+			'   Senha de todas as contas: ver SEED_PASSWORD em apps/api/src/scripts/seed.ts',
+		)
 		for (const teacher of createdTeachers) {
 			console.log(`   • ${teacher.name} — ${teacher.email}`)
 		}

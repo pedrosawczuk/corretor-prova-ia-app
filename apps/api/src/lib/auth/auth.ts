@@ -56,6 +56,9 @@ export const auth = betterAuth({
 			clientSecret: env.GOOGLE_CLIENT_SECRET || '',
 		},
 	},
+	account: {
+		encryptOAuthTokens: true,
+	},
 	plugins: [
 		admin({
 			defaultRole: 'user',
