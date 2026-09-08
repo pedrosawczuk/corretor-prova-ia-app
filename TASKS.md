@@ -60,13 +60,13 @@ Também por decisão do usuário: a galeria é usada **uma foto por vez, no luga
   - Pronto quando: escolher da galeria um arquivo não-imagem ou maior que o limite mostra um toast de erro imediatamente, sem chamar a API; o valor do limite existe em um único lugar (`packages/shared`), importado por ambos os apps.
   - Depende de: 5
 
-- [ ] 8. Mensagens de erro de upload específicas por causa
+- [x] 8. Mensagens de erro de upload específicas por causa
   - O que fazer: `handleCapture` em `corrigir-prova.tsx:103-112` hoje sempre mostra o mesmo toast genérico ("Não foi possível enviar a foto. Tente novamente.") em qualquer falha de `useUploadSubmissionPage`. Trocar para exibir a mensagem real retornada pelo backend via `toastApiError` (já existem mensagens específicas em `upload-submission-page.ts`, e as novas das tarefas 2 e 3), caindo no texto genérico só quando a API não retornar mensagem utilizável.
   - Arquivos: `apps/web/src/components/dashboard/corrigir-prova.tsx`
   - Pronto quando: escolher da galeria uma foto de resolução baixa (tarefa 2) mostra no toast a mensagem específica do backend, não a genérica.
   - Depende de: 2, 3, 7
 
-- [ ] 9. Validação manual ponta a ponta (câmera + galeria + HEIC)
+- [x] 9. Validação manual ponta a ponta (câmera + galeria + HEIC)
   - O que fazer: rodar manualmente o fluxo completo em um navegador (mobile real e/ou desktop com dispositivo simulado): iniciar correção, tirar 1 foto pela câmera para a página 1, escolher da galeria uma foto para a página 2, revisar as duas prévias, corrigir e conferir o resultado. Repetir o teste escolhendo especificamente um arquivo `.heic` real de iPhone (ou fixture equivalente) para validar a tarefa 1 de ponta a ponta pelo app, não só pelo teste automatizado de backend.
   - Arquivos: n/a — validação manual, sem alteração de código nesta tarefa
   - Pronto quando: o fluxo completo funciona sem erros com fotos de origens mistas (câmera + galeria), e uma foto `.heic` é aceita e lida corretamente até o relatório final.
@@ -74,25 +74,25 @@ Também por decisão do usuário: a galeria é usada **uma foto por vez, no luga
 
 **Trilha C — Robustez da leitura (pipeline OpenCV) — paralela à Trilha A/B**
 
-- [ ] 10. Persistir diagnóstico por página quando os marcadores não são encontrados
+- [x] 10. Persistir diagnóstico por página quando os marcadores não são encontrados
   - O que fazer: hoje `readPage` (`read-submission-answers.ts:250-289`, especificamente a linha `if (!found) return` em 264-265) falha silenciosamente quando os 4 marcadores de canto não são localizados — a página inteira vira "sem marcação" (fill ratio 0) para todas as alternativas, indistinguível de "o aluno realmente não marcou nada". Mudar `readSubmissionAnswers` para também retornar, por página, se os marcadores foram encontrados (ex: `Map<pageNumber, { markersFound: boolean }>`), e em `process-submission.ts` gravar esse diagnóstico no campo `rawOcrPayload` (jsonb, já existe em `submission_pages` — hoje sempre `null`, nenhuma migration necessária) do registro `submission_pages` correspondente.
   - Arquivos: `apps/api/src/lib/vision/read-submission-answers.ts`, `apps/api/src/modules/submissions/process-submission.ts`
   - Pronto quando: ao processar uma submissão em que uma página não tem os 4 marcadores detectados, o `submission_pages.rawOcrPayload` daquela página fica preenchido com `{ markersFound: false }` (ou equivalente); teste unitário cobre o caso via o retorno estruturado de `readSubmissionAnswers`.
   - Depende de: nenhuma
 
-- [ ] 11. Avisar o professor quando uma página específica falhou no alinhamento
+- [x] 11. Avisar o professor quando uma página específica falhou no alinhamento
   - O que fazer: usar o diagnóstico da tarefa 10 para, na resposta de `processSubmissionModule` (e no tipo `Submission` compartilhado em `packages/shared/src/types/submission.ts`), sinalizar quais páginas tiveram falha de alinhamento. Hoje o professor só vê "N questão(ões) precisam da sua revisão manual" (`corrigir-prova.tsx:127-132`), sem saber se a causa foi uma foto ilegível (recuperável tirando outra foto) ou marcações realmente ambíguas. Adicionar um aviso específico na tela de resultado (`corrigir-prova.tsx` / `corrigir-prova-resultado.tsx`), ex.: "A página 2 não pôde ser alinhada automaticamente — todas as questões dela precisam de revisão manual".
   - Arquivos: `apps/api/src/modules/submissions/process-submission.ts`, `packages/shared/src/types/submission.ts`, `apps/web/src/components/dashboard/corrigir-prova.tsx`, `apps/web/src/components/dashboard/corrigir-prova-resultado.tsx`
   - Pronto quando: numa submissão de teste com uma página sem marcadores detectáveis, a tela de resultado mostra o aviso específico citando o número da página, distinto do aviso genérico de questões pendentes.
   - Depende de: 10
 
-- [ ] 12. Segunda tentativa com margem de busca de marcador mais ampla
+- [x] 12. Segunda tentativa com margem de busca de marcador mais ampla
   - O que fazer: `CORNER_SEARCH_MARGIN = 0.32` (`read-submission-answers.ts:42`) é fixo; uma foto levemente descentralizada além dessa margem faz a página inteira falhar sem necessidade. Em `locateAlignmentMarkers`, se a primeira tentativa com a margem padrão não encontrar os 4 marcadores, tentar novamente com uma margem maior (ex: `0.45`) antes de desistir e marcar a página como `markersFound: false`. A margem maior só entra como fallback, sem afetar o caso padrão.
   - Arquivos: `apps/api/src/lib/vision/read-submission-answers.ts`
   - Pronto quando: um fixture de página com marcadores fora de 0.32 mas dentro de 0.45 passa a ser lido corretamente (antes falhava); teste de regressão garante que o caso padrão continua sendo resolvido já na primeira tentativa.
   - Depende de: nenhuma
 
-- [ ] 13. Testes com imagens degradadas (blur, inclinação, iluminação irregular)
+- [x] 13. Testes com imagens degradadas (blur, inclinação, iluminação irregular)
   - O que fazer: `read-submission-answers.test.ts` hoje só cobre páginas geradas em SVG, perfeitamente alinhadas e limpas. Adicionar fixtures derivados do mesmo gerador aplicando (via `sharp`) blur gaussiano moderado, rotação leve (ex: 5°), e um gradiente de brilho simulando iluminação desigual — cobrindo: leitura ainda correta sob blur/rotação leve dentro da tolerância; marcador cortado/ausente retorna `markersFound: false` sem lançar exceção (usa o retorno estruturado da tarefa 10); o retry da tarefa 12 é exercitado por um fixture desalinhado dentro da margem estendida.
   - Arquivos: `apps/api/src/lib/vision/read-submission-answers.test.ts`
   - Pronto quando: os cenários acima têm teste passando, cobrindo tanto o caminho degradado que ainda funciona quanto a falha esperada e sinalizada de marcador ausente.
@@ -100,13 +100,13 @@ Também por decisão do usuário: a galeria é usada **uma foto por vez, no luga
 
 **Trilha D — Documentação (paralela, sem bloquear nada)**
 
-- [ ] 14. Atualizar RF09 em `docs/requisitos.md` para incluir a opção de galeria
+- [x] 14. Atualizar RF09 em `docs/requisitos.md` para incluir a opção de galeria
   - O que fazer: RF09 hoje descreve apenas "o app abre a câmera em tela cheia... para capturar fotos". Atualizar a redação para refletir que o professor pode tirar foto ou escolher uma imagem da galeria para cada página.
   - Arquivos: `docs/requisitos.md`
   - Pronto quando: RF09 menciona as duas fontes de imagem disponíveis.
   - Depende de: 5
 
-- [ ] 15. Corrigir RF10/RNF02 em `docs/requisitos.md` para refletir a implementação real
+- [x] 15. Corrigir RF10/RNF02 em `docs/requisitos.md` para refletir a implementação real
   - O que fazer: confirmado durante o levantamento desta feature que não existe chamada a Vision LLM nem streaming (SSE/WebSocket) na correção — `POST /submissions/:submissionId/process` é síncrono e a leitura é 100% OpenCV determinístico (`read-submission-answers.ts`). RF10 ("Feedback em Tempo Real... Corrigindo questão 1...") e RNF02 ("Uso de SSE ou WebSockets") descrevem algo que nunca foi implementado. Ajustar os dois itens para descrever o comportamento real (resposta única após processamento síncrono) ou, se o streaming ainda for uma meta futura, marcar explicitamente como "planejado, não implementado" em vez de deixar parecer que já existe.
   - Arquivos: `docs/requisitos.md`
   - Pronto quando: RF10/RNF02 não descrevem mais um comportamento (Vision LLM, streaming) que diverge do código atual.

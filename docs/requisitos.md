@@ -1,7 +1,7 @@
 # Corretor & Gerador de Provas IA - Documento de Requisitos (MVP)
 
 ## Visão Geral
-O aplicativo é uma plataforma para o ciclo completo de avaliações escolares: desde a **criação e refinamento de provas com IA**, passando pela **formatação e impressão**, até a **correção automática por visão computacional (Vision LLM)** através da câmera do smartphone do professor.
+O aplicativo é uma plataforma para o ciclo completo de avaliações escolares: desde a **criação e refinamento de provas com IA**, passando pela **formatação e impressão**, até a **correção automática por visão computacional clássica (OpenCV, sem Vision LLM)** através de fotos tiradas pela câmera ou escolhidas na galeria do smartphone do professor.
 
 ---
 
@@ -38,8 +38,8 @@ O aplicativo é uma plataforma para o ciclo completo de avaliações escolares: 
 *   **RF08 - Layout de Impressão com QR Code:** Visualização formatada e diagramada da prova pronta para impressão (`@media print`), incluindo um **QR Code único** no rodapé/cabeçalho com o identificador da prova (`provaId`).
 
 ### 2.4. Correção por Visão Computacional
-*   **RF09 - Modo Scanner Direto:** Na página da prova (ou ao ler o QR Code da folha), o app abre a câmera em tela cheia otimizada para capturar fotos das folhas de respostas em sequência.
-*   **RF10 - Feedback em Tempo Real (Streaming):** Exibição do progresso da análise da IA questão a questão (ex: "Corrigindo questão 1...", "Corrigindo questão 2...").
+*   **RF09 - Modo Scanner Direto:** Na página da prova (ou ao ler o QR Code da folha), o app abre a câmera em tela cheia otimizada para capturar fotos das folhas de respostas em sequência, com a opção de, em vez de fotografar, escolher uma foto já existente na galeria/arquivos do dispositivo para a página atual (inclusive arquivos `.heic`/`.heif` de iPhone).
+*   **RF10 - Feedback de Processamento:** Ao final do envio das fotos, o professor aciona o processamento e vê uma animação indicando que a leitura está em andamento; o backend processa a submissão de forma síncrona (sem streaming incremental por questão) e devolve o relatório completo de uma só vez ao final.
 *   **RF11 - Intervenção Manual (Dúvida do OCR/IA):** Modal para o professor indicar manualmente a alternativa caso a IA identifique ambiguidade ou ilegibilidade na foto.
 *   **RF12 - Relatório Final de Correção:** Exibição imediata da nota total, acertos/erros por questão e justificativas.
 
@@ -47,6 +47,6 @@ O aplicativo é uma plataforma para o ciclo completo de avaliações escolares: 
 
 ## 3. Requisitos Não-Funcionais (Non-Functional Requirements)
 *   **RNF01 - Saída Estruturada da IA (Structured Outputs):** A geração e refatoração de provas devem usar JSON Schemas estritos (Zod) para garantir a integridade estrutural das questões.
-*   **RNF02 - Streaming de Correção:** Uso de Server-Sent Events (SSE) ou WebSockets no endpoint de correção para resposta em tempo real.
+*   **RNF02 - Processamento Síncrono da Correção:** A leitura por visão computacional (`read-submission-answers.ts`) roda de forma síncrona dentro da própria requisição HTTP de `POST /submissions/:submissionId/process` — não há SSE, WebSockets nem qualquer streaming incremental de progresso.
 *   **RNF03 - Responsividade Mobile-First:** A interface de escaneamento de provas deve ser 100% fluida e otimizada para uso em smartphones.
 *   **RNF04 - Arquitetura do Sistema:** Monorepo com Turborepo, Fastify (Backend), React (Frontend), PostgreSQL com Drizzle ORM e `better-auth`.
