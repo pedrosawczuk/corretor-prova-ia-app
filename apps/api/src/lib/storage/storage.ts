@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { env } from '@app/env'
+import { MAX_SUBMISSION_PAGE_SIZE_BYTES } from '@app/shared'
 import { Client } from 'minio'
 
 export const storageClient = new Client({
@@ -64,7 +65,7 @@ export async function deleteObjectByPublicUrl(url: string) {
 	await storageClient.removeObject(env.MINIO_BUCKET, objectName).catch(() => {})
 }
 
-export const MAX_SUBMISSION_PAGE_SIZE_BYTES = 10 * 1024 * 1024
+export { MAX_SUBMISSION_PAGE_SIZE_BYTES }
 
 const SUBMISSION_PAGES_PREFIX = 'submission-pages/'
 
