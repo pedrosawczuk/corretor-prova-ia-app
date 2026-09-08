@@ -10,6 +10,7 @@ export interface SubmissionPage {
 	submissionId: string
 	pageNumber: number
 	imageUrl: string
+	markersFound: boolean | null
 	createdAt: string
 }
 

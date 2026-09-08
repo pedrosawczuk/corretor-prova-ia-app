@@ -29,6 +29,23 @@ export interface ExtractedAnswer {
 	confidence: number | null
 }
 
+export interface PageDiagnostics {
+	markersFound: boolean
+}
+
+export function extractMarkersFound(rawOcrPayload: unknown): boolean | null {
+	if (
+		!rawOcrPayload ||
+		typeof rawOcrPayload !== 'object' ||
+		typeof (rawOcrPayload as { markersFound?: unknown }).markersFound !==
+			'boolean'
+	) {
+		return null
+	}
+
+	return (rawOcrPayload as PageDiagnostics).markersFound
+}
+
 /**
  * Abaixo desse percentual de pixels escuros na área da alternativa, tratamos
  * como "sem marcação" — evita que uma sombra leve ou o próprio traço da
@@ -40,6 +57,14 @@ const MIN_FILL_RATIO = 0.12
  * estar do canto esperado para ser considerado candidato. Generoso o
  * suficiente pra tolerar a folha não estar perfeitamente centralizada. */
 const CORNER_SEARCH_MARGIN = 0.32
+
+/**
+ * Margem de busca de fallback: só entra em jogo quando a tentativa com
+ * CORNER_SEARCH_MARGIN não encontra os 4 marcadores, para tolerar uma foto
+ * mais descentralizada sem afetar o caso padrão (que já resolve na primeira
+ * tentativa).
+ */
+const CORNER_SEARCH_MARGIN_FALLBACK = 0.45
 
 /**
  * Área do glifo "A)" em relação à origem do marcador extraído do PDF (que é
@@ -87,14 +112,15 @@ function findCornerCandidate(
 	width: number,
 	height: number,
 	marker: AlignmentMarkerPosition,
+	margin: number,
 ): PixelPoint | null {
 	const isLeft = marker.id.includes('left')
 	const isTop = marker.id.includes('top')
 
-	const minX = isLeft ? 0 : width * (1 - CORNER_SEARCH_MARGIN)
-	const maxX = isLeft ? width * CORNER_SEARCH_MARGIN : width
-	const minY = isTop ? 0 : height * (1 - CORNER_SEARCH_MARGIN)
-	const maxY = isTop ? height * CORNER_SEARCH_MARGIN : height
+	const minX = isLeft ? 0 : width * (1 - margin)
+	const maxX = isLeft ? width * margin : width
+	const minY = isTop ? 0 : height * (1 - margin)
+	const maxY = isTop ? height * margin : height
 
 	let best: (PixelPoint & { squareness: number }) | null = null
 
@@ -118,11 +144,38 @@ function findCornerCandidate(
 	return best
 }
 
+function tryLocateAlignmentMarkers(
+	cv: Awaited<ReturnType<typeof getOpenCv>>,
+	contours: InstanceType<typeof cv.MatVector>,
+	width: number,
+	height: number,
+	margin: number,
+): Record<string, PixelPoint> | null {
+	const found: Record<string, PixelPoint> = {}
+
+	for (const marker of ALIGNMENT_MARKERS) {
+		const candidate = findCornerCandidate(
+			cv,
+			contours,
+			width,
+			height,
+			marker,
+			margin,
+		)
+		if (!candidate) return null
+		found[marker.id] = candidate
+	}
+
+	return found
+}
+
 /**
  * Localiza os 4 marcadores de canto impressos na página (build-exam-pdf.tsx)
  * na foto — retorna null se algum não for encontrado (foto cortada, mal
  * enquadrada, iluminação ruim etc.), sinalizando que essa página não pode
- * ser lida com segurança.
+ * ser lida com segurança. Primeiro tenta com a margem de busca padrão; se a
+ * folha estiver descentralizada além dela, tenta de novo com uma margem mais
+ * ampla antes de desistir.
  */
 function locateAlignmentMarkers(
 	cv: Awaited<ReturnType<typeof getOpenCv>>,
@@ -142,14 +195,22 @@ function locateAlignmentMarkers(
 			cv.CHAIN_APPROX_SIMPLE,
 		)
 
-		const found: Record<string, PixelPoint> = {}
-		for (const marker of ALIGNMENT_MARKERS) {
-			const candidate = findCornerCandidate(cv, contours, width, height, marker)
-			if (!candidate) return null
-			found[marker.id] = candidate
-		}
-
-		return found
+		return (
+			tryLocateAlignmentMarkers(
+				cv,
+				contours,
+				width,
+				height,
+				CORNER_SEARCH_MARGIN,
+			) ??
+			tryLocateAlignmentMarkers(
+				cv,
+				contours,
+				width,
+				height,
+				CORNER_SEARCH_MARGIN_FALLBACK,
+			)
+		)
 	} finally {
 		contours.delete()
 		hierarchy.delete()
@@ -252,7 +313,7 @@ async function readPage(
 	page: SubmissionPageImage,
 	options: { id: string; markerX: number; markerY: number }[],
 	fillRatioByOptionId: Map<string, number>,
-) {
+): Promise<PageDiagnostics> {
 	const { mat, width, height } = await decodeToMat(cv, page.data)
 	const gray = new cv.Mat()
 	const binary = new cv.Mat()
@@ -262,7 +323,7 @@ async function readPage(
 		cv.threshold(gray, binary, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)
 
 		const found = locateAlignmentMarkers(cv, binary, width, height)
-		if (!found) return
+		if (!found) return { markersFound: false }
 
 		const transform = buildTransform(cv, found)
 
@@ -281,6 +342,8 @@ async function readPage(
 		} finally {
 			transform.delete()
 		}
+
+		return { markersFound: true }
 	} finally {
 		mat.delete()
 		gray.delete()
@@ -320,10 +383,15 @@ function decideQuestionAnswer(
  * (grade-submission-answers.ts) continua decidindo o que vai para revisão
  * manual do professor.
  */
+export interface ReadSubmissionAnswersResult {
+	answers: ExtractedAnswer[]
+	pageDiagnostics: Map<number, PageDiagnostics>
+}
+
 export async function readSubmissionAnswers(
 	pages: SubmissionPageImage[],
 	questions: OmrQuestion[],
-): Promise<ExtractedAnswer[]> {
+): Promise<ReadSubmissionAnswersResult> {
 	const cv = await getOpenCv()
 
 	const optionsByPage = new Map<
@@ -352,15 +420,24 @@ export async function readSubmissionAnswers(
 	}
 
 	const fillRatioByOptionId = new Map<string, number>()
+	const pageDiagnostics = new Map<number, PageDiagnostics>()
 
 	for (const page of pages) {
 		const pageOptions = optionsByPage.get(page.pageNumber)
 		if (!pageOptions?.length) continue
 
-		await readPage(cv, page, pageOptions, fillRatioByOptionId)
+		const diagnostics = await readPage(
+			cv,
+			page,
+			pageOptions,
+			fillRatioByOptionId,
+		)
+		pageDiagnostics.set(page.pageNumber, diagnostics)
 	}
 
-	return questions.map((question) =>
+	const answers = questions.map((question) =>
 		decideQuestionAnswer(question, fillRatioByOptionId),
 	)
+
+	return { answers, pageDiagnostics }
 }
