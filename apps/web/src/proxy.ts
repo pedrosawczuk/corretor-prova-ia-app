@@ -9,7 +9,13 @@ const AUTH_ROUTES = [
 	'/verificar-email',
 	'/erro-autenticacao',
 ]
-const PUBLIC_INFORMATIVE_ROUTES = ['/', '/privacidade', '/termos', '/sair']
+const PUBLIC_INFORMATIVE_ROUTES = [
+	'/',
+	'/privacidade',
+	'/termos',
+	'/sair',
+	'/pricing',
+]
 
 export function proxy(request: NextRequest) {
 	const { pathname } = request.nextUrl

@@ -33,6 +33,18 @@ function resolveErrorMessage(error: ApiError, fallback: string) {
 }
 
 export function toastApiError(error: unknown, fallback: string) {
+	if (error instanceof ApiError && error.code === 'PAYMENT_REQUIRED') {
+		toast.error(error.message || fallback, {
+			action: {
+				label: 'Ver planos',
+				onClick: () => {
+					window.location.href = '/dashboard/configuracoes'
+				},
+			},
+		})
+		return
+	}
+
 	toast.error(
 		error instanceof ApiError
 			? resolveErrorMessage(error, fallback)

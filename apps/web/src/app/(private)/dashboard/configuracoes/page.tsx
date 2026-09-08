@@ -1,11 +1,19 @@
-import { MonitorSmartphone, ShieldCheck, Trash2, UserRound } from 'lucide-react'
+import {
+	CreditCard,
+	MonitorSmartphone,
+	ShieldCheck,
+	Trash2,
+	UserRound,
+} from 'lucide-react'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { DeletarContaSection } from '@/components/dashboard/configuracoes/deletar-conta-section'
 import { DoisFatoresSection } from '@/components/dashboard/configuracoes/dois-fatores-section'
 import { PerfilSection } from '@/components/dashboard/configuracoes/perfil-section'
+import { PlanoFaturamentoSection } from '@/components/dashboard/configuracoes/plano-faturamento-section'
 import { SegurancaSection } from '@/components/dashboard/configuracoes/seguranca-section'
 import { SessoesSection } from '@/components/dashboard/configuracoes/sessoes-section'
+import type { PlanSlug } from '@/hooks/use-billing'
 import {
 	getAuthAccountsList,
 	getAuthSession,
@@ -19,13 +27,20 @@ export const metadata: Metadata = {
 
 const NAV_ITEMS = [
 	{ id: 'perfil', label: 'Perfil', icon: UserRound },
+	{ id: 'plano-faturamento', label: 'Plano e Faturamento', icon: CreditCard },
 	{ id: 'seguranca', label: 'Segurança', icon: ShieldCheck },
 	{ id: 'sessoes', label: 'Sessões', icon: MonitorSmartphone },
 	{ id: 'deletar-conta', label: 'Deletar Conta', icon: Trash2 },
 ]
 
+const PLAN_SLUGS: PlanSlug[] = ['avulso', 'essencial', 'pro']
+
 interface ConfiguracoesPageProps {
-	searchParams: Promise<{ 'ativar-2fa'?: string }>
+	searchParams: Promise<{
+		'ativar-2fa'?: string
+		checkout?: string
+		plano?: string
+	}>
 }
 
 export default async function ConfiguracoesPage({
@@ -37,7 +52,10 @@ export default async function ConfiguracoesPage({
 		redirect('/entrar')
 	}
 
-	const { 'ativar-2fa': ativar2fa } = await searchParams
+	const { 'ativar-2fa': ativar2fa, checkout, plano } = await searchParams
+	const checkoutStatus =
+		checkout === 'success' || checkout === 'cancelled' ? checkout : undefined
+	const preselectedSlug = PLAN_SLUGS.find((slug) => slug === plano)
 	const sessions = await getAuthSessionsList()
 	const accounts = await getAuthAccountsList()
 	const hasPassword =
@@ -84,6 +102,13 @@ export default async function ConfiguracoesPage({
 				<div className="flex flex-col gap-6 min-w-0">
 					<section id="perfil" className="scroll-mt-6">
 						<PerfilSection user={authSession.user} />
+					</section>
+
+					<section id="plano-faturamento" className="scroll-mt-6">
+						<PlanoFaturamentoSection
+							checkoutStatus={checkoutStatus}
+							preselectedSlug={preselectedSlug}
+						/>
 					</section>
 
 					<section id="seguranca" className="scroll-mt-6 flex flex-col gap-4">
