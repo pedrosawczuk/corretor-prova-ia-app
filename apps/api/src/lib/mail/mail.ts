@@ -2,6 +2,7 @@ import { env } from '@app/env'
 import { Resend } from 'resend'
 import { NewLoginEmail } from './templates/new-login-email'
 import { PaymentFailedEmail } from './templates/payment-failed-email'
+import { PaymentReceivedEmail } from './templates/payment-received-email'
 import { ResetPasswordEmail } from './templates/reset-password-email'
 import { SubscriptionCancelledEmail } from './templates/subscription-cancelled-email'
 import { TwoFactorOtpEmail } from './templates/two-factor-otp-email'
@@ -146,6 +147,41 @@ export async function sendPaymentFailedEmail({
 		react: PaymentFailedEmail({
 			name,
 			manageUrl: `${env.WEB_URL}/dashboard/configuracoes`,
+		}),
+	})
+}
+
+interface SendPaymentReceivedEmailParams {
+	to: string
+	name: string
+	planName: string
+	priceCents: number
+}
+
+export async function sendPaymentReceivedEmail({
+	to,
+	name,
+	planName,
+	priceCents,
+}: SendPaymentReceivedEmailParams) {
+	if (!env.RESEND_API_KEY || !env.MAIL_FROM) {
+		return
+	}
+
+	const priceFormatted = new Intl.NumberFormat('pt-BR', {
+		style: 'currency',
+		currency: 'BRL',
+	}).format(priceCents / 100)
+
+	await resend.emails.send({
+		from: env.MAIL_FROM,
+		to,
+		subject: 'Pagamento confirmado — gabarita.app',
+		react: PaymentReceivedEmail({
+			name,
+			planName,
+			priceFormatted,
+			dashboardUrl: `${env.WEB_URL}/dashboard`,
 		}),
 	})
 }

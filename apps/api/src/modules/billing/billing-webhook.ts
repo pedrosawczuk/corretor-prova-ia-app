@@ -131,6 +131,13 @@ export async function billingWebhookModule(
 					source: 'purchase',
 					referenceId: extractStringField(payload.data, 'id') ?? payload.id,
 				})
+
+				notification = {
+					type: 'payment_received',
+					userId,
+					planName: plan.name,
+					priceCents: plan.priceCents,
+				}
 				break
 			}
 
@@ -253,6 +260,13 @@ export async function billingWebhookModule(
 					currentPeriodStart,
 					currentPeriodEnd,
 				})
+
+				notification = {
+					type: 'payment_received',
+					userId,
+					planName: plan.name,
+					priceCents: plan.priceCents,
+				}
 				break
 			}
 
