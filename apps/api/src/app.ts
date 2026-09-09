@@ -28,6 +28,7 @@ import { adminRoutes } from '@/modules/admin/admin-routes'
 import { authRoutes } from '@/modules/auth/auth-routes'
 import { billingRoutes } from '@/modules/billing/billing-routes'
 import { classroomRoutes } from '@/modules/classrooms/classroom-routes'
+import { dashboardRoutes } from '@/modules/dashboard/dashboard-routes'
 import { examRoutes } from '@/modules/exams/exam-routes'
 import { subjectRoutes } from '@/modules/subjects/subjects-routes'
 import { submissionRoutes } from '@/modules/submissions/submission-routes'
@@ -105,6 +106,7 @@ app.all(
 app.register(authRoutes, { prefix: '/auth' })
 app.register(billingRoutes, { prefix: '/billing' })
 app.register(classroomRoutes, { prefix: '/classrooms' })
+app.register(dashboardRoutes, { prefix: '/dashboard' })
 app.register(examRoutes, { prefix: '/exams' })
 app.register(subjectRoutes, { prefix: '/subjects' })
 app.register(adminRoutes, { prefix: '/admin' })

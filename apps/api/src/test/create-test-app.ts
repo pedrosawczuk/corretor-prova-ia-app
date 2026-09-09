@@ -9,6 +9,7 @@ import { registerErrorHandler } from '@/lib/http/register-error-handler'
 import { adminRoutes } from '@/modules/admin/admin-routes'
 import { billingRoutes } from '@/modules/billing/billing-routes'
 import { classroomRoutes } from '@/modules/classrooms/classroom-routes'
+import { dashboardRoutes } from '@/modules/dashboard/dashboard-routes'
 import { examRoutes } from '@/modules/exams/exam-routes'
 import { subjectRoutes } from '@/modules/subjects/subjects-routes'
 import { submissionRoutes } from '@/modules/submissions/submission-routes'
@@ -24,6 +25,7 @@ export function createTestApp() {
 	registerErrorHandler(app)
 
 	app.register(classroomRoutes, { prefix: '/classrooms' })
+	app.register(dashboardRoutes, { prefix: '/dashboard' })
 	app.register(examRoutes, { prefix: '/exams' })
 	app.register(subjectRoutes, { prefix: '/subjects' })
 	app.register(adminRoutes, { prefix: '/admin' })
