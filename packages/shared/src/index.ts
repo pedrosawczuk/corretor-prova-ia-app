@@ -1,5 +1,6 @@
 export * from './constants/submission'
 export * from './schemas'
+export * from './types/dashboard'
 export * from './types/exam'
 export * from './types/submission'
 export * from './utils/points'
