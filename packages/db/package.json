@@ -7,6 +7,7 @@
 	"scripts": {
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "tsx src/migrate.ts",
+		"db:seed:plans": "tsx src/seed-plans.ts",
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio"
 	},

@@ -14,6 +14,9 @@ for (const envPath of ['.env', '../../.env', '../.env']) {
 
 export const dbEnvSchema = z.object({
 	DATABASE_URL: z.url().startsWith('postgresql://'),
+	ABACATEPAY_PRODUCT_ID_AVULSO: z.string().min(1),
+	ABACATEPAY_PRODUCT_ID_ESSENCIAL: z.string().min(1),
+	ABACATEPAY_PRODUCT_ID_PRO: z.string().min(1),
 })
 
 export type DbEnv = z.infer<typeof dbEnvSchema>
