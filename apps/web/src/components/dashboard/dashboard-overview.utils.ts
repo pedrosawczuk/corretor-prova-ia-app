@@ -1,24 +1,16 @@
 import dayjs from '@app/dayjs'
+import type { PerformanceOverview } from '@app/shared'
 import type { Classroom } from '@/hooks/use-classrooms'
 
 export const GROWTH_MONTHS = 6
-export const MAX_SUBJECTS = 6
+export const MAX_CLASSROOMS_IN_CHART = 6
 
-export function buildSubjectData(
-	classrooms: Classroom[],
-	subjectNameById: Map<string, string>,
+export function buildClassroomPerformanceData(
+	byClassroom: PerformanceOverview['byClassroom'],
 ) {
-	const counts = new Map<string, number>()
-
-	for (const classroom of classrooms) {
-		const name = subjectNameById.get(classroom.subjectId) ?? '—'
-		counts.set(name, (counts.get(name) ?? 0) + 1)
-	}
-
-	return Array.from(counts.entries())
-		.map(([subject, count]) => ({ subject, count }))
-		.sort((a, b) => b.count - a.count)
-		.slice(0, MAX_SUBJECTS)
+	return [...byClassroom]
+		.sort((a, b) => a.averageScorePercentage - b.averageScorePercentage)
+		.slice(0, MAX_CLASSROOMS_IN_CHART)
 }
 
 export function buildGrowthData(classrooms: Classroom[]) {

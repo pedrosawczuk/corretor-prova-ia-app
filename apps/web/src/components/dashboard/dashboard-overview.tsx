@@ -12,10 +12,11 @@ import {
 } from '@app/ui'
 import {
 	ArrowRight,
-	BookOpen,
+	Award,
 	Clock,
 	FileText,
 	LayoutDashboard,
+	Target,
 	Users,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -33,19 +34,25 @@ import {
 } from 'recharts'
 import { ChartTooltip } from '@/components/charts/chart-tooltip'
 import { useClassrooms } from '@/hooks/use-classrooms'
+import { usePerformanceOverview } from '@/hooks/use-dashboard'
 import { useAllExams } from '@/hooks/use-exams'
 import { useSubjectNameMap } from '@/hooks/use-subjects'
 import { formatRelativeDate } from '@/lib/date'
-import { buildGrowthData, buildSubjectData } from './dashboard-overview.utils'
+import {
+	buildClassroomPerformanceData,
+	buildGrowthData,
+} from './dashboard-overview.utils'
 import { OnboardingTour } from './onboarding-tour'
 
 export function DashboardOverview() {
 	const { data: classrooms, isLoading, isError } = useClassrooms()
+	const { data: performanceOverview, isLoading: isPerformanceLoading } =
+		usePerformanceOverview()
 	const subjectNameById = useSubjectNameMap()
 
-	const subjectData = React.useMemo(
-		() => buildSubjectData(classrooms ?? [], subjectNameById),
-		[classrooms, subjectNameById],
+	const classroomPerformanceData = React.useMemo(
+		() => buildClassroomPerformanceData(performanceOverview?.byClassroom ?? []),
+		[performanceOverview],
 	)
 
 	const growthData = React.useMemo(
@@ -62,7 +69,6 @@ export function DashboardOverview() {
 	)
 
 	const totalTurmas = classrooms?.length ?? 0
-	const totalMaterias = new Set((classrooms ?? []).map((c) => c.subjectId)).size
 
 	const classroomIds = React.useMemo(
 		() => (classrooms ?? []).map((c) => c.id),
@@ -107,7 +113,10 @@ export function DashboardOverview() {
 				</p>
 			</div>
 
-			<div data-tour="stats" className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+			<div
+				data-tour="stats"
+				className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+			>
 				<Card>
 					<CardContent className="flex items-center gap-3 pt-4 sm:pt-6">
 						<div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
@@ -129,17 +138,19 @@ export function DashboardOverview() {
 				<Card>
 					<CardContent className="flex items-center gap-3 pt-4 sm:pt-6">
 						<div className="size-10 rounded-xl bg-info/10 text-info flex items-center justify-center shrink-0">
-							<BookOpen className="size-5" />
+							<Award className="size-5" />
 						</div>
 						<div>
-							{isLoading ? (
-								<Skeleton className="h-7 w-10" />
+							{isPerformanceLoading ? (
+								<Skeleton className="h-7 w-12" />
 							) : (
 								<p className="text-2xl font-bold tracking-tight text-foreground">
-									{totalMaterias}
+									{performanceOverview?.overall.averageScorePercentage != null
+										? `${performanceOverview.overall.averageScorePercentage}%`
+										: '—'}
 								</p>
 							)}
-							<p className="text-xs text-muted-foreground">Matérias</p>
+							<p className="text-xs text-muted-foreground">Nota média</p>
 						</div>
 					</CardContent>
 				</Card>
@@ -161,24 +172,44 @@ export function DashboardOverview() {
 						</div>
 					</CardContent>
 				</Card>
+
+				<Card>
+					<CardContent className="flex items-center gap-3 pt-4 sm:pt-6">
+						<div className="size-10 rounded-xl bg-warning/10 text-warning flex items-center justify-center shrink-0">
+							<Target className="size-5" />
+						</div>
+						<div>
+							{isPerformanceLoading ? (
+								<Skeleton className="h-7 w-12" />
+							) : (
+								<p className="text-2xl font-bold tracking-tight text-foreground">
+									{performanceOverview?.overall.accuracyRate != null
+										? `${performanceOverview.overall.accuracyRate}%`
+										: '—'}
+								</p>
+							)}
+							<p className="text-xs text-muted-foreground">Taxa de acerto</p>
+						</div>
+					</CardContent>
+				</Card>
 			</div>
 
 			<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 				<Card>
 					<CardHeader>
-						<CardTitle>Turmas por matéria</CardTitle>
+						<CardTitle>Desempenho por turma</CardTitle>
 					</CardHeader>
 					<CardContent>
-						{isLoading ? (
+						{isPerformanceLoading ? (
 							<Skeleton className="h-64 w-full rounded-xl" />
-						) : subjectData.length === 0 ? (
+						) : classroomPerformanceData.length === 0 ? (
 							<div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-								Crie turmas para ver o resumo por matéria.
+								Corrija provas para ver o desempenho por turma.
 							</div>
 						) : (
 							<ResponsiveContainer width="100%" height={256}>
 								<BarChart
-									data={subjectData}
+									data={classroomPerformanceData}
 									margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
 									barCategoryGap="30%"
 								>
@@ -187,7 +218,7 @@ export function DashboardOverview() {
 										stroke="var(--color-border)"
 									/>
 									<XAxis
-										dataKey="subject"
+										dataKey="classroomName"
 										tickLine={false}
 										axisLine={false}
 										tick={{
@@ -196,6 +227,7 @@ export function DashboardOverview() {
 										}}
 									/>
 									<YAxis
+										domain={[0, 100]}
 										allowDecimals={false}
 										tickLine={false}
 										axisLine={false}
@@ -206,12 +238,10 @@ export function DashboardOverview() {
 									/>
 									<RechartsTooltip
 										cursor={{ fill: 'var(--color-muted)' }}
-										content={(props) => (
-											<ChartTooltip {...props} suffix="turma(s)" />
-										)}
+										content={(props) => <ChartTooltip {...props} suffix="%" />}
 									/>
 									<Bar
-										dataKey="count"
+										dataKey="averageScorePercentage"
 										fill="var(--color-primary)"
 										radius={[4, 4, 0, 0]}
 										maxBarSize={48}
