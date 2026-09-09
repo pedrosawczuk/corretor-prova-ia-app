@@ -53,6 +53,7 @@ describe('GET /billing/status', () => {
 			subscriptionStatus: null,
 			currentPeriodEnd: null,
 			cancelAtPeriodEnd: false,
+			subscriberSince: null,
 			correctionsUsed: 0,
 			creditBalance: 0,
 		})
@@ -60,6 +61,7 @@ describe('GET /billing/status', () => {
 
 	it('retorna os dados do plano e o uso do ciclo quando o usuário tem assinatura ativa', async () => {
 		const currentPeriodEnd = new Date('2026-10-01T00:00:00.000Z')
+		const createdAt = new Date('2026-06-15T00:00:00.000Z')
 
 		vi.mocked(db.select)
 			.mockReturnValueOnce(
@@ -69,6 +71,7 @@ describe('GET /billing/status', () => {
 						currentPeriodStart: new Date('2026-09-01T00:00:00.000Z'),
 						currentPeriodEnd,
 						cancelAtPeriodEnd: false,
+						createdAt,
 						planSlug: 'essencial',
 						planName: 'Essencial',
 						monthlyCorrectionsLimit: 100,
@@ -95,6 +98,7 @@ describe('GET /billing/status', () => {
 			subscriptionStatus: 'active',
 			currentPeriodEnd: currentPeriodEnd.toISOString(),
 			cancelAtPeriodEnd: false,
+			subscriberSince: createdAt.toISOString(),
 			correctionsUsed: 42,
 			creditBalance: 3,
 		})
@@ -133,6 +137,7 @@ describe('GET /billing/status', () => {
 			subscriptionStatus: null,
 			currentPeriodEnd: null,
 			cancelAtPeriodEnd: false,
+			subscriberSince: null,
 			correctionsUsed: 0,
 			creditBalance: 0,
 		})

@@ -21,6 +21,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import {
 	BadgeCheck,
 	Camera,
+	Crown,
 	Loader2,
 	Mail,
 	Phone,
@@ -32,6 +33,7 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import type { z } from 'zod'
+import { useBillingStatus } from '@/hooks/use-billing'
 import { apiClient } from '@/lib/api-client'
 import { applyApiErrorsToForm, toastApiError } from '@/lib/api-error-handler'
 import type { AuthUser } from '@/lib/auth-server'
@@ -136,6 +138,15 @@ export function PerfilSection({ user }: { user: AuthUser }) {
 	}
 
 	const memberSince = formatDate(user.createdAt)
+	const { data: billingStatus } = useBillingStatus()
+	const isSubscriber =
+		billingStatus?.plan != null &&
+		(billingStatus.subscriptionStatus === 'active' ||
+			billingStatus.subscriptionStatus === 'past_due')
+	const subscriberSince =
+		isSubscriber && billingStatus?.subscriberSince
+			? formatDate(billingStatus.subscriberSince, 'MMM [de] YYYY')
+			: null
 
 	return (
 		<Card>
@@ -195,6 +206,16 @@ export function PerfilSection({ user }: { user: AuthUser }) {
 						<p className="text-xs text-muted-foreground">
 							Membro desde {memberSince}
 						</p>
+						{subscriberSince && (
+							<Badge
+								variant="outline"
+								size="sm"
+								leftIcon={<Crown />}
+								className="border-primary/30 text-primary bg-primary/5"
+							>
+								Assinante desde {subscriberSince}
+							</Badge>
+						)}
 					</div>
 				</div>
 

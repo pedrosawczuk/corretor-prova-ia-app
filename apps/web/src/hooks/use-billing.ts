@@ -16,6 +16,7 @@ export interface BillingStatus {
 	subscriptionStatus: 'active' | 'past_due' | 'canceled' | null
 	currentPeriodEnd: string | null
 	cancelAtPeriodEnd: boolean
+	subscriberSince: string | null
 	correctionsUsed: number
 	creditBalance: number
 }

@@ -52,6 +52,7 @@ export function PlanoFaturamentoSection({
 	const [isPolling, setIsPolling] = React.useState(checkoutStatus === 'success')
 	const [isTrocarOpen, setIsTrocarOpen] = React.useState(false)
 	const [isCancelarOpen, setIsCancelarOpen] = React.useState(false)
+	const hasShownCheckoutToastRef = React.useRef(false)
 
 	const { data, isLoading, isError } = useBillingStatus({
 		refetchInterval: isPolling ? CHECKOUT_SUCCESS_POLL_MS : false,
@@ -59,7 +60,8 @@ export function PlanoFaturamentoSection({
 	const createCheckout = useCreateCheckout()
 
 	React.useEffect(() => {
-		if (!checkoutStatus) return
+		if (!checkoutStatus || hasShownCheckoutToastRef.current) return
+		hasShownCheckoutToastRef.current = true
 
 		if (checkoutStatus === 'success') {
 			toast.success(

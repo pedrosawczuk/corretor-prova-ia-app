@@ -31,6 +31,7 @@ export async function getBillingStatusModule(
 			currentPeriodStart: subscriptionsTable.currentPeriodStart,
 			currentPeriodEnd: subscriptionsTable.currentPeriodEnd,
 			cancelAtPeriodEnd: subscriptionsTable.cancelAtPeriodEnd,
+			createdAt: subscriptionsTable.createdAt,
 			updatedAt: subscriptionsTable.updatedAt,
 			planSlug: plansTable.slug,
 			planName: plansTable.name,
@@ -87,6 +88,7 @@ export async function getBillingStatusModule(
 		subscriptionStatus: subscription?.status ?? null,
 		currentPeriodEnd: subscription?.currentPeriodEnd ?? null,
 		cancelAtPeriodEnd: subscription?.cancelAtPeriodEnd ?? false,
+		subscriberSince: subscription?.createdAt ?? null,
 		correctionsUsed,
 		creditBalance,
 	})
