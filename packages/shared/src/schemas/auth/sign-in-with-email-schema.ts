@@ -10,6 +10,7 @@ export const signInWithEmailSchema = z.strictObject({
 		.string()
 		.min(8, 'A senha deve ter no mínimo 8 caracteres')
 		.max(128, 'A senha deve ter no máximo 128 caracteres'),
+	remember: z.boolean().optional().default(true),
 })
 
 export type SignInWithEmailInput = z.infer<typeof signInWithEmailSchema>

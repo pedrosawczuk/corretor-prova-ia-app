@@ -47,6 +47,9 @@ export const auth = betterAuth({
 			},
 		},
 	},
+	session: {
+		expiresIn: 60 * 60 * 24 * 30,
+	},
 	onAPIError: {
 		errorURL: `${env.WEB_URL}/erro-autenticacao`,
 	},

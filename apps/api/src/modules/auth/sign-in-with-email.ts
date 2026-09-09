@@ -7,12 +7,13 @@ export async function signInWithEmailModule(
 	request: FastifyRequest<{ Body: SignInWithEmailInput }>,
 	reply: FastifyReply,
 ) {
-	const { email, password } = request.body
+	const { email, password, remember } = request.body
 
 	const response = await auth.api.signInEmail({
 		body: {
 			email,
 			password,
+			rememberMe: remember,
 		},
 		asResponse: true,
 		headers: toFetchHeaders(request.headers),

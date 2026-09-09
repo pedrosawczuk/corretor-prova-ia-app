@@ -20,17 +20,13 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
+import type { z } from 'zod'
 import { useGoogleAuth } from '@/hooks/use-google-auth'
 import { ApiError, apiClient } from '@/lib/api-client'
 import { applyApiErrorsToForm } from '@/lib/api-error-handler'
 import { GoogleIcon } from './google-icon'
 
-const entrarSchema = signInWithEmailSchema.extend({
-	remember: z.boolean(),
-})
-
-type EntrarInput = z.infer<typeof entrarSchema>
+type EntrarInput = z.input<typeof signInWithEmailSchema>
 
 export function EntrarForm() {
 	const router = useRouter()
@@ -41,11 +37,11 @@ export function EntrarForm() {
 	})
 
 	const form = useForm<EntrarInput>({
-		resolver: zodResolver(entrarSchema),
+		resolver: zodResolver(signInWithEmailSchema),
 		defaultValues: {
 			email: '',
 			password: '',
-			remember: false,
+			remember: true,
 		},
 	})
 
@@ -58,6 +54,7 @@ export function EntrarForm() {
 				body: JSON.stringify({
 					email: data.email,
 					password: data.password,
+					remember: data.remember,
 				}),
 			})
 

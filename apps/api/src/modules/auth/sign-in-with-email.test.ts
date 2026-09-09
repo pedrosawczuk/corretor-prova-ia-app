@@ -80,4 +80,48 @@ describe('POST /auth/sign-in', () => {
 		expect(response.statusCode).toBe(400)
 		expect(auth.api.signInEmail).not.toHaveBeenCalled()
 	})
+
+	it('repassa remember: false como rememberMe: false para o better-auth', async () => {
+		const payload = { ...makeSignInPayload(), remember: false }
+
+		vi.mocked(auth.api.signInEmail).mockResolvedValue(
+			makeAuthResponse({
+				user: { id: faker.string.uuid(), email: payload.email },
+			}) as never,
+		)
+
+		await app.inject({
+			method: 'POST',
+			url: '/auth/sign-in',
+			payload,
+		})
+
+		expect(auth.api.signInEmail).toHaveBeenCalledWith(
+			expect.objectContaining({
+				body: expect.objectContaining({ rememberMe: false }),
+			}),
+		)
+	})
+
+	it('repassa remember: true (ou omitido) como rememberMe: true para o better-auth', async () => {
+		const payload = makeSignInPayload()
+
+		vi.mocked(auth.api.signInEmail).mockResolvedValue(
+			makeAuthResponse({
+				user: { id: faker.string.uuid(), email: payload.email },
+			}) as never,
+		)
+
+		await app.inject({
+			method: 'POST',
+			url: '/auth/sign-in',
+			payload,
+		})
+
+		expect(auth.api.signInEmail).toHaveBeenCalledWith(
+			expect.objectContaining({
+				body: expect.objectContaining({ rememberMe: true }),
+			}),
+		)
+	})
 })

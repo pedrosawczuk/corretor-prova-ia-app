@@ -1,6 +1,16 @@
 import { env } from '@app/env'
 import { symmetricDecrypt, symmetricEncrypt } from 'better-auth/crypto'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+vi.unmock('@/lib/auth/auth')
+
+describe('duração da sessão (better-auth session.expiresIn)', () => {
+	it('configura a sessão para durar 30 dias', async () => {
+		const { auth } = await import('./auth')
+
+		expect(auth.options.session?.expiresIn).toBe(60 * 60 * 24 * 30)
+	})
+})
 
 describe('criptografia de tokens OAuth (better-auth account.encryptOAuthTokens)', () => {
 	it('criptografa um token com o secret do projeto de forma que o texto cifrado não seja o valor em claro', async () => {
