@@ -5,6 +5,15 @@ import { apiClient } from '@/lib/api-client'
 const submissionsKeys = {
 	detail: (submissionId: string) =>
 		['submissions', 'detail', submissionId] as const,
+	byExam: (examId: string) => ['submissions', 'byExam', examId] as const,
+}
+
+export function useSubmissions(examId: string) {
+	return useQuery({
+		queryKey: submissionsKeys.byExam(examId),
+		queryFn: () => apiClient<Submission[]>(`/exams/${examId}/submissions`),
+		enabled: Boolean(examId),
+	})
 }
 
 export function useSubmission(submissionId: string | undefined) {

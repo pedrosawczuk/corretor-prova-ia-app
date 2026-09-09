@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
+import { Skeleton } from '@app/ui'
 import { CorrigirProva } from '@/components/dashboard/corrigir-prova'
 
 export const metadata: Metadata = {
@@ -15,5 +17,16 @@ export default async function CorrigirProvaPage({
 }: CorrigirProvaPageProps) {
 	const { id, examId } = await params
 
-	return <CorrigirProva turmaId={id} examId={examId} />
+	return (
+		<Suspense
+			fallback={
+				<div className="flex flex-1 flex-col gap-6 p-6 bg-muted/20">
+					<Skeleton className="h-8 w-40" />
+					<Skeleton className="h-64 rounded-2xl" />
+				</div>
+			}
+		>
+			<CorrigirProva turmaId={id} examId={examId} />
+		</Suspense>
+	)
 }

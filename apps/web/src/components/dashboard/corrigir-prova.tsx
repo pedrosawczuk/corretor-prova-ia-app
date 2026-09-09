@@ -1,6 +1,14 @@
 'use client'
 
-import { Badge, Button, Card, CardContent, Skeleton, toast } from '@app/ui'
+import {
+	Badge,
+	Button,
+	Card,
+	CardContent,
+	Input,
+	Skeleton,
+	toast,
+} from '@app/ui'
 import {
 	AlertTriangle,
 	ArrowLeft,
@@ -12,7 +20,9 @@ import {
 	SearchX,
 } from 'lucide-react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import * as React from 'react'
+import { useClassroomStudentSuggestions } from '@/hooks/use-classrooms'
 import { useExam, useExportExam } from '@/hooks/use-exams'
 import {
 	useCreateSubmission,
@@ -39,12 +49,23 @@ interface CorrigirProvaProps {
 }
 
 export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
+	const searchParams = useSearchParams()
+	const querySubmissionId = searchParams.get('submissionId')
+
 	const { data: exam, isLoading, error } = useExam(examId)
 	const exportExam = useExportExam(examId)
 
-	const [step, setStep] = React.useState<Step>('intro')
-	const [submissionId, setSubmissionId] = React.useState<string>()
+	const [step, setStep] = React.useState<Step>(
+		querySubmissionId ? 'result' : 'intro',
+	)
+	const [studentName, setStudentName] = React.useState('')
+	const [submissionId, setSubmissionId] = React.useState<string | undefined>(
+		querySubmissionId ?? undefined,
+	)
 	const [pagePreviews, setPagePreviews] = React.useState<string[]>([])
+
+	const { data: studentSuggestions = [] } =
+		useClassroomStudentSuggestions(turmaId)
 
 	const createSubmission = useCreateSubmission(examId)
 	const uploadPage = useUploadSubmissionPage(submissionId ?? '')
@@ -53,6 +74,13 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 
 	const pagePreviewsRef = React.useRef(pagePreviews)
 	pagePreviewsRef.current = pagePreviews
+
+	React.useEffect(() => {
+		if (querySubmissionId) {
+			setSubmissionId(querySubmissionId)
+			setStep('result')
+		}
+	}, [querySubmissionId])
 
 	React.useEffect(() => {
 		return () => {
@@ -94,7 +122,7 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 	const totalPages = exam.templatePageCount
 
 	function handleStart() {
-		createSubmission.mutate(undefined, {
+		createSubmission.mutate(studentName.trim() || undefined, {
 			onSuccess: (submissionRow) => {
 				setSubmissionId(submissionRow.id)
 				setStep('capturing')
@@ -143,6 +171,69 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 		})
 	}
 
+	if (step === 'result') {
+		if (!submission) {
+			return (
+				<div className="flex flex-1 flex-col gap-6 p-6 bg-muted/20">
+					<Skeleton className="h-64 rounded-2xl" />
+				</div>
+			)
+		}
+
+		const pending = countPendingReview(submission)
+		const misalignedPages = getMisalignedPageNumbers(submission)
+
+		return (
+			<div className="flex flex-1 flex-col gap-6 p-6 bg-muted/20">
+				<Link
+					href={`/dashboard/turmas/${turmaId}/provas/${examId}`}
+					className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+				>
+					<ArrowLeft className="size-3.5" />
+					Voltar para a prova
+				</Link>
+
+				{misalignedPages.length > 0 && (
+					<div className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning/5 p-3 text-sm text-warning">
+						<AlertTriangle className="size-4 shrink-0 mt-0.5" />
+						<p>{buildMisalignedPagesWarning(misalignedPages)}</p>
+					</div>
+				)}
+
+				<Card variant="subtle">
+					<CardContent className="flex items-center justify-between gap-4 pt-4 sm:pt-6">
+						<div>
+							<p className="text-sm font-semibold text-foreground">
+								{submission.studentIdentifier
+									? `Correção de ${submission.studentIdentifier}`
+									: 'Correção sem identificação'}
+							</p>
+							<p className="mt-1 text-xs text-muted-foreground">Nota apurada</p>
+							<p className="text-2xl font-bold text-foreground">
+								{submission.totalScore ?? '0.00'}{' '}
+								<span className="text-sm font-normal text-muted-foreground">
+									/ {exam.totalPoints}
+								</span>
+							</p>
+						</div>
+						{pending > 0 ? (
+							<Badge variant="warning-outline">
+								{pending} pendente(s) de revisão
+							</Badge>
+						) : (
+							<Badge variant="success-outline">
+								<CheckCircle2 className="size-3.5" />
+								Correção concluída
+							</Badge>
+						)}
+					</CardContent>
+				</Card>
+
+				<CorrigirProvaResultado exam={exam} submission={submission} />
+			</div>
+		)
+	}
+
 	if (step === 'intro' || !totalPages) {
 		return (
 			<div className="flex flex-1 flex-col gap-6 p-6 bg-muted/20">
@@ -170,14 +261,30 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 					</div>
 
 					{totalPages ? (
-						<Button
-							leftIcon={<Camera />}
-							size="lg"
-							isLoading={createSubmission.isPending}
-							onClick={handleStart}
-						>
-							Iniciar correção
-						</Button>
+						<div className="flex w-full max-w-sm flex-col gap-4">
+							<Input
+								label="Nome do aluno (opcional)"
+								placeholder="Ex: Ana Silva"
+								value={studentName}
+								onChange={(e) => setStudentName(e.target.value)}
+								list="student-suggestions"
+								containerClassName="text-left"
+							/>
+							<datalist id="student-suggestions">
+								{studentSuggestions.map((name) => (
+									<option key={name} value={name} />
+								))}
+							</datalist>
+
+							<Button
+								leftIcon={<Camera />}
+								size="lg"
+								isLoading={createSubmission.isPending}
+								onClick={handleStart}
+							>
+								Iniciar correção
+							</Button>
+						</div>
 					) : (
 						<Button
 							leftIcon={<Download />}
@@ -280,59 +387,5 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 		)
 	}
 
-	if (!submission) {
-		return (
-			<div className="flex flex-1 flex-col gap-6 p-6 bg-muted/20">
-				<Skeleton className="h-64 rounded-2xl" />
-			</div>
-		)
-	}
-
-	const pending = countPendingReview(submission)
-	const misalignedPages = getMisalignedPageNumbers(submission)
-
-	return (
-		<div className="flex flex-1 flex-col gap-6 p-6 bg-muted/20">
-			<Link
-				href={`/dashboard/turmas/${turmaId}/provas/${examId}`}
-				className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-			>
-				<ArrowLeft className="size-3.5" />
-				Voltar para a prova
-			</Link>
-
-			{misalignedPages.length > 0 && (
-				<div className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning/5 p-3 text-sm text-warning">
-					<AlertTriangle className="size-4 shrink-0 mt-0.5" />
-					<p>{buildMisalignedPagesWarning(misalignedPages)}</p>
-				</div>
-			)}
-
-			<Card variant="subtle">
-				<CardContent className="flex items-center justify-between gap-4 pt-4 sm:pt-6">
-					<div>
-						<p className="text-xs text-muted-foreground">Nota apurada</p>
-						<p className="text-2xl font-bold text-foreground">
-							{submission.totalScore ?? '0.00'}{' '}
-							<span className="text-sm font-normal text-muted-foreground">
-								/ {exam.totalPoints}
-							</span>
-						</p>
-					</div>
-					{pending > 0 ? (
-						<Badge variant="warning-outline">
-							{pending} pendente(s) de revisão
-						</Badge>
-					) : (
-						<Badge variant="success-outline">
-							<CheckCircle2 className="size-3.5" />
-							Correção concluída
-						</Badge>
-					)}
-				</CardContent>
-			</Card>
-
-			<CorrigirProvaResultado exam={exam} submission={submission} />
-		</div>
-	)
+	return null
 }

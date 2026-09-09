@@ -15,6 +15,8 @@ export interface Classroom {
 const classroomsKeys = {
 	all: ['classrooms'] as const,
 	detail: (id: string) => ['classrooms', id] as const,
+	students: (classroomId: string) =>
+		['classrooms', classroomId, 'students'] as const,
 }
 
 export function useClassrooms() {
@@ -29,6 +31,14 @@ export function useClassroom(id: string) {
 		queryKey: classroomsKeys.detail(id),
 		queryFn: () => apiClient<Classroom>(`/classrooms/${id}`),
 		enabled: Boolean(id),
+	})
+}
+
+export function useClassroomStudentSuggestions(classroomId: string) {
+	return useQuery({
+		queryKey: classroomsKeys.students(classroomId),
+		queryFn: () => apiClient<string[]>(`/classrooms/${classroomId}/students`),
+		enabled: Boolean(classroomId),
 	})
 }
 

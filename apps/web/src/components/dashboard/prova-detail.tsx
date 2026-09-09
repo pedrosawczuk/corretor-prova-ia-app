@@ -1,6 +1,6 @@
 'use client'
 
-import type { GenerateExamInput } from '@app/shared'
+import type { GenerateExamInput, SubmissionStatus } from '@app/shared'
 import {
 	Badge,
 	Button,
@@ -31,9 +31,29 @@ import {
 import Link from 'next/link'
 import * as React from 'react'
 import { useExam, useExportExam, useGenerateExam } from '@/hooks/use-exams'
+import { useSubmissions } from '@/hooks/use-submissions'
 import { ApiError } from '@/lib/api-client'
 import { toastApiError } from '@/lib/api-error-handler'
+import { formatDate } from '@/lib/date'
 import { ProvaResultado } from './prova-resultado'
+
+const submissionStatusMap: Record<
+	SubmissionStatus,
+	{
+		label: string
+		variant:
+			| 'success-outline'
+			| 'warning-outline'
+			| 'destructive-outline'
+			| 'subtle'
+	}
+> = {
+	completed: { label: 'Concluída', variant: 'success-outline' },
+	needs_review: { label: 'Revisão pendente', variant: 'warning-outline' },
+	processing: { label: 'Processando', variant: 'subtle' },
+	pending_processing: { label: 'Pendente', variant: 'subtle' },
+	failed: { label: 'Falhou', variant: 'destructive-outline' },
+}
 
 interface ProvaDetailProps {
 	turmaId: string
@@ -42,6 +62,7 @@ interface ProvaDetailProps {
 
 export function ProvaDetail({ turmaId, examId }: ProvaDetailProps) {
 	const { data: exam, isLoading, error } = useExam(examId)
+	const { data: submissions = [] } = useSubmissions(examId)
 	const generateExam = useGenerateExam(examId)
 	const exportExam = useExportExam(examId)
 
@@ -314,6 +335,53 @@ export function ProvaDetail({ turmaId, examId }: ProvaDetailProps) {
 						Informe o conteúdo da prova e clique em "Gerar".
 					</p>
 				</div>
+			)}
+
+			{submissions.length > 0 && (
+				<Card>
+					<CardHeader>
+						<CardTitle className="text-base">Submissões corrigidas</CardTitle>
+					</CardHeader>
+					<CardContent className="flex flex-col divide-y divide-border p-0">
+						{submissions.map((submission) => {
+							const statusInfo = submissionStatusMap[submission.status] ?? {
+								label: submission.status,
+								variant: 'subtle' as const,
+							}
+
+							return (
+								<Link
+									key={submission.id}
+									href={`/dashboard/turmas/${turmaId}/provas/${examId}/corrigir?submissionId=${submission.id}`}
+									className="flex items-center justify-between p-4 transition-colors hover:bg-muted/40"
+								>
+									<div className="flex flex-col gap-0.5">
+										<span className="text-sm font-semibold text-foreground">
+											{submission.studentIdentifier ?? 'Sem identificação'}
+										</span>
+										<span className="text-xs text-muted-foreground">
+											{formatDate(
+												submission.createdAt,
+												'DD/MM/YYYY [às] HH:mm',
+											)}
+										</span>
+									</div>
+									<div className="flex items-center gap-3">
+										<Badge variant={statusInfo.variant} size="sm">
+											{statusInfo.label}
+										</Badge>
+										<span className="text-sm font-bold text-foreground">
+											{submission.totalScore ?? '0.00'}{' '}
+											<span className="text-xs font-normal text-muted-foreground">
+												/ {exam.totalPoints}
+											</span>
+										</span>
+									</div>
+								</Link>
+							)
+						})}
+					</CardContent>
+				</Card>
 			)}
 		</div>
 	)
