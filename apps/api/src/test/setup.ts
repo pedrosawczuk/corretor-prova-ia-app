@@ -35,6 +35,7 @@ vi.mock('@app/db', () => ({
 	eq: vi.fn(),
 	gte: vi.fn(),
 	inArray: vi.fn(),
+	isNotNull: vi.fn(),
 	lte: vi.fn(),
 	sql: vi.fn(),
 }))

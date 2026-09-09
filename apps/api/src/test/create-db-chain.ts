@@ -8,6 +8,8 @@ const CHAIN_METHODS = [
 	'set',
 	'returning',
 	'innerJoin',
+	'leftJoin',
+	'groupBy',
 	'limit',
 	'offset',
 	'onConflictDoNothing',

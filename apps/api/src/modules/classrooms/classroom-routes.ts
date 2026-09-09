@@ -4,6 +4,8 @@ import { createClassroomModule } from './create-classroom'
 import { deleteClassroomModule } from './delete-classroom'
 import { getClassroomModule } from './get-classroom'
 import { getClassroomParamsSchema } from './get-classroom-schema'
+import { listClassroomStudentsModule } from './list-classroom-students'
+import { listClassroomStudentsParamsSchema } from './list-classroom-students-schema'
 import { listClassroomsModule } from './list-classrooms'
 import { updateClassroomModule } from './update-classroom'
 
@@ -19,6 +21,16 @@ export function classroomRoutes(app: FastifyInstance) {
 	)
 
 	app.get('/', listClassroomsModule)
+
+	app.get(
+		'/:classroomId/students',
+		{
+			schema: {
+				params: listClassroomStudentsParamsSchema,
+			},
+		},
+		listClassroomStudentsModule,
+	)
 
 	app.get(
 		'/:id',
