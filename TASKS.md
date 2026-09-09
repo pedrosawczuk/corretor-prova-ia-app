@@ -1,5 +1,10 @@
 # TASKS.md
 
+## Status
+Em andamento: nenhuma
+Concluídas: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26
+Bloqueadas: nenhuma
+
 ## Feature: Corrigir prova por foto — aceitar câmera ou galeria, com leitura mais confiável
 
 ### Contexto
@@ -110,4 +115,116 @@ Também por decisão do usuário: a galeria é usada **uma foto por vez, no luga
   - O que fazer: confirmado durante o levantamento desta feature que não existe chamada a Vision LLM nem streaming (SSE/WebSocket) na correção — `POST /submissions/:submissionId/process` é síncrono e a leitura é 100% OpenCV determinístico (`read-submission-answers.ts`). RF10 ("Feedback em Tempo Real... Corrigindo questão 1...") e RNF02 ("Uso de SSE ou WebSockets") descrevem algo que nunca foi implementado. Ajustar os dois itens para descrever o comportamento real (resposta única após processamento síncrono) ou, se o streaming ainda for uma meta futura, marcar explicitamente como "planejado, não implementado" em vez de deixar parecer que já existe.
   - Arquivos: `docs/requisitos.md`
   - Pronto quando: RF10/RNF02 não descrevem mais um comportamento (Vision LLM, streaming) que diverge do código atual.
+  - Depende de: nenhuma
+
+## Feature: Dashboard com métricas de produto, não de vaidade
+
+### Contexto
+
+`dashboard-overview.tsx` hoje só mostra contagens de cadastro (turmas, matérias, provas) e dois gráficos derivados dessas mesmas contagens ("turmas por matéria", "crescimento de turmas"). Nenhum desses números responde à pergunta que importa para o professor: como minha turma foi na prova. Os dados para responder isso já existem no banco e não usados em lugar nenhum da UI hoje: `submissions.totalScore` (nota obtida), `exams.totalPoints` (nota máxima da prova) e `submission_answers.finalScore`/`questions.maxPoints` (acerto por questão). Não existe hoje nenhum endpoint que agregue esses dados — `list-submissions.ts` só lista submissões de uma prova por vez, sem agregação, e o frontend não tem nenhum hook nem tela consumindo nota ou taxa de acerto.
+
+**Achado importante do levantamento do código real:** submissões com `status = 'needs_review'` têm respostas com `finalScore = null` (`grade-submission-answers.ts`) até a revisão manual. Qualquer média de nota ou taxa de acerto precisa considerar **apenas submissões `completed`**, senão o número fica artificialmente mais baixo.
+
+**Caminho crítico:** 16 → 17 → 18 → 19 → 20 (backend agrega os dados, depois o frontend expõe e substitui a UI de vaidade). 21 fecha com validação manual ponta a ponta.
+
+**Conflito de arquivo sinalizado:** 19 e 20 editam o mesmo arquivo (`dashboard-overview.tsx` e `dashboard-overview.utils.ts`) — por isso são sequenciais (20 depende de 19), não devem ser executadas em paralelo por agentes diferentes.
+
+### Tarefas
+
+- [x] 16. Endpoint de nota média e desempenho por turma
+  - O que fazer: criar módulo novo `apps/api/src/modules/dashboard/` com `get-performance-overview.ts` (função `getPerformanceOverviewModule`) e `dashboard-routes.ts` (`dashboardRoutes`), registrados em `apps/api/src/app.ts` (`app.register(dashboardRoutes, { prefix: '/dashboard' })`) e em `apps/api/src/test/create-test-app.ts`. Rota `GET /dashboard/performance-overview`, autenticada com `getAuthenticatedUser` (mesmo padrão de `apps/api/src/modules/exams/list-exams.ts`). Calcular, escopado a `classroomsTable.teacherId = user.id` e apenas sobre `submissionsTable.status = 'completed'`: `overall.averageScorePercentage` (média de `totalScore / exams.totalPoints * 100` entre as submissões completed do professor, arredondada a 1 casa decimal, `null` se não houver nenhuma), `overall.correctedSubmissionsCount` (contagem dessas submissões), e `byClassroom` (array com `classroomId`, `classroomName`, `averageScorePercentage`, `correctedSubmissionsCount`, só turmas com ao menos 1 submissão completed). Join necessário: `submissionsTable` → `examsTable` (`examId`) → `classroomsTable` (`classroomId`). Seguir o padrão de agregação com `leftJoin`/`groupBy`/`sql<number>` já usado em `apps/api/src/modules/admin/get-admin-overview.ts`. Adicionar o tipo `PerformanceOverview` em `packages/shared/src/types/dashboard.ts` (novo) e exportar em `packages/shared/src/index.ts`, só com os campos acima (taxa de acerto é da tarefa 17).
+  - Arquivos: `apps/api/src/modules/dashboard/get-performance-overview.ts` (novo), `apps/api/src/modules/dashboard/dashboard-routes.ts` (novo), `apps/api/src/app.ts`, `apps/api/src/test/create-test-app.ts`, `packages/shared/src/types/dashboard.ts` (novo), `packages/shared/src/index.ts`
+  - Pronto quando: `GET /dashboard/performance-overview` retorna `overall`/`byClassroom` corretos para um cenário com 2 turmas e submissões completed + needs_review misturadas (needs_review fica de fora do cálculo); professor sem nenhuma submissão completed recebe `averageScorePercentage: null`, `correctedSubmissionsCount: 0`, `byClassroom: []`; submissões de turma de outro professor nunca aparecem; teste automatizado cobre os três casos com as factories reais (`make-classroom`, `make-exam`, `make-submission`, `make-submission-answer`), sem mocks de banco.
+  - Depende de: nenhuma
+
+- [x] 17. Adicionar taxa de acerto ao endpoint de desempenho
+  - O que fazer: estender `getPerformanceOverviewModule` (tarefa 16) com `overall.accuracyRate`: percentual de `submission_answers` cujo `finalScore` é igual ao `maxPoints` da questão (`questionsTable.maxPoints`), entre as respostas de submissões completed do professor, arredondado a 1 casa decimal, `null` se não houver nenhuma resposta. Join adicional: `submissionAnswersTable` → `submissionsTable` (`submissionId`) reaproveitando a cadeia até `classroomsTable` da tarefa 16, e → `questionsTable` (`questionId`) para o `maxPoints`. Atualizar o tipo `PerformanceOverview` para incluir `accuracyRate`. Só o valor geral do professor é pedido aqui, não por turma.
+  - Arquivos: `apps/api/src/modules/dashboard/get-performance-overview.ts`, `packages/shared/src/types/dashboard.ts`
+  - Pronto quando: no mesmo cenário de teste da tarefa 16, uma submissão completed com 3 de 4 respostas corretas contribui com 75% para `accuracyRate`, testado agregando mais de uma submissão; `accuracyRate` é `null` quando não há nenhuma resposta de submissão completed.
+  - Depende de: 16
+
+- [x] 18. Hook `usePerformanceOverview` no frontend
+  - O que fazer: criar `apps/web/src/hooks/use-dashboard.ts` com `usePerformanceOverview()`, seguindo o padrão de `useQuery` de `apps/web/src/hooks/use-submissions.ts` (query key `['dashboard', 'performance-overview']`), chamando `apiClient<PerformanceOverview>('/dashboard/performance-overview')` (tipo de `@app/shared`).
+  - Arquivos: `apps/web/src/hooks/use-dashboard.ts` (novo)
+  - Pronto quando: o hook expõe dados tipados de `PerformanceOverview` e a chamada bate corretamente no endpoint da tarefa 17.
+  - Depende de: 17
+
+- [x] 19. Cards de nota média e taxa de acerto no dashboard
+  - O que fazer: em `dashboard-overview.tsx`, chamar `usePerformanceOverview()` (tarefa 18). Trocar o card "Matérias" (ícone `BookOpen`, `totalMaterias`) por um card "Nota média" com `overall.averageScorePercentage` formatado como porcentagem (ex: `72%`), mostrando "—" durante o carregamento ou quando `null`. Adicionar um quarto card "Taxa de acerto" com `overall.accuracyRate`, mesmo tratamento de loading/vazio. Ajustar o grid de `sm:grid-cols-3` para `sm:grid-cols-2 lg:grid-cols-4`. Manter os cards "Turmas" e "Provas" como estão. O gráfico "Turmas por matéria" (e `totalMaterias`/`buildSubjectData`) continuam existindo até a tarefa 20 removê-los.
+  - Arquivos: `apps/web/src/components/dashboard/dashboard-overview.tsx`
+  - Pronto quando: com professor que já corrigiu provas, o dashboard mostra nota média e taxa de acerto reais (validado manualmente); sem nenhuma correção, os dois cards novos mostram "—" sem erro no console.
+  - Depende de: 18
+
+- [x] 20. Substituir gráfico "Turmas por matéria" por "Desempenho por turma"
+  - O que fazer: em `dashboard-overview.utils.ts`, remover `buildSubjectData` (e `MAX_SUBJECTS`, se ficar sem uso) e adicionar `buildClassroomPerformanceData(byClassroom: PerformanceOverview['byClassroom'])`, ordenando por `averageScorePercentage` crescente (pior desempenho primeiro) e limitando a uma constante nova `MAX_CLASSROOMS_IN_CHART = 6`. Em `dashboard-overview.tsx`, trocar o card "Turmas por matéria" (`BarChart` com `subjectData`) por "Desempenho por turma", usando `buildClassroomPerformanceData(performanceOverview?.byClassroom ?? [])`, eixo X com `classroomName`, eixo Y de 0 a 100, `ChartTooltip` com `suffix="%"` — mesmo componente visual, só trocando os dados. Estado vazio (nenhuma turma com correção completed) segue o padrão existente de mensagem no lugar do gráfico (ex: "Corrija provas para ver o desempenho por turma."). O gráfico "Crescimento de turmas" continua como está.
+  - Arquivos: `apps/web/src/components/dashboard/dashboard-overview.tsx`, `apps/web/src/components/dashboard/dashboard-overview.utils.ts`, `apps/web/src/components/dashboard/dashboard-overview.utils.test.ts` (novo)
+  - Pronto quando: com 2+ turmas com submissões completed e notas médias diferentes, o gráfico mostra as turmas da pior para a melhor nota média com tooltip em `%`; sem nenhuma correção completed aparece a mensagem de estado vazio; teste unitário cobre `buildClassroomPerformanceData` (ordenação e limite).
+  - Depende de: 19
+
+- [ ] 21. Validação manual ponta a ponta das métricas de desempenho no dashboard
+  - O que fazer: corrigir ao menos duas provas de turmas diferentes (uma com nota alta, outra com nota baixa, incluindo ao menos uma questão errada e uma que caia em revisão manual) e conferir que o dashboard mostra nota média, taxa de acerto e o gráfico "Desempenho por turma" condizentes com os dados reais; conferir que uma submissão `needs_review` ainda não revisada manualmente não entra nesses números.
+  - Arquivos: n/a — validação manual, sem alteração de código nesta tarefa
+  - Pronto quando: os valores exibidos no dashboard batem com o cálculo manual esperado para o cenário de teste usado.
+  - Depende de: 16, 17, 18, 19, 20
+
+## Feature: Identificação do aluno na correção (com sugestão por turma)
+
+### Contexto
+
+Hoje `corrigir-prova.tsx:97` chama `createSubmission.mutate(undefined, ...)` — a submissão nasce sem nenhum vínculo com um aluno. A coluna `studentIdentifier` já existe em `submissions` (`packages/db/src/schema/submissions.ts:24`) e o backend já aceita esse campo em `createSubmissionBodySchema` (`create-submission-schema.ts`), mas o frontend nunca preenche. Resultado: o professor corrige, vê a nota na tela do `CorrigirProvaResultado`, e se não anotar em outro lugar, a informação de quem é o aluno se perde — o que esvazia o requisito do próprio `docs/requisitos.md` de o app apoiar o professor a "transcrever para seu diário de classe oficial".
+
+A captura tem que ser por turma, não por prova: um aluno faz várias provas ao longo do ano na mesma turma, e o nome digitado numa prova só serve de sugestão nas provas seguintes se a busca olhar a turma inteira, não uma prova isolada. Hoje isso não é possível de forma confiável porque `studentIdentifier` só existe amarrado a `submissions.examId` — não há como listar "quem já respondeu algo nesta turma" sem passar por todas as provas dela.
+
+**Decisão de escopo:** sem tabela `students`, sem tela de cadastro, sem exigir preenchimento. O nome é texto livre com autocomplete alimentado pelos nomes já usados nas provas anteriores da mesma turma — meramente para reduzir fragmentação por digitação divergente ("João Silva" vs. "Joao S."), não para virar gestão de matrícula. Isso respeita o corte de escopo já registrado em `docs/requisitos.md` ("Sem Gestão de Alunos"). Sem uma tabela `students`, a normalização é best-effort: dois nomes digitados de forma diferente continuam sendo dois registros distintos — o autocomplete reduz a fragmentação, não a elimina.
+
+**Achado importante do levantamento do código real:** o tipo compartilhado `Submission` (`packages/shared/src/types/submission.ts`) já tem `studentIdentifier: string | null` — exibir esse campo depois de capturado (Trilha C) não depende de nenhuma mudança de schema ou de tipo, só de UI. Por isso as tarefas 26 e 27 não dependem tecnicamente da 25, mesmo que só fiquem com dado real para mostrar depois que ela existir.
+
+Sem exibir o nome depois de capturado, a feature não fecha o loop — por isso a Trilha C mostra o identificador no resultado imediato e na listagem de submissões da prova (endpoint `GET /exams/:examId/submissions` já existe em `list-submissions.ts` e nunca é consumido pelo frontend hoje).
+
+**Caminho crítico:** 22 → 23 → 24 → 25 (endpoint de sugestões → hook → autocomplete → gravação do nome). A Trilha C (26, 27) não tem dependência técnica de schema/tipo com a Trilha B e pode ser feita em paralelo — só fica com dado real para mostrar depois que a 25 existir.
+
+**Conflito de arquivo sinalizado:** 24 e 25 editam o mesmo arquivo (`corrigir-prova.tsx`) — 25 depende do estado (`studentName`) criado em 24, por isso são sequenciais, não devem ser executadas em paralelo.
+
+### Tarefas
+
+**Trilha A — Backend: sugestões de nome por turma**
+
+- [x] 22. Endpoint de sugestões de aluno por turma
+  - O que fazer: criar `GET /classrooms/:classroomId/students`, retornando um array de `studentIdentifier` distintos já usados em submissões de qualquer prova daquela turma, ordenados por uso mais recente primeiro. Seguir o padrão de `get-classroom.ts`: primeiro buscar a turma e validar `classroom.teacherId === user.id` (senão `NotFoundError`), só então rodar a query de sugestões usando `classroomId` já validado. Query: `submissionsTable` `innerJoin` `examsTable` (`examsTable.id = submissionsTable.examId`), `where(and(eq(examsTable.classroomId, classroomId), isNotNull(submissionsTable.studentIdentifier)))`, `groupBy(submissionsTable.studentIdentifier)`, `orderBy(desc(sql`max(${submissionsTable.createdAt})`))` — helpers `and`/`eq`/`isNotNull`/`desc`/`sql` todos vêm do barrel `@app/db`.
+  - Arquivos: `apps/api/src/modules/classrooms/list-classroom-students.ts` (novo, `listClassroomStudentsModule`), `apps/api/src/modules/classrooms/list-classroom-students-schema.ts` (novo, `listClassroomStudentsParamsSchema` com `classroomId: z.uuid(...)`), `apps/api/src/modules/classrooms/list-classroom-students.test.ts` (novo), `apps/api/src/modules/classrooms/classroom-routes.ts` (nova rota `GET /:classroomId/students`)
+  - Pronto quando: chamar o endpoint com uma turma que tem 2 provas corrigidas, cada uma com alunos parcialmente repetidos, retorna a lista sem duplicata e sem os `null`, ordenada pela submissão mais recente daquele nome; teste automatizado cobre isolamento por `teacherId` (turma de outro professor retorna 404, nunca vaza nomes); teste usa as factories reais (`make-classroom`, `make-exam`, `make-submission`), sem mocks de banco.
+  - Depende de: nenhuma
+
+**Trilha B — Frontend: capturar o nome na correção (caminho crítico)**
+
+- [x] 23. Hook de sugestões de aluno
+  - O que fazer: `useClassroomStudentSuggestions(classroomId: string)` em `apps/web/src/hooks/use-classrooms.ts`, seguindo o mesmo padrão de `useClassroom` (query key `['classrooms', classroomId, 'students']`, `enabled: Boolean(classroomId)`), chamando `apiClient<string[]>(`/classrooms/${classroomId}/students`)`.
+  - Arquivos: `apps/web/src/hooks/use-classrooms.ts`
+  - Pronto quando: o hook retorna a lista tipada de strings e cacheia por `classroomId`, batendo corretamente no endpoint da tarefa 22.
+  - Depende de: 22
+
+- [x] 24. Campo "Nome do aluno (opcional)" com autocomplete na tela de intro da correção
+  - O que fazer: na tela `step === 'intro'` de `corrigir-prova.tsx` (linhas 146-193), adicionar um estado `studentName` e um `Input` (label "Nome do aluno (opcional)") logo acima do botão "Iniciar correção", usando `useClassroomStudentSuggestions(turmaId)` (tarefa 23) para alimentar um `<datalist>` nativo associado via `list="student-suggestions"` no `Input` (o componente `Input` de `@app/ui` já repassa props desconhecidas para o `<input>` nativo — não precisa de um componente de combobox novo). O campo é sempre opcional: não bloqueia nem exige preenchimento para habilitar "Iniciar correção".
+  - Arquivos: `apps/web/src/components/dashboard/corrigir-prova.tsx`
+  - Pronto quando: na tela de intro, digitar parte do nome de um aluno já corrigido antes na mesma turma mostra ele como sugestão do `<datalist>`; o campo aceita normalmente um nome novo que não está na lista; deixar em branco não impede iniciar a correção.
+  - Depende de: 23
+
+- [x] 25. Passar o nome capturado para `createSubmission`
+  - O que fazer: em `handleStart` (`corrigir-prova.tsx:96-106`), trocar `createSubmission.mutate(undefined, ...)` por `createSubmission.mutate(studentName.trim() || undefined, ...)`, usando o estado `studentName` criado na tarefa 24. Sem mudança de contrato em `useCreateSubmission` (`use-submissions.ts:18-26`), que já aceita `studentIdentifier?: string`.
+  - Arquivos: `apps/web/src/components/dashboard/corrigir-prova.tsx`
+  - Pronto quando: corrigir uma prova preenchendo o nome grava `studentIdentifier` na submissão (conferível via `GET /submissions/:id`); corrigir sem preencher continua funcionando como hoje (`studentIdentifier: null`).
+  - Depende de: 24
+
+**Trilha C — Fechar o loop: mostrar o nome depois de capturado (sem dependência técnica da Trilha B, paralela)**
+
+- [x] 26. Exibir o nome do aluno no resultado imediato da correção
+  - O que fazer: em `CorrigirProvaResultado` (`corrigir-prova-resultado.tsx`) ou no cabeçalho de resultado em `corrigir-prova.tsx` (bloco `Card variant="subtle"` com "Nota apurada", linhas 311-333), receber/usar `submission.studentIdentifier` (já existe no tipo `Submission`) e mostrar como título ou badge acima da nota, ex.: "Correção de {nome}" quando preenchido, ou "Correção sem identificação" quando `null`.
+  - Arquivos: `apps/web/src/components/dashboard/corrigir-prova.tsx` e/ou `apps/web/src/components/dashboard/corrigir-prova-resultado.tsx`
+  - Pronto quando: uma submissão com `studentIdentifier` preenchido mostra o nome na tela de resultado; uma submissão com `studentIdentifier: null` mostra o texto de "sem identificação", sem quebrar o layout existente. Pode ser validado com um registro de teste com o campo preenchido manualmente, mesmo antes da tarefa 25 estar pronta.
+  - Depende de: nenhuma
+
+- [ ] 27. Listagem de submissões já corrigidas na página da prova
+  - O que fazer: adicionar `useSubmissions(examId)` em `apps/web/src/hooks/use-submissions.ts` consumindo o `GET /exams/:examId/submissions` que já existe (`list-submissions.ts`, hoje sem nenhum consumidor no frontend), seguindo o padrão de `useQuery` do arquivo (query key `['submissions', 'byExam', examId]`). Renderizar em `ProvaDetail` (`prova-detail.tsx`), abaixo do cabeçalho e antes/depois de `ProvaResultado`, uma lista simples com nome (`studentIdentifier ?? 'Sem identificação'`), nota (`totalScore ?? '0.00'`), status e data — cada linha é um `Link` para `` `/dashboard/turmas/${turmaId}/provas/${examId}/corrigir?submissionId=${submission.id}` ``. Em `corrigir-prova.tsx`, ler esse `submissionId` da URL via `useSearchParams` (next/navigation): se presente, pular direto para `step: 'result'` com esse id (sem passar por `intro`/`capturing`/`review`) — o restante do fluxo de resultado (`useSubmission`, skeleton de carregamento, `CorrigirProvaResultado`) já funciona para qualquer submissão existente, sem mudança adicional.
+  - Arquivos: `apps/web/src/hooks/use-submissions.ts`, `apps/web/src/components/dashboard/prova-detail.tsx`, `apps/web/src/components/dashboard/corrigir-prova.tsx`
+  - Pronto quando: depois de corrigir 2 alunos da mesma prova, a página da prova lista os 2, com nome (ou "Sem identificação") e nota; clicar numa linha abre a tela de resultado daquela submissão específica sem refazer a correção.
   - Depende de: nenhuma
