@@ -2,7 +2,7 @@
 
 ## Status
 Em andamento: nenhuma
-Concluídas: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26
+Concluídas: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
 Bloqueadas: nenhuma
 
 ## Feature: Corrigir prova por foto — aceitar câmera ou galeria, com leitura mais confiável
@@ -223,8 +223,46 @@ Sem exibir o nome depois de capturado, a feature não fecha o loop — por isso 
   - Pronto quando: uma submissão com `studentIdentifier` preenchido mostra o nome na tela de resultado; uma submissão com `studentIdentifier: null` mostra o texto de "sem identificação", sem quebrar o layout existente. Pode ser validado com um registro de teste com o campo preenchido manualmente, mesmo antes da tarefa 25 estar pronta.
   - Depende de: nenhuma
 
-- [ ] 27. Listagem de submissões já corrigidas na página da prova
+- [x] 27. Listagem de submissões já corrigidas na página da prova
   - O que fazer: adicionar `useSubmissions(examId)` em `apps/web/src/hooks/use-submissions.ts` consumindo o `GET /exams/:examId/submissions` que já existe (`list-submissions.ts`, hoje sem nenhum consumidor no frontend), seguindo o padrão de `useQuery` do arquivo (query key `['submissions', 'byExam', examId]`). Renderizar em `ProvaDetail` (`prova-detail.tsx`), abaixo do cabeçalho e antes/depois de `ProvaResultado`, uma lista simples com nome (`studentIdentifier ?? 'Sem identificação'`), nota (`totalScore ?? '0.00'`), status e data — cada linha é um `Link` para `` `/dashboard/turmas/${turmaId}/provas/${examId}/corrigir?submissionId=${submission.id}` ``. Em `corrigir-prova.tsx`, ler esse `submissionId` da URL via `useSearchParams` (next/navigation): se presente, pular direto para `step: 'result'` com esse id (sem passar por `intro`/`capturing`/`review`) — o restante do fluxo de resultado (`useSubmission`, skeleton de carregamento, `CorrigirProvaResultado`) já funciona para qualquer submissão existente, sem mudança adicional.
   - Arquivos: `apps/web/src/hooks/use-submissions.ts`, `apps/web/src/components/dashboard/prova-detail.tsx`, `apps/web/src/components/dashboard/corrigir-prova.tsx`
   - Pronto quando: depois de corrigir 2 alunos da mesma prova, a página da prova lista os 2, com nome (ou "Sem identificação") e nota; clicar numa linha abre a tela de resultado daquela submissão específica sem refazer a correção.
   - Depende de: nenhuma
+
+## Feature: Consertar o checkbox "Lembrar deste dispositivo por 30 dias" no login
+
+### Contexto
+
+Confirmado no código real: o checkbox de `entrar-form.tsx` é decorativo. `onSubmit` (linhas 52-65) lê `data.remember` do formulário mas só envia `email`/`password` para `POST /auth/sign-in` — o valor do checkbox é descartado antes de chegar na API. O schema compartilhado `signInWithEmailSchema` (`packages/shared/src/schemas/auth/sign-in-with-email-schema.ts`) é um `z.strictObject` sem nenhum campo de "lembrar", então mesmo que o frontend mandasse o valor, a API rejeitaria por campo extra. E `signInWithEmailModule` (`sign-in-with-email.ts:10-16`) chama `auth.api.signInEmail` só com `email`/`password`, nunca repassando a opção correspondente do better-auth.
+
+**Achado importante do levantamento do código real:** o better-auth (`node_modules/better-auth`, v1.7.1) já suporta nativamente `rememberMe` no body de `signInEmail` — quando `rememberMe === false`, ele cria um cookie de sessão **não-persistente** (expira ao fechar o navegador) em vez do cookie persistente padrão; **o padrão do better-auth já é `rememberMe: true`** quando o campo não é enviado, ou seja, hoje toda sessão já nasce "persistente" por omissão — o bug do checkbox é não conseguir desligar isso, não precisar ligá-lo.
+
+**Segundo achado, que muda o texto do fix:** a duração da sessão (`session.expiresIn`) nunca foi configurada em `apps/api/src/lib/auth/auth.ts` — não existe nenhuma chave `session: {...}` no objeto passado a `betterAuth(...)` (só existe `databaseHooks.session`, que é outra coisa). Isso faz o better-auth cair no padrão dele: **7 dias**, não 30. Ou seja, mesmo depois de religar o checkbox, marcar "lembrar por 30 dias" hoje resultaria numa sessão persistente de 7 dias — a própria promessa do texto continuaria falsa. Corrigir isso exige configurar `session.expiresIn` explicitamente, não só repassar `rememberMe`.
+
+**Caminho crítico:** 29 → 30 → 31 (schema → backend → frontend). A tarefa 28 (duração da sessão) é uma config independente e pode ser feita a qualquer momento, em paralelo.
+
+### Tarefas
+
+- [x] 28. Configurar a sessão do better-auth para durar 30 dias
+  - O que fazer: em `apps/api/src/lib/auth/auth.ts`, adicionar a chave `session: { expiresIn: 60 * 60 * 24 * 30 }` (30 dias em segundos) ao objeto passado para `betterAuth(...)` — hoje essa chave não existe e o better-auth usa o padrão dele de 7 dias. Isso é uma config global de duração máxima de sessão, não específica do checkbox: com ou sem "lembrar", nenhuma sessão deve durar mais que isso; sem essa mudança, ligar o checkbox como pedido na tarefa 30 continuaria resultando numa sessão de 7 dias, não 30. Não confundir com `databaseHooks.session`, que já existe e é um hook de auditoria/e-mail, não a config de duração.
+  - Arquivos: `apps/api/src/lib/auth/auth.ts`
+  - Pronto quando: um login (com ou sem "lembrar") gera um cookie de sessão cujo `maxAge`/expiração corresponde a 30 dias, não mais 7; teste automatizado cobre a config (ex.: inspecionar `auth.options.session.expiresIn` ou o cookie retornado por um sign-in de teste).
+  - Depende de: nenhuma
+
+- [x] 29. Adicionar campo `remember` ao schema compartilhado de sign-in
+  - O que fazer: em `packages/shared/src/schemas/auth/sign-in-with-email-schema.ts`, adicionar `remember: z.boolean().optional().default(true)` ao `signInWithEmailSchema` (`z.strictObject`). O default `true` preserva o comportamento atual para qualquer chamada que não envie o campo (inclusive o teste existente `sign-in-with-email.test.ts`, cujo `makeSignInPayload()` não inclui `remember`) — hoje toda sessão já nasce persistente, então omitir o campo não pode mudar esse comportamento.
+  - Arquivos: `packages/shared/src/schemas/auth/sign-in-with-email-schema.ts`
+  - Pronto quando: `SignInWithEmailInput` passa a incluir `remember: boolean`; o teste existente de `POST /auth/sign-in` que não envia `remember` continua passando sem alteração (confirma que o default não quebrou nada).
+  - Depende de: nenhuma
+
+- [x] 30. Repassar `remember` como `rememberMe` para o better-auth
+  - O que fazer: em `signInWithEmailModule` (`sign-in-with-email.ts:10-16`), extrair `remember` de `request.body` (agora tipado pela tarefa 29) e passar `rememberMe: remember` dentro de `body` na chamada a `auth.api.signInEmail` (mapeando o nome do campo — o schema compartilhado usa `remember` para casar com o campo do formulário em `entrar-form.tsx`; o better-auth espera `rememberMe`).
+  - Arquivos: `apps/api/src/modules/auth/sign-in-with-email.ts`, `apps/api/src/modules/auth/sign-in-with-email.test.ts`
+  - Pronto quando: um teste cobre que enviar `remember: false` no body de `POST /auth/sign-in` chama `auth.api.signInEmail` com `rememberMe: false` (mock de `auth.api.signInEmail`, mesmo padrão já usado no arquivo); enviar `remember: true` (ou omitir) chama com `rememberMe: true`.
+  - Depende de: 29
+
+- [x] 31. Frontend: enviar o valor do checkbox para a API
+  - O que fazer: em `entrar-form.tsx`, remover o `.extend({ remember: z.boolean() })` local (linhas 29-31) e usar `signInWithEmailSchema` diretamente como resolver do formulário, já que o campo `remember` passa a existir no schema compartilhado (tarefa 29). Em `onSubmit` (linhas 52-65), incluir `remember: data.remember` no `body` enviado a `POST /auth/sign-in`, junto de `email`/`password`.
+  - Arquivos: `apps/web/src/components/auth/entrar-form.tsx`
+  - Pronto quando: desmarcar "Lembrar deste dispositivo por 30 dias" e fazer login grava um cookie de sessão não-persistente (expira ao fechar o navegador, verificável nas DevTools — sem `Expires`/`Max-Age`); deixar marcado (comportamento hoje já padrão) continua gerando cookie persistente, agora com validade de 30 dias (tarefa 28).
+  - Depende de: 30
