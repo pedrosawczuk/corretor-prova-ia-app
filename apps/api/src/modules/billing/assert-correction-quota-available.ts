@@ -16,10 +16,16 @@ import { PaymentRequiredError } from '@/core/errors'
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
+const CORRECTION_QUOTA_CHECK_ENABLED = false
+
 export async function assertCorrectionQuotaAvailable(
 	tx: Transaction,
 	userId: string,
 ): Promise<void> {
+	if (!CORRECTION_QUOTA_CHECK_ENABLED) {
+		return
+	}
+
 	await tx
 		.select({ id: user.id })
 		.from(user)
