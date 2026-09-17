@@ -11,11 +11,11 @@ import {
 	uploadSubmissionPage,
 } from '@/lib/storage/storage'
 import { fetchOwnedSubmission } from './fetch-owned-submission'
+import { NON_EDITABLE_SUBMISSION_STATUSES } from './non-editable-submission-statuses'
 import type { SubmissionParams } from './submission-params-schema'
 
 const MAX_PAGE_DIMENSION = 1600
 const MIN_PAGE_DIMENSION = 900
-const NON_UPLOADABLE_STATUSES = new Set(['processing', 'completed'])
 const HEIC_MIME_TYPES = new Set(['image/heic', 'image/heif'])
 const MAX_INPUT_PIXELS = 30_000_000
 
@@ -43,7 +43,7 @@ export async function uploadSubmissionPageModule(
 
 	const { submission } = await fetchOwnedSubmission(submissionId, user.id)
 
-	if (NON_UPLOADABLE_STATUSES.has(submission.status)) {
+	if (NON_EDITABLE_SUBMISSION_STATUSES.has(submission.status)) {
 		throw new ConflictError(
 			'Não é possível adicionar páginas a uma submissão já processada.',
 		)

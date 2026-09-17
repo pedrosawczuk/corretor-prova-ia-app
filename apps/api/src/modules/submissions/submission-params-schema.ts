@@ -20,3 +20,10 @@ export const submissionAnswerParamsSchema = z.strictObject({
 export type SubmissionAnswerParams = z.infer<
 	typeof submissionAnswerParamsSchema
 >
+
+export const submissionPageParamsSchema = z.strictObject({
+	submissionId: z.uuid('ID de submissão inválido'),
+	pageId: z.uuid('ID de página inválido'),
+})
+
+export type SubmissionPageParams = z.infer<typeof submissionPageParamsSchema>
