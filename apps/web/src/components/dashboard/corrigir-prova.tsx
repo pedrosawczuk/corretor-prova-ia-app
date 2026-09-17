@@ -15,7 +15,6 @@ import {
 	Camera,
 	CheckCircle2,
 	Download,
-	RotateCcw,
 	ScanLine,
 	SearchX,
 } from 'lucide-react'
@@ -26,7 +25,9 @@ import { useClassroomStudentSuggestions } from '@/hooks/use-classrooms'
 import { useExam, useExportExam } from '@/hooks/use-exams'
 import {
 	useCreateSubmission,
+	useDeleteSubmissionPage,
 	useProcessSubmission,
+	useReorderSubmissionPages,
 	useSubmission,
 	useUploadSubmissionPage,
 } from '@/hooks/use-submissions'
@@ -36,9 +37,12 @@ import {
 	buildMisalignedPagesWarning,
 	countPendingReview,
 	getMisalignedPageNumbers,
+	movePageInOrder,
 } from './corrigir-prova.utils'
 import { CorrigirProvaCamera } from './corrigir-prova-camera'
 import { CorrigirProvaResultado } from './corrigir-prova-resultado'
+import type { CorrigirProvaReviewPage } from './corrigir-prova-review'
+import { CorrigirProvaReview } from './corrigir-prova-review'
 import { CorrigirProvaScanAnimation } from './corrigir-prova-scan-animation'
 
 type Step = 'intro' | 'capturing' | 'review' | 'processing' | 'result'
@@ -62,18 +66,20 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 	const [submissionId, setSubmissionId] = React.useState<string | undefined>(
 		querySubmissionId ?? undefined,
 	)
-	const [pagePreviews, setPagePreviews] = React.useState<string[]>([])
+	const [pages, setPages] = React.useState<CorrigirProvaReviewPage[]>([])
 
 	const { data: studentSuggestions = [] } =
 		useClassroomStudentSuggestions(turmaId)
 
 	const createSubmission = useCreateSubmission(examId)
 	const uploadPage = useUploadSubmissionPage(submissionId ?? '')
+	const deletePage = useDeleteSubmissionPage(submissionId ?? '')
+	const reorderPages = useReorderSubmissionPages(submissionId ?? '')
 	const processSubmission = useProcessSubmission(submissionId ?? '')
 	const { data: submission } = useSubmission(submissionId)
 
-	const pagePreviewsRef = React.useRef(pagePreviews)
-	pagePreviewsRef.current = pagePreviews
+	const pagesRef = React.useRef(pages)
+	pagesRef.current = pages
 
 	React.useEffect(() => {
 		if (querySubmissionId) {
@@ -84,7 +90,7 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 
 	React.useEffect(() => {
 		return () => {
-			for (const url of pagePreviewsRef.current) URL.revokeObjectURL(url)
+			for (const page of pagesRef.current) URL.revokeObjectURL(page.previewUrl)
 		}
 	}, [])
 
@@ -133,42 +139,85 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 		})
 	}
 
-	function handleCapture(blob: Blob) {
-		uploadPage.mutate(blob, {
-			onSuccess: () => {
-				setPagePreviews((prev) => [...prev, URL.createObjectURL(blob)])
-			},
-			onError: (err) => {
+	async function handleCapture(files: Blob[]) {
+		if (!totalPages) return
+
+		const remainingSlots = Math.max(0, totalPages - pages.length)
+		const filesToUpload = files.slice(0, remainingSlots)
+		const skippedCount = files.length - filesToUpload.length
+
+		for (const file of filesToUpload) {
+			try {
+				const page = await uploadPage.mutateAsync(file)
+				const previewUrl = URL.createObjectURL(file)
+				setPages((prev) => [...prev, { id: page.id, previewUrl }])
+			} catch (err) {
 				toastApiError(err, 'Não foi possível enviar a foto. Tente novamente.')
-			},
-		})
+				return
+			}
+		}
+
+		if (skippedCount > 0) {
+			toast.info(
+				`Apenas ${filesToUpload.length} foto(s) foram usadas — a prova tem ${totalPages} página(s).`,
+			)
+		}
+
+		if (pages.length + filesToUpload.length >= totalPages) {
+			setStep('review')
+		}
+	}
+
+	function handleMovePage(index: number, direction: -1 | 1) {
+		setPages((prev) => movePageInOrder(prev, index, direction))
 	}
 
 	function handleRetakeLast() {
-		setPagePreviews((prev) => {
-			const last = prev.at(-1)
-			if (last) URL.revokeObjectURL(last)
-			return prev.slice(0, -1)
+		const last = pages.at(-1)
+		if (!last) return
+
+		deletePage.mutate(last.id, {
+			onSuccess: () => {
+				URL.revokeObjectURL(last.previewUrl)
+				setPages((prev) => prev.slice(0, -1))
+				setStep('capturing')
+			},
+			onError: (err) => {
+				toastApiError(err, 'Não foi possível remover a foto. Tente novamente.')
+			},
 		})
 	}
 
 	function handleProcess() {
 		setStep('processing')
-		processSubmission.mutate(undefined, {
-			onSuccess: (result) => {
-				setStep('result')
-				const pending = countPendingReview(result)
-				if (pending > 0) {
-					toast.info(`${pending} questão(ões) precisam da sua revisão manual.`)
-				} else {
-					toast.success('Prova corrigida automaticamente com sucesso!')
-				}
+		reorderPages.mutate(
+			pages.map((page) => page.id),
+			{
+				onSuccess: () => {
+					processSubmission.mutate(undefined, {
+						onSuccess: (result) => {
+							setStep('result')
+							const pending = countPendingReview(result)
+							if (pending > 0) {
+								toast.info(
+									`${pending} questão(ões) precisam da sua revisão manual.`,
+								)
+							} else {
+								toast.success('Prova corrigida automaticamente com sucesso!')
+							}
+						},
+						onError: (err) => {
+							setStep('review')
+							toastApiError(err, 'Não foi possível processar a correção.')
+						},
+					})
+				},
+				onError: (err) => {
+					setStep('review')
+					toastApiError(err, 'Não foi possível salvar a ordem das páginas.')
+				},
 			},
-			onError: (err) => {
-				setStep('review')
-				toastApiError(err, 'Não foi possível processar a correção.')
-			},
-		})
+		)
 	}
 
 	if (step === 'result') {
@@ -301,7 +350,7 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 	}
 
 	if (step === 'capturing') {
-		const pageNumber = pagePreviews.length + 1
+		const pageNumber = pages.length + 1
 
 		return (
 			<div className="flex flex-1 flex-col">
@@ -309,10 +358,7 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 					pageNumber={pageNumber}
 					totalPages={totalPages}
 					isUploading={uploadPage.isPending}
-					onCapture={(blob) => {
-						handleCapture(blob)
-						if (pageNumber >= totalPages) setStep('review')
-					}}
+					onCapture={handleCapture}
 				/>
 			</div>
 		)
@@ -320,61 +366,21 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 
 	if (step === 'review') {
 		return (
-			<div className="flex flex-1 flex-col gap-6 p-6 bg-muted/20">
-				<h1 className="text-lg font-bold text-foreground">
-					Confira as fotos antes de corrigir
-				</h1>
-
-				<div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-					{pagePreviews.map((url, index) => (
-						<div
-							key={url}
-							className="relative aspect-3/4 overflow-hidden rounded-xl border border-border"
-						>
-							<img
-								src={url}
-								alt={`Página ${index + 1}`}
-								className="h-full w-full object-cover"
-							/>
-							<Badge
-								size="xs"
-								variant="secondary"
-								className="absolute left-1.5 top-1.5"
-							>
-								Pág. {index + 1}
-							</Badge>
-						</div>
-					))}
-				</div>
-
-				<div className="flex flex-col gap-2 sm:flex-row">
-					<Button
-						variant="outline"
-						leftIcon={<RotateCcw />}
-						onClick={() => {
-							handleRetakeLast()
-							setStep('capturing')
-						}}
-					>
-						Refazer última foto
-					</Button>
-					<Button
-						leftIcon={<CheckCircle2 />}
-						fullWidth
-						isLoading={processSubmission.isPending}
-						onClick={handleProcess}
-					>
-						Corrigir
-					</Button>
-				</div>
-			</div>
+			<CorrigirProvaReview
+				pages={pages}
+				isProcessing={reorderPages.isPending || processSubmission.isPending}
+				isRetaking={deletePage.isPending}
+				onMovePage={handleMovePage}
+				onRetakeLast={handleRetakeLast}
+				onProcess={handleProcess}
+			/>
 		)
 	}
 
 	if (step === 'processing') {
 		return (
 			<div className="flex flex-1 flex-col items-center justify-center gap-6 p-6 text-center">
-				<CorrigirProvaScanAnimation previewUrl={pagePreviews.at(-1)} />
+				<CorrigirProvaScanAnimation previewUrl={pages.at(-1)?.previewUrl} />
 				<div>
 					<h1 className="text-base font-semibold text-foreground">
 						Lendo as respostas...

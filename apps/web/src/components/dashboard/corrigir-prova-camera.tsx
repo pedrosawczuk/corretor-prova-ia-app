@@ -20,7 +20,7 @@ interface CorrigirProvaCameraProps {
 	pageNumber: number
 	totalPages: number
 	isUploading: boolean
-	onCapture: (blob: Blob) => void
+	onCapture: (files: Blob[]) => void
 }
 
 export function CorrigirProvaCamera({
@@ -34,21 +34,23 @@ export function CorrigirProvaCamera({
 
 	async function handleCapture() {
 		const blob = await captureFrame()
-		if (blob) onCapture(blob)
+		if (blob) onCapture([blob])
 	}
 
 	function handleGallerySelected(event: React.ChangeEvent<HTMLInputElement>) {
-		const file = event.target.files?.[0]
+		const files = Array.from(event.target.files ?? [])
 		event.target.value = ''
-		if (!file) return
+		if (files.length === 0) return
 
-		const validationError = validateGalleryFile(file)
-		if (validationError) {
-			toast.error(validationError)
-			return
+		for (const file of files) {
+			const validationError = validateGalleryFile(file)
+			if (validationError) {
+				toast.error(validationError)
+				return
+			}
 		}
 
-		onCapture(file)
+		onCapture(files)
 	}
 
 	return (
@@ -142,7 +144,7 @@ export function CorrigirProvaCamera({
 				ref={galleryInputRef}
 				type="file"
 				accept="image/*"
-				capture="environment"
+				multiple
 				onChange={handleGallerySelected}
 				disabled={isUploading}
 				className="sr-only"

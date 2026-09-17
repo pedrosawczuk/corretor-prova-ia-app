@@ -35,3 +35,16 @@ export function buildMisalignedPagesWarning(pageNumbers: number[]): string {
 
 	return `As páginas ${pageNumbers.join(', ')} não puderam ser alinhadas automaticamente — todas as questões delas precisam de revisão manual.`
 }
+
+export function movePageInOrder<T>(
+	items: T[],
+	index: number,
+	direction: -1 | 1,
+): T[] {
+	const targetIndex = index + direction
+	if (targetIndex < 0 || targetIndex >= items.length) return items
+
+	const next = [...items]
+	;[next[index], next[targetIndex]] = [next[targetIndex], next[index]]
+	return next
+}

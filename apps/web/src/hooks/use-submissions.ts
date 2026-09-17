@@ -55,6 +55,45 @@ export function useUploadSubmissionPage(submissionId: string) {
 	})
 }
 
+export function useReorderSubmissionPages(submissionId: string) {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (pageIds: string[]) =>
+			apiClient<SubmissionPage[]>(
+				`/submissions/${submissionId}/pages/reorder`,
+				{
+					method: 'PATCH',
+					body: JSON.stringify({ pageIds }),
+				},
+			),
+		onSuccess: (pages) => {
+			queryClient.setQueryData<Submission>(
+				submissionsKeys.detail(submissionId),
+				(prev) => prev && { ...prev, pages },
+			)
+		},
+	})
+}
+
+export function useDeleteSubmissionPage(submissionId: string) {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (pageId: string) =>
+			apiClient<SubmissionPage[]>(
+				`/submissions/${submissionId}/pages/${pageId}`,
+				{ method: 'DELETE' },
+			),
+		onSuccess: (pages) => {
+			queryClient.setQueryData<Submission>(
+				submissionsKeys.detail(submissionId),
+				(prev) => prev && { ...prev, pages },
+			)
+		},
+	})
+}
+
 export function useProcessSubmission(submissionId: string) {
 	const queryClient = useQueryClient()
 
