@@ -46,10 +46,7 @@ export function HeroSection() {
 
 				<div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
 					<CheckCircle className="size-4 text-emerald-500 shrink-0" />
-					<span>
-						Mais de <strong>4.800 avaliações</strong> corrigidas por professores
-						em fase beta
-					</span>
+					<span>Testado por professores reais durante o beta</span>
 				</div>
 			</div>
 

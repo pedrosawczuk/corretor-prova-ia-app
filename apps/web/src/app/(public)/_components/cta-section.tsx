@@ -30,7 +30,7 @@ export function CtaSection() {
 							variant="default"
 							asChild
 							rightIcon={<ArrowRight />}
-							className="h-12 px-8 text-base shadow-lg shadow-primary/30 font-semibold w-full sm:w-auto"
+							className="h-12 px-8 text-base font-semibold w-full sm:w-auto"
 						>
 							<Link href="/criar-conta">Criar Conta Gratuita</Link>
 						</Button>
