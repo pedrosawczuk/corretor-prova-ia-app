@@ -137,27 +137,52 @@ export abstract class AppError extends Error {
 
 ---
 
-## 6. Testes com Banco Real (Factories, sem Mocks)
+## 6. Testes (Unitários com Mocks e Integração com Banco Real)
 
-- Não usamos mocks (`vi.mock`) para chamadas de banco de dados.
-- Testes rodam contra o banco PostgreSQL de testes real (`TEST_DATABASE_URL`).
-- Dados de teste são gerados através de **factories** com `@faker-js/faker` localizadas em `packages/db/tests/factories/make-<recurso>.ts`.
-- O arquivo `setup.ts` roda um `TRUNCATE CASCADE` antes de cada teste (`beforeEach`).
+O `apps/api/vitest.config.ts` declara dois projetos Vitest (`test.projects`):
+
+| Projeto | Arquivos | Banco | Comando |
+| --- | --- | --- | --- |
+| `unit` | `src/**/*.test.ts` | `@app/db` mockado | `pnpm --filter @app/api test:unit` |
+| `integration` | `src/**/*.spec.ts` | PostgreSQL real (`TEST_DATABASE_URL`) | `pnpm --filter @app/api test:integration` |
+
+`pnpm --filter @app/api test` roda os dois.
+
+### 6.1 Testes unitários (`*.test.ts`)
+
+- `apps/api/src/test/setup.ts` faz `vi.mock('@app/db')` global e importa `apps/api/src/test/mock-external-services.ts` (auth, e-mail, Redis).
+- Queries são simuladas com `createDbChain` (`apps/api/src/test/create-db-chain.ts`).
+- Dados em memória vêm das factories `make-<recurso>.ts` em `apps/api/src/test/factories/` (sem gravar nada).
+- Use para lógica pura e para fluxos cujo comportamento não depende do banco.
+
+### 6.2 Testes de integração (`*.spec.ts`)
+
+- Com `NODE_ENV=test`, `@app/env` troca `DATABASE_URL` por `TEST_DATABASE_URL`. O processo aborta se ela estiver ausente, for igual a `DATABASE_URL` ou se o nome do banco não terminar em `_test`.
+- `apps/api/src/test/integration-global-setup.ts` cria o banco (no mesmo Postgres do `docker-compose.dev.yml`) se ele não existir e aplica as migrations de `packages/db/drizzle` antes da suíte.
+- `apps/api/src/test/integration-setup.ts` **não** mocka `@app/db`: só os serviços externos (`mock-external-services.ts`). Antes de cada teste roda `truncateDatabase()` (`TRUNCATE ... RESTART IDENTITY CASCADE` em todas as tabelas de `public`, após revalidar o sufixo `_test`).
+- Como o truncate apaga também os planos da migration, cada teste cria os dados de que precisa.
+- Dados são gravados pelas factories `insert-<recurso>.ts` em `apps/api/src/test/db-factories/` (função `insert<Recurso>(overrides)`, que retorna a linha inserida).
+- O resultado é verificado consultando o banco com `db.select`.
 
 ```typescript
-// apps/api/src/modules/exams/create-exam.spec.ts
-import { makeClass } from '@app/db/tests/factories/make-class'
-
-it('deve criar uma prova com sucesso', async () => {
-  const schoolClass = await makeClass()
+// apps/api/src/modules/admin/create-admin-subject.spec.ts
+it('retorna 409 e não duplica quando já existe disciplina com o mesmo nome', async () => {
+  await db.insert(subjectsTable).values({ name: 'História' })
 
   const response = await app.inject({
     method: 'POST',
-    url: '/exams',
-    payload: { classId: schoolClass.id, title: 'História Geral' },
+    url: '/admin/subjects',
+    payload: { name: 'História' },
   })
 
-  expect(response.statusCode).toBe(201)
+  expect(response.statusCode).toBe(409)
+
+  const rows = await db
+    .select()
+    .from(subjectsTable)
+    .where(eq(subjectsTable.name, 'História'))
+
+  expect(rows).toHaveLength(1)
 })
 ```
 
@@ -170,5 +195,5 @@ it('deve criar uma prova com sucesso', async () => {
 - Não lançamos `Error` genérico sem `statusCode` e `errorCode`.
 - Não importamos erros diretamente do arquivo individual fora da pasta `core/errors` — sempre pelo barrel.
 - Não usamos sintaxe estilo Prisma (`db.recurso.findFirst()`) — apenas queries Drizzle padrão.
-- Não usamos mocks de banco de dados nos testes — sempre factories com banco real.
+- Não mockamos o banco de dados nos testes de integração (`*.spec.ts`): eles sempre usam factories `insert-*` com banco real.
 - Não realizamos escritas relacionadas fora de uma transação `db.transaction`.
