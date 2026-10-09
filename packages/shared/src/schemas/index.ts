@@ -1,4 +1,5 @@
 export * from './auth'
+export * from './billing'
 export * from './classrooms'
 export * from './exams'
 export * from './subjects'
