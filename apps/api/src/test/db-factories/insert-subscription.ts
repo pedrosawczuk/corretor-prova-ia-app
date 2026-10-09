@@ -5,7 +5,9 @@ import { insertUser } from './insert-user'
 
 type Subscription = typeof subscriptionsTable.$inferSelect
 
-export async function insertSubscription(overrides: Partial<Subscription> = {}) {
+export async function insertSubscription(
+	overrides: Partial<Subscription> = {},
+) {
 	const userId = overrides.userId ?? (await insertUser()).id
 	const planId = overrides.planId ?? (await insertPlan()).id
 

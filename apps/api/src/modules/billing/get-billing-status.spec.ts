@@ -125,13 +125,17 @@ describe('GET /billing/status (integração)', () => {
 			createdAt: new Date(now - 90 * DAY_MS),
 		})
 		const exam = await insertExamFor(user.id)
-		await db
-			.insert(submissionsTable)
-			.values([
-				makeSubmission({ examId: exam.id, createdAt: new Date(now - DAY_MS) }),
-				makeSubmission({ examId: exam.id, createdAt: new Date(now - 2 * DAY_MS) }),
-				makeSubmission({ examId: exam.id, createdAt: new Date(now - 30 * DAY_MS) }),
-			])
+		await db.insert(submissionsTable).values([
+			makeSubmission({ examId: exam.id, createdAt: new Date(now - DAY_MS) }),
+			makeSubmission({
+				examId: exam.id,
+				createdAt: new Date(now - 2 * DAY_MS),
+			}),
+			makeSubmission({
+				examId: exam.id,
+				createdAt: new Date(now - 30 * DAY_MS),
+			}),
+		])
 		await insertCorrectionCredit({ userId: user.id, delta: 10 })
 		await insertCorrectionCredit({
 			userId: user.id,
