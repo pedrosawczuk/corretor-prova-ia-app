@@ -19,7 +19,6 @@ export const plansTable = pgTable('plans', {
 	name: text('name').notNull(),
 	billingType: planBillingTypeEnum('billing_type').notNull(),
 	priceCents: integer('price_cents').notNull(),
-	abacatepayProductId: text('abacatepay_product_id'),
 	monthlyCorrectionsLimit: integer('monthly_corrections_limit'),
 	creditsGranted: integer('credits_granted'),
 	allowsDocxExport: boolean('allows_docx_export').notNull().default(false),

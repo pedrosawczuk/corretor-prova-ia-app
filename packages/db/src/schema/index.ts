@@ -1,5 +1,6 @@
 export * from './accounts'
 export * from './audit-logs'
+export * from './billing-customers'
 export * from './billing-events'
 export * from './classrooms'
 export * from './correction-credits'

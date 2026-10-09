@@ -20,7 +20,6 @@ async function runSeed() {
 					name: 'Avulso',
 					billingType: 'one_time',
 					priceCents: 1990,
-					abacatepayProductId: dbEnv.ABACATEPAY_PRODUCT_ID_AVULSO,
 					monthlyCorrectionsLimit: null,
 					creditsGranted: 10,
 					allowsDocxExport: false,
@@ -30,7 +29,6 @@ async function runSeed() {
 					name: 'Essencial',
 					billingType: 'recurring',
 					priceCents: 3990,
-					abacatepayProductId: dbEnv.ABACATEPAY_PRODUCT_ID_ESSENCIAL,
 					monthlyCorrectionsLimit: 100,
 					creditsGranted: null,
 					allowsDocxExport: false,
@@ -40,7 +38,6 @@ async function runSeed() {
 					name: 'Pro',
 					billingType: 'recurring',
 					priceCents: 9990,
-					abacatepayProductId: dbEnv.ABACATEPAY_PRODUCT_ID_PRO,
 					monthlyCorrectionsLimit: 500,
 					creditsGranted: null,
 					allowsDocxExport: true,
@@ -49,8 +46,12 @@ async function runSeed() {
 			.onConflictDoUpdate({
 				target: plansTable.slug,
 				set: {
-					abacatepayProductId: sql`excluded.abacatepay_product_id`,
-					updatedAt: new Date(),
+					name: sql`excluded.name`,
+					priceCents: sql`excluded.price_cents`,
+					monthlyCorrectionsLimit: sql`excluded.monthly_corrections_limit`,
+					creditsGranted: sql`excluded.credits_granted`,
+					allowsDocxExport: sql`excluded.allows_docx_export`,
+					updatedAt: sql`excluded.updated_at`,
 				},
 			})
 

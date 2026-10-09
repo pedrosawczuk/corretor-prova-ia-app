@@ -30,7 +30,7 @@ export const subscriptionsTable = pgTable(
 			.references(() => plansTable.id),
 		pendingPlanId: uuid('pending_plan_id').references(() => plansTable.id),
 		status: subscriptionStatusEnum('status').notNull(),
-		abacatepayBillingId: text('abacatepay_billing_id').notNull(),
+		asaasSubscriptionId: text('asaas_subscription_id').notNull(),
 		currentPeriodStart: timestamp('current_period_start').notNull(),
 		currentPeriodEnd: timestamp('current_period_end').notNull(),
 		cancelAtPeriodEnd: boolean('cancel_at_period_end').notNull().default(false),
@@ -39,8 +39,8 @@ export const subscriptionsTable = pgTable(
 	},
 	(table) => [
 		index('subscriptions_user_id_idx').on(table.userId),
-		index('subscriptions_abacatepay_billing_id_idx').on(
-			table.abacatepayBillingId,
+		uniqueIndex('subscriptions_asaas_subscription_id_idx').on(
+			table.asaasSubscriptionId,
 		),
 		uniqueIndex('subscriptions_active_per_user_idx')
 			.on(table.userId)
