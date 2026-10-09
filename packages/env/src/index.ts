@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { z } from 'zod'
+import { resolveDatabaseUrl } from './resolve-database-url'
 
 for (const envPath of ['.env', '../../.env', '../.env']) {
 	const fullPath = resolve(process.cwd(), envPath)
@@ -13,16 +14,14 @@ for (const envPath of ['.env', '../../.env', '../.env']) {
 }
 
 export const dbEnvSchema = z.object({
+	NODE_ENV: z.enum(['dev', 'prod', 'test']).default('dev'),
 	DATABASE_URL: z.url().startsWith('postgresql://'),
-	ABACATEPAY_PRODUCT_ID_AVULSO: z.string().min(1),
-	ABACATEPAY_PRODUCT_ID_ESSENCIAL: z.string().min(1),
-	ABACATEPAY_PRODUCT_ID_PRO: z.string().min(1),
+	TEST_DATABASE_URL: z.url().startsWith('postgresql://').optional(),
 })
 
 export type DbEnv = z.infer<typeof dbEnvSchema>
 
 export const apiEnvSchema = dbEnvSchema.extend({
-	NODE_ENV: z.enum(['dev', 'prod', 'test']),
 	PORT: z.coerce.number(),
 	HOST: z.string(),
 	TRUST_PROXY: z.stringbool().default(false),
@@ -44,15 +43,21 @@ export const apiEnvSchema = dbEnvSchema.extend({
 	MINIO_ACCESS_KEY: z.string().min(1),
 	MINIO_SECRET_KEY: z.string().min(1),
 	MINIO_BUCKET: z.string().min(1),
-	ABACATEPAY_API_KEY: z.string().min(1),
-	ABACATEPAY_WEBHOOK_SECRET: z.string().min(1),
-	ABACATEPAY_API_BASE_URL: z.url().default('https://api.abacatepay.com/v2'),
+	ASAAS_API_KEY: z.string().min(1),
+	ASAAS_WEBHOOK_TOKEN: z.string().min(32),
+	ASAAS_API_BASE_URL: z.url(),
 })
 
 export type ApiEnv = z.infer<typeof apiEnvSchema>
 
-export const dbEnv = dbEnvSchema.parse(process.env)
-export const apiEnv = apiEnvSchema.parse(process.env)
+function withResolvedDatabaseUrl<T extends DbEnv>(parsed: T): T {
+	return { ...parsed, DATABASE_URL: resolveDatabaseUrl(parsed) }
+}
+
+export const dbEnv = withResolvedDatabaseUrl(dbEnvSchema.parse(process.env))
+export const apiEnv = withResolvedDatabaseUrl(apiEnvSchema.parse(process.env))
 
 export const env = apiEnv
 export type Env = ApiEnv
+
+export { getDatabaseName, resolveDatabaseUrl } from './resolve-database-url'
