@@ -10,25 +10,25 @@ import {
 	vi,
 } from 'vitest'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
-import { cancelAbacatePaySubscription } from '@/lib/billing/cancel-abacatepay-billing'
-import { createAbacatePayCustomer } from '@/lib/billing/create-abacatepay-customer'
-import { createAbacatePayBilling } from '@/lib/billing/create-billing'
+import { cancelAsaasSubscription } from '@/lib/billing/cancel-asaas-subscription'
+import { createAsaasSubscription } from '@/lib/billing/create-asaas-subscription'
+import { getAsaasSubscriptionFirstPaymentUrl } from '@/lib/billing/get-asaas-subscription-first-payment-url'
 import { createDbChain } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
 import { makePlan } from '@/test/factories/make-plan'
 import { makeSubscription } from '@/test/factories/make-subscription'
 
-vi.mock('@/lib/billing/cancel-abacatepay-billing', () => ({
-	cancelAbacatePaySubscription: vi.fn(),
+vi.mock('@/lib/billing/cancel-asaas-subscription', () => ({
+	cancelAsaasSubscription: vi.fn(),
 }))
 
-vi.mock('@/lib/billing/create-abacatepay-customer', () => ({
-	createAbacatePayCustomer: vi.fn(),
+vi.mock('@/lib/billing/create-asaas-subscription', () => ({
+	createAsaasSubscription: vi.fn(),
 }))
 
-vi.mock('@/lib/billing/create-billing', () => ({
-	createAbacatePayBilling: vi.fn(),
+vi.mock('@/lib/billing/get-asaas-subscription-first-payment-url', () => ({
+	getAsaasSubscriptionFirstPaymentUrl: vi.fn(),
 }))
 
 describe('POST /billing/change-plan', () => {
@@ -73,8 +73,8 @@ describe('POST /billing/change-plan', () => {
 			pendingPlanSlug: 'pro',
 			effectiveAt: subscription.currentPeriodEnd.toISOString(),
 		})
-		expect(cancelAbacatePaySubscription).not.toHaveBeenCalled()
-		expect(createAbacatePayBilling).not.toHaveBeenCalled()
+		expect(cancelAsaasSubscription).not.toHaveBeenCalled()
+		expect(createAsaasSubscription).not.toHaveBeenCalled()
 	})
 
 	it('cancela a assinatura atual e cria um novo checkout quando immediate é true', async () => {
@@ -88,14 +88,15 @@ describe('POST /billing/change-plan', () => {
 		vi.mocked(db.select)
 			.mockReturnValueOnce(createDbChain([targetPlan]) as never)
 			.mockReturnValueOnce(createDbChain([subscription]) as never)
+			.mockReturnValueOnce(
+				createDbChain([{ asaasCustomerId: 'cus_123' }]) as never,
+			)
 		vi.mocked(db.update).mockReturnValue(createDbChain([]) as never)
-		vi.mocked(cancelAbacatePaySubscription).mockResolvedValue(undefined)
-		vi.mocked(createAbacatePayCustomer).mockResolvedValue({ id: 'cust_123' })
-		vi.mocked(createAbacatePayBilling).mockResolvedValue({
-			id: 'subs_new',
-			url: 'https://app.abacatepay.com/pay/subs_new',
-			status: 'PENDING',
-		})
+		vi.mocked(cancelAsaasSubscription).mockResolvedValue(undefined)
+		vi.mocked(createAsaasSubscription).mockResolvedValue({ id: 'sub_new' })
+		vi.mocked(getAsaasSubscriptionFirstPaymentUrl).mockResolvedValue(
+			'https://sandbox.asaas.com/i/sub_new_pay',
+		)
 
 		const response = await app.inject({
 			method: 'POST',
@@ -105,18 +106,19 @@ describe('POST /billing/change-plan', () => {
 
 		expect(response.statusCode).toBe(200)
 		expect(response.json()).toEqual({
-			checkoutUrl: 'https://app.abacatepay.com/pay/subs_new',
+			checkoutUrl: 'https://sandbox.asaas.com/i/sub_new_pay',
 		})
-		expect(cancelAbacatePaySubscription).toHaveBeenCalledWith(
-			subscription.abacatepayBillingId,
+		expect(cancelAsaasSubscription).toHaveBeenCalledWith(
+			subscription.asaasSubscriptionId,
 		)
-		expect(createAbacatePayBilling).toHaveBeenCalledWith(
+		expect(createAsaasSubscription).toHaveBeenCalledWith(
 			expect.objectContaining({
-				billingType: 'recurring',
-				productId: targetPlan.abacatepayProductId,
-				metadata: { userId: user.id, planSlug: 'pro' },
+				customerId: 'cus_123',
+				valueCents: targetPlan.priceCents,
+				externalReference: `${user.id}:pro`,
 			}),
 		)
+		expect(getAsaasSubscriptionFirstPaymentUrl).toHaveBeenCalledWith('sub_new')
 	})
 
 	it('retorna 404 quando o usuário não tem assinatura ativa', async () => {

@@ -11,14 +11,14 @@ import {
 } from 'vitest'
 import { BillingProviderError } from '@/core/errors'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
-import { cancelAbacatePaySubscription } from '@/lib/billing/cancel-abacatepay-billing'
+import { cancelAsaasSubscription } from '@/lib/billing/cancel-asaas-subscription'
 import { createDbChain } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
 import { makeSubscription } from '@/test/factories/make-subscription'
 
-vi.mock('@/lib/billing/cancel-abacatepay-billing', () => ({
-	cancelAbacatePaySubscription: vi.fn(),
+vi.mock('@/lib/billing/cancel-asaas-subscription', () => ({
+	cancelAsaasSubscription: vi.fn(),
 }))
 
 describe('POST /billing/cancel', () => {
@@ -38,7 +38,7 @@ describe('POST /billing/cancel', () => {
 		vi.mocked(getAuthenticatedUser).mockResolvedValue(user as never)
 	})
 
-	it('cancela na AbacatePay e agenda o fim de acesso para o fim do ciclo pago', async () => {
+	it('cancela no Asaas e agenda o fim de acesso para o fim do ciclo pago', async () => {
 		const subscription = makeSubscription({
 			userId: user.id,
 			cancelAtPeriodEnd: false,
@@ -48,7 +48,7 @@ describe('POST /billing/cancel', () => {
 			createDbChain([subscription]) as never,
 		)
 		vi.mocked(db.update).mockReturnValue(createDbChain([]) as never)
-		vi.mocked(cancelAbacatePaySubscription).mockResolvedValue(undefined)
+		vi.mocked(cancelAsaasSubscription).mockResolvedValue(undefined)
 
 		const response = await app.inject({
 			method: 'POST',
@@ -60,8 +60,8 @@ describe('POST /billing/cancel', () => {
 			cancelAtPeriodEnd: true,
 			currentPeriodEnd: subscription.currentPeriodEnd.toISOString(),
 		})
-		expect(cancelAbacatePaySubscription).toHaveBeenCalledWith(
-			subscription.abacatepayBillingId,
+		expect(cancelAsaasSubscription).toHaveBeenCalledWith(
+			subscription.asaasSubscriptionId,
 		)
 		expect(db.update).toHaveBeenCalled()
 	})
@@ -82,7 +82,7 @@ describe('POST /billing/cancel', () => {
 		})
 
 		expect(response.statusCode).toBe(200)
-		expect(cancelAbacatePaySubscription).not.toHaveBeenCalled()
+		expect(cancelAsaasSubscription).not.toHaveBeenCalled()
 		expect(db.update).not.toHaveBeenCalled()
 	})
 
@@ -97,7 +97,7 @@ describe('POST /billing/cancel', () => {
 		expect(response.statusCode).toBe(404)
 	})
 
-	it('não marca cancelamento local quando a chamada à AbacatePay falha', async () => {
+	it('não marca cancelamento local quando a chamada ao Asaas falha', async () => {
 		const subscription = makeSubscription({
 			userId: user.id,
 			cancelAtPeriodEnd: false,
@@ -106,7 +106,7 @@ describe('POST /billing/cancel', () => {
 		vi.mocked(db.select).mockReturnValueOnce(
 			createDbChain([subscription]) as never,
 		)
-		vi.mocked(cancelAbacatePaySubscription).mockRejectedValue(
+		vi.mocked(cancelAsaasSubscription).mockRejectedValue(
 			new BillingProviderError('Provedor indisponível.'),
 		)
 

@@ -1,69 +1,126 @@
-import {
-	billingEventsTable,
-	correctionCreditsTable,
-	db,
-	eq,
-	inArray,
-	plansTable,
-	subscriptionsTable,
-} from '@app/db'
+import { billingEventsTable, db, eq } from '@app/db'
 import { env } from '@app/env'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { verifyAbacatePayWebhookSignature } from '@/lib/billing/verify-webhook-signature'
-import { billingWebhookPayloadSchema } from './billing-webhook-schema'
+import { fromAsaasValue } from '@/lib/billing/to-asaas-value'
+import { verifyAsaasWebhookToken } from '@/lib/billing/verify-asaas-webhook-token'
+import type { BillingTransaction } from './billing-transaction'
+import {
+	type BillingWebhookPayload,
+	billingWebhookPayloadSchema,
+} from './billing-webhook-schema'
+import { handleOneTimePaymentWebhook } from './handle-one-time-payment-webhook'
+import { handlePaymentOverdueWebhook } from './handle-payment-overdue-webhook'
+import { handleSubscriptionDeletedWebhook } from './handle-subscription-deleted-webhook'
+import { handleSubscriptionPaymentWebhook } from './handle-subscription-payment-webhook'
+import { isPaymentAlreadyProcessed } from './is-payment-already-processed'
+import { PAID_PAYMENT_EVENTS } from './paid-payment-events'
+import { resolveSubscriptionPaymentOwner } from './resolve-subscription-payment-owner'
 import {
 	type BillingNotification,
 	sendBillingNotificationEmail,
 } from './send-billing-notification-email'
 
-const AUTOMATIC_CANCELLATION_REASON = 'max_payment_retries_exceeded'
+type SubscriptionOwner = Awaited<
+	ReturnType<typeof resolveSubscriptionPaymentOwner>
+>
 
-function addOneMonth(date: Date) {
-	const next = new Date(date)
-	next.setMonth(next.getMonth() + 1)
-	return next
+interface WebhookEventContext {
+	payload: BillingWebhookPayload
+	paymentId: string | undefined
+	asaasSubscriptionId: string | undefined
+	subscriptionOwner: SubscriptionOwner
 }
 
-function extractStringField(data: Record<string, unknown>, field: string) {
-	const value = data[field]
+function extractStringField(
+	data: Record<string, unknown> | undefined,
+	field: string,
+) {
+	const value = data?.[field]
 	return typeof value === 'string' ? value : undefined
 }
 
-function extractMetadataField(data: Record<string, unknown>, field: string) {
-	const metadata = data.metadata
-	if (!metadata || typeof metadata !== 'object') return undefined
-	const value = (metadata as Record<string, unknown>)[field]
-	return typeof value === 'string' ? value : undefined
-}
-
-function extractNumberField(data: Record<string, unknown>, field: string) {
-	const value = data[field]
+function extractNumberField(
+	data: Record<string, unknown> | undefined,
+	field: string,
+) {
+	const value = data?.[field]
 	return typeof value === 'number' ? value : undefined
+}
+
+function handleWebhookEvent(
+	tx: BillingTransaction,
+	{
+		payload,
+		paymentId,
+		asaasSubscriptionId,
+		subscriptionOwner,
+	}: WebhookEventContext,
+): Promise<BillingNotification | null> {
+	const eventId = payload.id
+
+	switch (payload.event) {
+		case 'PAYMENT_CONFIRMED':
+		case 'PAYMENT_RECEIVED': {
+			if (!asaasSubscriptionId) {
+				return handleOneTimePaymentWebhook(tx, {
+					eventId,
+					paymentId,
+					externalReference: extractStringField(
+						payload.payment,
+						'externalReference',
+					),
+				})
+			}
+
+			const chargedValue = extractNumberField(payload.payment, 'value')
+
+			return handleSubscriptionPaymentWebhook(tx, {
+				eventId,
+				asaasSubscriptionId,
+				chargedAmountCents:
+					chargedValue === undefined ? undefined : fromAsaasValue(chargedValue),
+				owner: subscriptionOwner,
+			})
+		}
+
+		case 'PAYMENT_OVERDUE':
+			return handlePaymentOverdueWebhook(tx, {
+				eventId,
+				paymentId,
+				asaasSubscriptionId,
+			})
+
+		case 'SUBSCRIPTION_DELETED':
+			return handleSubscriptionDeletedWebhook(tx, {
+				eventId,
+				asaasSubscriptionId,
+			})
+
+		default:
+			console.warn(
+				'[billing webhook] Evento recebido sem tratamento mapeado.',
+				{ eventId, event: payload.event, paymentId, asaasSubscriptionId },
+			)
+			return Promise.resolve(null)
+	}
 }
 
 export async function billingWebhookModule(
 	request: FastifyRequest,
 	reply: FastifyReply,
 ) {
-	const rawBody = (request.body as Buffer).toString('utf8')
-	const signatureHeader = request.headers['x-webhook-signature']
-	const signature = Array.isArray(signatureHeader)
-		? signatureHeader[0]
-		: signatureHeader
+	const tokenHeader = request.headers['asaas-access-token']
+	const token = Array.isArray(tokenHeader) ? tokenHeader[0] : tokenHeader
 
-	if (
-		!verifyAbacatePayWebhookSignature(
-			rawBody,
-			signature,
-			env.ABACATEPAY_WEBHOOK_SECRET,
-		)
-	) {
-		console.error('[billing webhook] Assinatura inválida recebida.')
+	if (!verifyAsaasWebhookToken(token, env.ASAAS_WEBHOOK_TOKEN)) {
+		console.error('[billing webhook] Token inválido recebido.')
 		return reply.status(401).send({
-			code: 'INVALID_WEBHOOK_SIGNATURE',
-			message: 'Assinatura do webhook inválida.',
+			code: 'INVALID_WEBHOOK_TOKEN',
+			message: 'Token do webhook inválido.',
 		})
 	}
+
+	const rawBody = (request.body as Buffer).toString('utf8')
 
 	let json: unknown
 	try {
@@ -84,255 +141,60 @@ export async function billingWebhookModule(
 	}
 
 	const payload = parsed.data
-	let notification: BillingNotification | null = null
+	const paymentId = extractStringField(payload.payment, 'id')
+	const asaasSubscriptionId = payload.event.startsWith('SUBSCRIPTION_')
+		? extractStringField(payload.subscription, 'id')
+		: extractStringField(payload.payment, 'subscription')
+	const isPaidEvent = PAID_PAYMENT_EVENTS.includes(payload.event)
 
-	await db.transaction(async (tx) => {
+	const subscriptionOwner =
+		isPaidEvent && asaasSubscriptionId
+			? await resolveSubscriptionPaymentOwner({
+					asaasSubscriptionId,
+					paymentExternalReference: extractStringField(
+						payload.payment,
+						'externalReference',
+					),
+				})
+			: null
+
+	const notification = await db.transaction(async (tx) => {
 		const [inserted] = await tx
 			.insert(billingEventsTable)
 			.values({
-				abacatepayEventId: payload.id,
+				asaasEventId: payload.id,
+				asaasPaymentId: paymentId ?? null,
 				eventType: payload.event,
 				payload: json,
 			})
-			.onConflictDoNothing({ target: billingEventsTable.abacatepayEventId })
-			.returning()
+			.onConflictDoNothing({ target: billingEventsTable.asaasEventId })
+			.returning({ id: billingEventsTable.id })
 
-		if (!inserted) return
+		if (!inserted) return null
 
-		switch (payload.event) {
-			case 'checkout.completed': {
-				const userId = extractMetadataField(payload.data, 'userId')
-				const planSlug = extractMetadataField(payload.data, 'planSlug')
-
-				if (!userId || !planSlug) {
-					console.error(
-						'[billing webhook] checkout.completed sem metadata.userId/planSlug.',
-						{ eventId: payload.id },
-					)
-					break
-				}
-
-				const [plan] = await tx
-					.select()
-					.from(plansTable)
-					.where(eq(plansTable.slug, planSlug))
-
-				if (!plan || plan.creditsGranted == null) {
-					console.error(
-						'[billing webhook] checkout.completed referenciando plano sem créditos avulsos.',
-						{ eventId: payload.id, planSlug },
-					)
-					break
-				}
-
-				await tx.insert(correctionCreditsTable).values({
-					userId,
-					delta: plan.creditsGranted,
-					source: 'purchase',
-					referenceId: extractStringField(payload.data, 'id') ?? payload.id,
-				})
-
-				notification = {
-					type: 'payment_received',
-					userId,
-					planName: plan.name,
-					priceCents: plan.priceCents,
-				}
-				break
-			}
-
-			case 'subscription.completed':
-			case 'subscription.renewed': {
-				const abacatepayBillingId = extractStringField(payload.data, 'id')
-
-				if (!abacatepayBillingId) {
-					console.error('[billing webhook] Evento de assinatura sem data.id.', {
-						eventId: payload.id,
-						event: payload.event,
+		const alreadyProcessed =
+			isPaidEvent && paymentId
+				? await isPaymentAlreadyProcessed(tx, {
+						paymentId,
+						billingEventId: inserted.id,
 					})
-					break
-				}
+				: false
 
-				const currentPeriodStart = new Date()
-				const currentPeriodEnd = addOneMonth(currentPeriodStart)
-
-				const [existingSubscription] = await tx
-					.select()
-					.from(subscriptionsTable)
-					.where(
-						eq(subscriptionsTable.abacatepayBillingId, abacatepayBillingId),
-					)
-
-				if (existingSubscription) {
-					let planId = existingSubscription.planId
-					let pendingPlanId = existingSubscription.pendingPlanId
-
-					if (existingSubscription.pendingPlanId) {
-						const plans = await tx
-							.select()
-							.from(plansTable)
-							.where(
-								inArray(plansTable.id, [
-									existingSubscription.planId,
-									existingSubscription.pendingPlanId,
-								]),
-							)
-
-						const currentPlan = plans.find(
-							(candidate) => candidate.id === existingSubscription.planId,
-						)
-						const pendingPlan = plans.find(
-							(candidate) =>
-								candidate.id === existingSubscription.pendingPlanId,
-						)
-						const chargedAmountCents = extractNumberField(
-							payload.data,
-							'amount',
-						)
-						const isDowngradeOrLateral =
-							currentPlan != null &&
-							pendingPlan != null &&
-							pendingPlan.priceCents <= currentPlan.priceCents
-						const chargeMatchesPendingPlan =
-							pendingPlan != null &&
-							chargedAmountCents === pendingPlan.priceCents
-
-						if (
-							pendingPlan &&
-							(isDowngradeOrLateral || chargeMatchesPendingPlan)
-						) {
-							planId = pendingPlan.id
-							pendingPlanId = null
-						} else {
-							console.warn(
-								'[billing webhook] Troca de plano pendente não promovida: valor cobrado não corresponde ao plano pendente.',
-								{
-									eventId: payload.id,
-									subscriptionId: existingSubscription.id,
-								},
-							)
-						}
-					}
-
-					await tx
-						.update(subscriptionsTable)
-						.set({
-							status: 'active',
-							currentPeriodStart,
-							currentPeriodEnd,
-							updatedAt: new Date(),
-							planId,
-							pendingPlanId,
-						})
-						.where(eq(subscriptionsTable.id, existingSubscription.id))
-					break
-				}
-
-				const userId = extractMetadataField(payload.data, 'userId')
-				const planSlug = extractMetadataField(payload.data, 'planSlug')
-
-				if (!userId || !planSlug) {
-					console.error(
-						'[billing webhook] Nova assinatura sem metadata.userId/planSlug.',
-						{ eventId: payload.id },
-					)
-					break
-				}
-
-				const [plan] = await tx
-					.select()
-					.from(plansTable)
-					.where(eq(plansTable.slug, planSlug))
-
-				if (!plan) {
-					console.error(
-						'[billing webhook] Nova assinatura referenciando plano inexistente.',
-						{ eventId: payload.id, planSlug },
-					)
-					break
-				}
-
-				await tx.insert(subscriptionsTable).values({
-					userId,
-					planId: plan.id,
-					status: 'active',
-					abacatepayBillingId,
-					currentPeriodStart,
-					currentPeriodEnd,
+		const result = alreadyProcessed
+			? null
+			: await handleWebhookEvent(tx, {
+					payload,
+					paymentId,
+					asaasSubscriptionId,
+					subscriptionOwner,
 				})
-
-				notification = {
-					type: 'payment_received',
-					userId,
-					planName: plan.name,
-					priceCents: plan.priceCents,
-				}
-				break
-			}
-
-			case 'subscription.cancelled': {
-				const abacatepayBillingId = extractStringField(payload.data, 'id')
-
-				if (!abacatepayBillingId) {
-					console.error(
-						'[billing webhook] subscription.cancelled sem data.id.',
-						{ eventId: payload.id },
-					)
-					break
-				}
-
-				const [existingSubscription] = await tx
-					.select()
-					.from(subscriptionsTable)
-					.where(
-						eq(subscriptionsTable.abacatepayBillingId, abacatepayBillingId),
-					)
-
-				if (!existingSubscription) {
-					console.error(
-						'[billing webhook] subscription.cancelled para assinatura desconhecida.',
-						{ eventId: payload.id, abacatepayBillingId },
-					)
-					break
-				}
-
-				if (existingSubscription.cancelAtPeriodEnd) {
-					break
-				}
-
-				const cancelledDueTo = extractStringField(
-					payload.data,
-					'cancelledDueTo',
-				)
-				const isPaymentFailure =
-					cancelledDueTo === AUTOMATIC_CANCELLATION_REASON
-
-				await tx
-					.update(subscriptionsTable)
-					.set({
-						status: isPaymentFailure ? 'past_due' : 'canceled',
-						updatedAt: new Date(),
-					})
-					.where(eq(subscriptionsTable.id, existingSubscription.id))
-
-				notification = {
-					type: isPaymentFailure ? 'payment_failed' : 'subscription_canceled',
-					userId: existingSubscription.userId,
-				}
-				break
-			}
-
-			default:
-				console.warn(
-					'[billing webhook] Evento recebido sem tratamento mapeado.',
-					{ eventId: payload.id, event: payload.event },
-				)
-		}
 
 		await tx
 			.update(billingEventsTable)
 			.set({ processedAt: new Date() })
 			.where(eq(billingEventsTable.id, inserted.id))
+
+		return result
 	})
 
 	if (notification) {

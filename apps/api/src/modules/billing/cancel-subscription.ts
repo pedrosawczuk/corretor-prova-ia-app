@@ -2,7 +2,7 @@ import { and, db, eq, subscriptionsTable } from '@app/db'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { NotFoundError } from '@/core/errors'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
-import { cancelAbacatePaySubscription } from '@/lib/billing/cancel-abacatepay-billing'
+import { cancelAsaasSubscription } from '@/lib/billing/cancel-asaas-subscription'
 
 export async function cancelSubscriptionModule(
 	request: FastifyRequest,
@@ -31,7 +31,7 @@ export async function cancelSubscriptionModule(
 		})
 	}
 
-	await cancelAbacatePaySubscription(subscription.abacatepayBillingId)
+	await cancelAsaasSubscription(subscription.asaasSubscriptionId)
 
 	await db
 		.update(subscriptionsTable)

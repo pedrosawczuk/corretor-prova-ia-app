@@ -11,10 +11,15 @@ import {
 } from 'vitest'
 import { UnauthorizedError } from '@/core/errors'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { cancelAsaasSubscription } from '@/lib/billing/cancel-asaas-subscription'
 import { createDbChain } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
 import { sendBillingNotificationEmail } from './send-billing-notification-email'
+
+vi.mock('@/lib/billing/cancel-asaas-subscription', () => ({
+	cancelAsaasSubscription: vi.fn().mockResolvedValue(undefined),
+}))
 
 vi.mock('./send-billing-notification-email', () => ({
 	sendBillingNotificationEmail: vi.fn().mockResolvedValue(undefined),
@@ -37,10 +42,11 @@ describe('GET /billing/status', () => {
 		vi.mocked(getAuthenticatedUser).mockResolvedValue(user as never)
 	})
 
-	it('retorna plano nulo e saldo zerado quando o usuário não tem assinatura nem crédito', async () => {
+	it('retorna plano nulo, saldo zerado e hasBillingCustomer false quando o usuário não tem assinatura, crédito nem cliente no Asaas', async () => {
 		vi.mocked(db.select)
 			.mockReturnValueOnce(createDbChain([]) as never)
 			.mockReturnValueOnce(createDbChain([{ creditBalance: 0 }]) as never)
+			.mockReturnValueOnce(createDbChain([]) as never)
 
 		const response = await app.inject({
 			method: 'GET',
@@ -56,6 +62,7 @@ describe('GET /billing/status', () => {
 			subscriberSince: null,
 			correctionsUsed: 0,
 			creditBalance: 0,
+			hasBillingCustomer: false,
 		})
 	})
 
@@ -81,6 +88,7 @@ describe('GET /billing/status', () => {
 			)
 			.mockReturnValueOnce(createDbChain([{ correctionsUsed: 42 }]) as never)
 			.mockReturnValueOnce(createDbChain([{ creditBalance: 3 }]) as never)
+			.mockReturnValueOnce(createDbChain([{ userId: user.id }]) as never)
 
 		const response = await app.inject({
 			method: 'GET',
@@ -101,6 +109,7 @@ describe('GET /billing/status', () => {
 			subscriberSince: createdAt.toISOString(),
 			correctionsUsed: 42,
 			creditBalance: 3,
+			hasBillingCustomer: true,
 		})
 	})
 
@@ -124,6 +133,7 @@ describe('GET /billing/status', () => {
 				]) as never,
 			)
 			.mockReturnValueOnce(createDbChain([{ creditBalance: 0 }]) as never)
+			.mockReturnValueOnce(createDbChain([]) as never)
 		vi.mocked(db.update).mockReturnValue(createDbChain([]) as never)
 
 		const response = await app.inject({
@@ -140,6 +150,7 @@ describe('GET /billing/status', () => {
 			subscriberSince: null,
 			correctionsUsed: 0,
 			creditBalance: 0,
+			hasBillingCustomer: false,
 		})
 		expect(db.update).toHaveBeenCalled()
 		expect(sendBillingNotificationEmail).toHaveBeenCalledWith({
@@ -157,6 +168,7 @@ describe('GET /billing/status', () => {
 					{
 						id: 'sub_2',
 						userId: user.id,
+						asaasSubscriptionId: 'sub_asaas_2',
 						status: 'past_due',
 						currentPeriodStart: new Date('2026-08-01T00:00:00.000Z'),
 						currentPeriodEnd: new Date(Date.now() + 1000 * 60 * 60 * 24 * 20),
@@ -170,6 +182,7 @@ describe('GET /billing/status', () => {
 				]) as never,
 			)
 			.mockReturnValueOnce(createDbChain([{ creditBalance: 0 }]) as never)
+			.mockReturnValueOnce(createDbChain([]) as never)
 		vi.mocked(db.update).mockReturnValue(createDbChain([]) as never)
 
 		const response = await app.inject({
@@ -182,6 +195,7 @@ describe('GET /billing/status', () => {
 			plan: null,
 			subscriptionStatus: null,
 		})
+		expect(cancelAsaasSubscription).toHaveBeenCalledWith('sub_asaas_2')
 		expect(db.update).toHaveBeenCalled()
 	})
 

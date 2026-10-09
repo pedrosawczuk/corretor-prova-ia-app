@@ -1,4 +1,5 @@
 import { db, eq, subscriptionsTable } from '@app/db'
+import { cancelAsaasSubscription } from '@/lib/billing/cancel-asaas-subscription'
 import { sendBillingNotificationEmail } from './send-billing-notification-email'
 
 const PAST_DUE_GRACE_PERIOD_DAYS = 3
@@ -12,6 +13,7 @@ function addDays(date: Date, days: number) {
 interface ReconcilableSubscription {
 	id: string
 	userId: string
+	asaasSubscriptionId: string
 	status: 'active' | 'past_due' | 'canceled'
 	cancelAtPeriodEnd: boolean
 	currentPeriodEnd: Date
@@ -34,6 +36,17 @@ export async function reconcileSubscriptionStatus<
 
 	if (!periodEndedWithCancellation && !pastDueGracePeriodExpired) {
 		return subscription
+	}
+
+	if (pastDueGracePeriodExpired) {
+		await cancelAsaasSubscription(subscription.asaasSubscriptionId).catch(
+			() => {
+				console.error(
+					'[billing] Falha ao cancelar assinatura no Asaas após inadimplência.',
+					{ subscriptionId: subscription.id },
+				)
+			},
+		)
 	}
 
 	await db

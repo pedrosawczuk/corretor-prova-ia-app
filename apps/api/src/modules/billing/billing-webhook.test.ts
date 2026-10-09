@@ -1,37 +1,59 @@
-import { createHmac } from 'node:crypto'
-import {
-	billingEventsTable,
-	correctionCreditsTable,
-	db,
-	subscriptionsTable,
-} from '@app/db'
+import { db } from '@app/db'
 import { env } from '@app/env'
 import type { FastifyInstance } from 'fastify'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { BillingProviderError } from '@/core/errors'
+import { getAsaasSubscription } from '@/lib/billing/get-asaas-subscription'
 import { createDbChain, createDbTransactionMock } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
+import { makeSubscription } from '@/test/factories/make-subscription'
 import { sendBillingNotificationEmail } from './send-billing-notification-email'
 
 vi.mock('./send-billing-notification-email', () => ({
 	sendBillingNotificationEmail: vi.fn().mockResolvedValue(undefined),
 }))
 
-function sign(body: string) {
-	return createHmac('sha256', env.ABACATEPAY_WEBHOOK_SECRET)
-		.update(Buffer.from(body, 'utf8'))
-		.digest('base64')
+vi.mock('@/lib/billing/get-asaas-subscription', () => ({
+	getAsaasSubscription: vi.fn(),
+}))
+
+interface TransactionMocks {
+	insert?: ReturnType<typeof vi.fn>
+	select?: ReturnType<typeof vi.fn>
+	update?: ReturnType<typeof vi.fn>
 }
 
-function injectWebhook(app: FastifyInstance, body: string, signature?: string) {
+function mockTransaction({
+	insert = vi.fn().mockReturnValueOnce(createDbChain([{ id: 'be_new' }])),
+	select = vi.fn(),
+	update = vi.fn(() => createDbChain([])),
+}: TransactionMocks = {}) {
+	vi.mocked(db.transaction).mockImplementation(
+		createDbTransactionMock({ insert, select, update }) as never,
+	)
+	return { insert, select, update }
+}
+
+function injectWebhook(
+	app: FastifyInstance,
+	payload: unknown,
+	token: string | null = env.ASAAS_WEBHOOK_TOKEN,
+) {
 	return app.inject({
 		method: 'POST',
 		url: '/billing/webhook',
-		payload: body,
+		payload: typeof payload === 'string' ? payload : JSON.stringify(payload),
 		headers: {
 			'content-type': 'application/json',
-			...(signature !== undefined && { 'x-webhook-signature': signature }),
+			...(token !== null && { 'asaas-access-token': token }),
 		},
 	})
+}
+
+function subscriptionUpdateCalls(update: ReturnType<typeof vi.fn>) {
+	return update.mock.results
+		.map((result) => result.value.set.mock.calls[0]?.[0])
+		.filter((values) => values && !('processedAt' in values))
 }
 
 describe('POST /billing/webhook', () => {
@@ -46,408 +68,485 @@ describe('POST /billing/webhook', () => {
 		await app.close()
 	})
 
-	it('retorna 401 e não abre transação quando a assinatura é inválida', async () => {
-		const body = JSON.stringify({
-			id: 'evt_invalid',
-			event: 'checkout.completed',
-			data: {},
-		})
+	it.each([
+		['ausente', null],
+		['vazio', ''],
+		['errado com o mesmo tamanho', `${env.ASAAS_WEBHOOK_TOKEN.slice(0, -1)}#`],
+		['de tamanho diferente', 'token-curto'],
+	])(
+		'retorna 401 e não abre transação quando o token está %s',
+		async (_label, token) => {
+			vi.spyOn(console, 'error').mockImplementation(() => {})
 
-		const response = await injectWebhook(app, body, 'assinatura-invalida')
+			const response = await injectWebhook(
+				app,
+				{ id: 'evt_x', event: 'PAYMENT_RECEIVED' },
+				token,
+			)
 
-		expect(response.statusCode).toBe(401)
+			expect(response.statusCode).toBe(401)
+			expect(response.json()).toEqual({
+				code: 'INVALID_WEBHOOK_TOKEN',
+				message: 'Token do webhook inválido.',
+			})
+			expect(db.transaction).not.toHaveBeenCalled()
+		},
+	)
+
+	it('retorna 200 sem abrir transação quando o corpo não é JSON válido', async () => {
+		vi.spyOn(console, 'error').mockImplementation(() => {})
+
+		const response = await injectWebhook(app, '{nao-e-json')
+
+		expect(response.statusCode).toBe(200)
 		expect(db.transaction).not.toHaveBeenCalled()
 	})
 
-	it('credita o pacote avulso quando recebe checkout.completed novo', async () => {
-		const body = JSON.stringify({
-			id: 'evt_checkout_1',
-			event: 'checkout.completed',
-			data: {
-				id: 'bill_abc',
-				metadata: { userId: 'user_1', planSlug: 'avulso' },
+	it('credita o pacote avulso com referenceId = payment.id quando recebe PAYMENT_RECEIVED de PIX', async () => {
+		const { insert, select, update } = mockTransaction({
+			insert: vi
+				.fn()
+				.mockReturnValueOnce(createDbChain([{ id: 'be_1' }]))
+				.mockReturnValueOnce(createDbChain([])),
+			select: vi
+				.fn()
+				.mockReturnValueOnce(createDbChain([]))
+				.mockReturnValueOnce(
+					createDbChain([
+						{
+							id: 'plan_1',
+							slug: 'avulso',
+							name: 'Avulso',
+							priceCents: 1990,
+							creditsGranted: 10,
+						},
+					]),
+				),
+		})
+
+		const response = await injectWebhook(app, {
+			id: 'evt_pix_1',
+			event: 'PAYMENT_RECEIVED',
+			payment: {
+				id: 'pay_pix_1',
+				billingType: 'PIX',
+				value: 19.9,
+				externalReference: 'user_1:avulso',
 			},
 		})
 
-		const insert = vi
-			.fn()
-			.mockReturnValueOnce(createDbChain([{ id: 'be_1' }]))
-			.mockReturnValueOnce(createDbChain([{ id: 'cc_1' }]))
-		const select = vi
-			.fn()
-			.mockReturnValueOnce(
-				createDbChain([{ id: 'plan_1', slug: 'avulso', creditsGranted: 10 }]),
-			)
-		const update = vi.fn().mockReturnValue(createDbChain([]))
-
-		vi.mocked(db.transaction).mockImplementation(
-			createDbTransactionMock({ insert, select, update }) as never,
-		)
-
-		const response = await injectWebhook(app, body, sign(body))
-
 		expect(response.statusCode).toBe(200)
-		expect(insert).toHaveBeenNthCalledWith(2, correctionCreditsTable)
-
-		const creditsChain = insert.mock.results[1].value
-		expect(creditsChain.values).toHaveBeenCalledWith({
+		expect(insert.mock.results[0].value.values).toHaveBeenCalledWith(
+			expect.objectContaining({
+				asaasEventId: 'evt_pix_1',
+				asaasPaymentId: 'pay_pix_1',
+				eventType: 'PAYMENT_RECEIVED',
+			}),
+		)
+		expect(insert.mock.results[1].value.values).toHaveBeenCalledWith({
 			userId: 'user_1',
 			delta: 10,
 			source: 'purchase',
-			referenceId: 'bill_abc',
+			referenceId: 'pay_pix_1',
 		})
-		expect(update).toHaveBeenCalledWith(billingEventsTable)
+		expect(update.mock.results[0].value.set).toHaveBeenCalledWith({
+			processedAt: expect.any(Date),
+		})
+		expect(select).toHaveBeenCalledTimes(2)
+		expect(db.select).not.toHaveBeenCalled()
+		expect(sendBillingNotificationEmail).toHaveBeenCalledWith({
+			type: 'payment_received',
+			userId: 'user_1',
+			planName: 'Avulso',
+			priceCents: 1990,
+		})
 	})
 
-	it('não reprocessa quando o evento já foi registrado (idempotência)', async () => {
-		const body = JSON.stringify({
-			id: 'evt_duplicado',
-			event: 'checkout.completed',
-			data: {
-				id: 'bill_dup',
-				metadata: { userId: 'user_1', planSlug: 'avulso' },
-			},
+	it('não reprocessa quando o mesmo evento é reenviado (idempotência por evento)', async () => {
+		const { select, update } = mockTransaction({
+			insert: vi.fn().mockReturnValueOnce(createDbChain([])),
 		})
 
-		const insert = vi.fn().mockReturnValueOnce(createDbChain([]))
-		const select = vi.fn()
-		const update = vi.fn()
+		const response = await injectWebhook(app, {
+			id: 'evt_duplicado',
+			event: 'PAYMENT_RECEIVED',
+			payment: { id: 'pay_dup', externalReference: 'user_1:avulso' },
+		})
 
-		vi.mocked(db.transaction).mockImplementation(
-			createDbTransactionMock({ insert, select, update }) as never,
+		expect(response.statusCode).toBe(200)
+		expect(select).not.toHaveBeenCalled()
+		expect(update).not.toHaveBeenCalled()
+		expect(sendBillingNotificationEmail).not.toHaveBeenCalled()
+	})
+
+	it('aplica a renovação só uma vez quando PAYMENT_RECEIVED chega depois do PAYMENT_CONFIRMED do mesmo pagamento', async () => {
+		vi.mocked(db.select).mockReturnValueOnce(
+			createDbChain([{ id: 'sub_local' }]) as never,
 		)
+		const { insert, select, update } = mockTransaction({
+			select: vi
+				.fn()
+				.mockReturnValueOnce(createDbChain([{ id: 'be_confirmed' }])),
+		})
 
-		const response = await injectWebhook(app, body, sign(body))
+		const response = await injectWebhook(app, {
+			id: 'evt_received',
+			event: 'PAYMENT_RECEIVED',
+			payment: {
+				id: 'pay_card_1',
+				billingType: 'CREDIT_CARD',
+				value: 39.9,
+				subscription: 'sub_asaas_1',
+			},
+		})
 
 		expect(response.statusCode).toBe(200)
 		expect(insert).toHaveBeenCalledTimes(1)
-		expect(select).not.toHaveBeenCalled()
-		expect(update).not.toHaveBeenCalled()
+		expect(select).toHaveBeenCalledTimes(1)
+		expect(update).toHaveBeenCalledTimes(1)
+		expect(update.mock.results[0].value.set).toHaveBeenCalledWith({
+			processedAt: expect.any(Date),
+		})
+		expect(getAsaasSubscription).not.toHaveBeenCalled()
+		expect(sendBillingNotificationEmail).not.toHaveBeenCalled()
 	})
 
-	it('ativa uma nova assinatura quando recebe subscription.completed', async () => {
-		const body = JSON.stringify({
-			id: 'evt_sub_1',
-			event: 'subscription.completed',
-			data: {
-				id: 'subs_abc',
-				metadata: { userId: 'user_2', planSlug: 'essencial' },
+	it('ativa uma nova assinatura resolvendo o dono via GET /subscriptions quando o pagamento não traz externalReference', async () => {
+		vi.mocked(db.select).mockReturnValueOnce(createDbChain([]) as never)
+		vi.mocked(getAsaasSubscription).mockResolvedValue({
+			id: 'sub_asaas_new',
+			externalReference: 'user_1:essencial',
+			status: 'ACTIVE',
+		})
+		const { insert } = mockTransaction({
+			insert: vi
+				.fn()
+				.mockReturnValueOnce(createDbChain([{ id: 'be_1' }]))
+				.mockReturnValueOnce(createDbChain([])),
+			select: vi
+				.fn()
+				.mockReturnValueOnce(createDbChain([]))
+				.mockReturnValueOnce(createDbChain([]))
+				.mockReturnValueOnce(
+					createDbChain([
+						{
+							id: 'plan_essencial',
+							slug: 'essencial',
+							name: 'Essencial',
+							priceCents: 3990,
+						},
+					]),
+				),
+		})
+
+		const response = await injectWebhook(app, {
+			id: 'evt_first_payment',
+			event: 'PAYMENT_CONFIRMED',
+			payment: {
+				id: 'pay_first',
+				billingType: 'CREDIT_CARD',
+				value: 39.9,
+				subscription: 'sub_asaas_new',
 			},
 		})
 
-		const insert = vi
-			.fn()
-			.mockReturnValueOnce(createDbChain([{ id: 'be_2' }]))
-			.mockReturnValueOnce(createDbChain([{ id: 'sub_1' }]))
-		const select = vi
-			.fn()
-			.mockReturnValueOnce(createDbChain([]))
-			.mockReturnValueOnce(createDbChain([{ id: 'plan_2', slug: 'essencial' }]))
-		const update = vi.fn().mockReturnValue(createDbChain([]))
-
-		vi.mocked(db.transaction).mockImplementation(
-			createDbTransactionMock({ insert, select, update }) as never,
-		)
-
-		const response = await injectWebhook(app, body, sign(body))
-
 		expect(response.statusCode).toBe(200)
-		expect(insert).toHaveBeenNthCalledWith(2, subscriptionsTable)
-
-		const subscriptionChain = insert.mock.results[1].value
-		expect(subscriptionChain.values).toHaveBeenCalledWith(
+		expect(getAsaasSubscription).toHaveBeenCalledWith('sub_asaas_new')
+		expect(insert.mock.results[1].value.values).toHaveBeenCalledWith(
 			expect.objectContaining({
-				userId: 'user_2',
-				planId: 'plan_2',
+				userId: 'user_1',
+				planId: 'plan_essencial',
 				status: 'active',
-				abacatepayBillingId: 'subs_abc',
+				asaasSubscriptionId: 'sub_asaas_new',
 			}),
 		)
+		expect(sendBillingNotificationEmail).toHaveBeenCalledWith({
+			type: 'payment_received',
+			userId: 'user_1',
+			planName: 'Essencial',
+			priceCents: 3990,
+		})
 	})
 
-	it('estende o período de uma assinatura existente quando recebe subscription.renewed', async () => {
-		const body = JSON.stringify({
-			id: 'evt_sub_2',
-			event: 'subscription.renewed',
-			data: { id: 'subs_abc' },
+	it('usa o externalReference do pagamento sem consultar o Asaas quando ele está presente', async () => {
+		vi.mocked(db.select).mockReturnValueOnce(createDbChain([]) as never)
+		const { insert } = mockTransaction({
+			insert: vi
+				.fn()
+				.mockReturnValueOnce(createDbChain([{ id: 'be_1' }]))
+				.mockReturnValueOnce(createDbChain([])),
+			select: vi
+				.fn()
+				.mockReturnValueOnce(createDbChain([]))
+				.mockReturnValueOnce(createDbChain([]))
+				.mockReturnValueOnce(
+					createDbChain([{ id: 'plan_pro', name: 'Pro', priceCents: 9990 }]),
+				),
 		})
 
-		const insert = vi.fn().mockReturnValueOnce(createDbChain([{ id: 'be_3' }]))
-		const select = vi.fn().mockReturnValueOnce(createDbChain([{ id: 'sub_1' }]))
-		const update = vi.fn().mockReturnValue(createDbChain([]))
-
-		vi.mocked(db.transaction).mockImplementation(
-			createDbTransactionMock({ insert, select, update }) as never,
-		)
-
-		const response = await injectWebhook(app, body, sign(body))
-
-		expect(response.statusCode).toBe(200)
-		expect(update).toHaveBeenNthCalledWith(1, subscriptionsTable)
-
-		const subscriptionUpdateChain = update.mock.results[0].value
-		expect(subscriptionUpdateChain.set).toHaveBeenCalledWith(
-			expect.objectContaining({ status: 'active' }),
-		)
-	})
-
-	it('promove o pendingPlanId ao renovar quando o valor cobrado corresponde ao plano pendente (upgrade)', async () => {
-		const body = JSON.stringify({
-			id: 'evt_sub_3',
-			event: 'subscription.renewed',
-			data: { id: 'subs_abc', amount: 9990 },
+		const response = await injectWebhook(app, {
+			id: 'evt_first_payment_ref',
+			event: 'PAYMENT_CONFIRMED',
+			payment: {
+				id: 'pay_first_ref',
+				value: 99.9,
+				subscription: 'sub_asaas_ref',
+				externalReference: 'user_2:pro',
+			},
 		})
 
-		const insert = vi.fn().mockReturnValueOnce(createDbChain([{ id: 'be_5' }]))
-		const select = vi
-			.fn()
-			.mockReturnValueOnce(
-				createDbChain([
-					{ id: 'sub_1', planId: 'plan_essencial', pendingPlanId: 'plan_pro' },
-				]),
-			)
-			.mockReturnValueOnce(
-				createDbChain([
-					{ id: 'plan_essencial', priceCents: 3990 },
-					{ id: 'plan_pro', priceCents: 9990 },
-				]),
-			)
-		const update = vi.fn().mockReturnValue(createDbChain([]))
-
-		vi.mocked(db.transaction).mockImplementation(
-			createDbTransactionMock({ insert, select, update }) as never,
-		)
-
-		const response = await injectWebhook(app, body, sign(body))
-
 		expect(response.statusCode).toBe(200)
-		const subscriptionUpdateChain = update.mock.results[0].value
-		expect(subscriptionUpdateChain.set).toHaveBeenCalledWith(
-			expect.objectContaining({ planId: 'plan_pro', pendingPlanId: null }),
+		expect(getAsaasSubscription).not.toHaveBeenCalled()
+		expect(insert.mock.results[1].value.values).toHaveBeenCalledWith(
+			expect.objectContaining({ userId: 'user_2', planId: 'plan_pro' }),
 		)
 	})
 
-	it('não promove o pendingPlanId ao renovar quando o valor cobrado ainda é o do plano antigo (upgrade sem recobrança)', async () => {
-		const body = JSON.stringify({
-			id: 'evt_sub_4',
-			event: 'subscription.renewed',
-			data: { id: 'subs_abc', amount: 3990 },
-		})
-
-		const insert = vi.fn().mockReturnValueOnce(createDbChain([{ id: 'be_9' }]))
-		const select = vi
-			.fn()
-			.mockReturnValueOnce(
-				createDbChain([
-					{ id: 'sub_1', planId: 'plan_essencial', pendingPlanId: 'plan_pro' },
-				]),
-			)
-			.mockReturnValueOnce(
-				createDbChain([
-					{ id: 'plan_essencial', priceCents: 3990 },
-					{ id: 'plan_pro', priceCents: 9990 },
-				]),
-			)
-		const update = vi.fn().mockReturnValue(createDbChain([]))
-
-		vi.mocked(db.transaction).mockImplementation(
-			createDbTransactionMock({ insert, select, update }) as never,
+	it('retorna erro sem gravar nada quando a consulta da assinatura no Asaas falha', async () => {
+		vi.mocked(db.select).mockReturnValueOnce(createDbChain([]) as never)
+		vi.mocked(getAsaasSubscription).mockRejectedValue(
+			new BillingProviderError(),
 		)
 
-		const warnSpy = vi
-			.spyOn(console, 'warn')
-			.mockImplementation(() => undefined)
+		const response = await injectWebhook(app, {
+			id: 'evt_first_payment_fail',
+			event: 'PAYMENT_CONFIRMED',
+			payment: { id: 'pay_fail', subscription: 'sub_asaas_fail' },
+		})
 
-		const response = await injectWebhook(app, body, sign(body))
+		expect(response.statusCode).toBeGreaterThanOrEqual(500)
+		expect(db.transaction).not.toHaveBeenCalled()
+	})
+
+	it('promove o pendingPlanId ao renovar quando o valor cobrado corresponde ao plano pendente', async () => {
+		const subscription = makeSubscription({
+			planId: 'plan_essencial',
+			pendingPlanId: 'plan_pro',
+			asaasSubscriptionId: 'sub_asaas_1',
+		})
+
+		vi.mocked(db.select).mockReturnValueOnce(
+			createDbChain([{ id: subscription.id }]) as never,
+		)
+		const { update } = mockTransaction({
+			select: vi
+				.fn()
+				.mockReturnValueOnce(createDbChain([]))
+				.mockReturnValueOnce(createDbChain([subscription]))
+				.mockReturnValueOnce(
+					createDbChain([
+						{ id: 'plan_essencial', priceCents: 3990 },
+						{ id: 'plan_pro', priceCents: 9990 },
+					]),
+				),
+		})
+
+		const response = await injectWebhook(app, {
+			id: 'evt_renewal_upgrade',
+			event: 'PAYMENT_RECEIVED',
+			payment: { id: 'pay_renewal', value: 99.9, subscription: 'sub_asaas_1' },
+		})
 
 		expect(response.statusCode).toBe(200)
-		const subscriptionUpdateChain = update.mock.results[0].value
-		expect(subscriptionUpdateChain.set).toHaveBeenCalledWith(
+		expect(subscriptionUpdateCalls(update)).toEqual([
+			expect.objectContaining({
+				status: 'active',
+				planId: 'plan_pro',
+				pendingPlanId: null,
+			}),
+		])
+		expect(sendBillingNotificationEmail).not.toHaveBeenCalled()
+	})
+
+	it('não promove o pendingPlanId quando o valor cobrado ainda é o do plano antigo (upgrade sem recobrança)', async () => {
+		vi.spyOn(console, 'warn').mockImplementation(() => {})
+		const subscription = makeSubscription({
+			planId: 'plan_essencial',
+			pendingPlanId: 'plan_pro',
+			asaasSubscriptionId: 'sub_asaas_1',
+		})
+
+		vi.mocked(db.select).mockReturnValueOnce(
+			createDbChain([{ id: subscription.id }]) as never,
+		)
+		const { update } = mockTransaction({
+			select: vi
+				.fn()
+				.mockReturnValueOnce(createDbChain([]))
+				.mockReturnValueOnce(createDbChain([subscription]))
+				.mockReturnValueOnce(
+					createDbChain([
+						{ id: 'plan_essencial', priceCents: 3990 },
+						{ id: 'plan_pro', priceCents: 9990 },
+					]),
+				),
+		})
+
+		const response = await injectWebhook(app, {
+			id: 'evt_renewal_no_upgrade',
+			event: 'PAYMENT_RECEIVED',
+			payment: {
+				id: 'pay_renewal_2',
+				value: 39.9,
+				subscription: 'sub_asaas_1',
+			},
+		})
+
+		expect(response.statusCode).toBe(200)
+		expect(subscriptionUpdateCalls(update)).toEqual([
 			expect.objectContaining({
 				planId: 'plan_essencial',
 				pendingPlanId: 'plan_pro',
 			}),
-		)
-		expect(warnSpy).toHaveBeenCalledWith(
-			expect.stringContaining('não promovida'),
-			expect.objectContaining({ eventId: 'evt_sub_4' }),
-		)
-
-		warnSpy.mockRestore()
+		])
 	})
 
-	it('promove o pendingPlanId ao renovar mesmo sem o valor cobrado mudar quando é um downgrade (bloco 7.2)', async () => {
-		const body = JSON.stringify({
-			id: 'evt_sub_5',
-			event: 'subscription.renewed',
-			data: { id: 'subs_abc', amount: 9990 },
+	it('não reativa uma assinatura local já cancelada quando chega um pagamento', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+		const subscription = makeSubscription({
+			status: 'canceled',
+			asaasSubscriptionId: 'sub_asaas_1',
 		})
 
-		const insert = vi.fn().mockReturnValueOnce(createDbChain([{ id: 'be_10' }]))
-		const select = vi
-			.fn()
-			.mockReturnValueOnce(
-				createDbChain([
-					{
-						id: 'sub_1',
-						planId: 'plan_pro',
-						pendingPlanId: 'plan_essencial',
-					},
-				]),
-			)
-			.mockReturnValueOnce(
-				createDbChain([
-					{ id: 'plan_pro', priceCents: 9990 },
-					{ id: 'plan_essencial', priceCents: 3990 },
-				]),
-			)
-		const update = vi.fn().mockReturnValue(createDbChain([]))
-
-		vi.mocked(db.transaction).mockImplementation(
-			createDbTransactionMock({ insert, select, update }) as never,
+		vi.mocked(db.select).mockReturnValueOnce(
+			createDbChain([{ id: subscription.id }]) as never,
 		)
+		const { update } = mockTransaction({
+			select: vi
+				.fn()
+				.mockReturnValueOnce(createDbChain([]))
+				.mockReturnValueOnce(createDbChain([subscription])),
+		})
 
-		const response = await injectWebhook(app, body, sign(body))
+		const response = await injectWebhook(app, {
+			id: 'evt_paid_canceled',
+			event: 'PAYMENT_CONFIRMED',
+			payment: { id: 'pay_late', value: 39.9, subscription: 'sub_asaas_1' },
+		})
 
 		expect(response.statusCode).toBe(200)
-		const subscriptionUpdateChain = update.mock.results[0].value
-		expect(subscriptionUpdateChain.set).toHaveBeenCalledWith(
-			expect.objectContaining({
-				planId: 'plan_essencial',
-				pendingPlanId: null,
-			}),
-		)
+		expect(subscriptionUpdateCalls(update)).toEqual([])
+		expect(warn).toHaveBeenCalled()
 	})
 
-	it('marca a assinatura como past_due quando o cancelamento é por falha de pagamento (bloco 8.1)', async () => {
-		const body = JSON.stringify({
-			id: 'evt_cancel_1',
-			event: 'subscription.cancelled',
-			data: { id: 'subs_abc', cancelledDueTo: 'max_payment_retries_exceeded' },
+	it('marca past_due e envia e-mail de falha quando recebe PAYMENT_OVERDUE de assinatura', async () => {
+		const subscription = makeSubscription({
+			userId: 'user_1',
+			asaasSubscriptionId: 'sub_asaas_1',
+			cancelAtPeriodEnd: false,
+		})
+		const { update } = mockTransaction({
+			select: vi.fn().mockReturnValueOnce(createDbChain([subscription])),
 		})
 
-		const insert = vi.fn().mockReturnValueOnce(createDbChain([{ id: 'be_6' }]))
-		const select = vi.fn().mockReturnValueOnce(
-			createDbChain([
-				{
-					id: 'sub_1',
-					userId: 'user_1',
-					cancelAtPeriodEnd: false,
-				},
-			]),
-		)
-		const update = vi.fn().mockReturnValue(createDbChain([]))
-
-		vi.mocked(db.transaction).mockImplementation(
-			createDbTransactionMock({ insert, select, update }) as never,
-		)
-
-		const response = await injectWebhook(app, body, sign(body))
+		const response = await injectWebhook(app, {
+			id: 'evt_overdue',
+			event: 'PAYMENT_OVERDUE',
+			payment: { id: 'pay_overdue', subscription: 'sub_asaas_1' },
+		})
 
 		expect(response.statusCode).toBe(200)
-		const subscriptionUpdateChain = update.mock.results[0].value
-		expect(subscriptionUpdateChain.set).toHaveBeenCalledWith(
-			expect.objectContaining({ status: 'past_due' }),
-		)
+		expect(subscriptionUpdateCalls(update)).toEqual([
+			{ status: 'past_due', updatedAt: expect.any(Date) },
+		])
 		expect(sendBillingNotificationEmail).toHaveBeenCalledWith({
 			type: 'payment_failed',
 			userId: 'user_1',
 		})
 	})
 
-	it('cancela a assinatura quando o cancelamento não é automático por falha de pagamento (bloco 8.1)', async () => {
-		const body = JSON.stringify({
-			id: 'evt_cancel_2',
-			event: 'subscription.cancelled',
-			data: { id: 'subs_abc' },
+	it('ignora PAYMENT_OVERDUE de assinatura com cancelamento agendado', async () => {
+		const subscription = makeSubscription({
+			asaasSubscriptionId: 'sub_asaas_1',
+			cancelAtPeriodEnd: true,
+		})
+		const { update } = mockTransaction({
+			select: vi.fn().mockReturnValueOnce(createDbChain([subscription])),
 		})
 
-		const insert = vi.fn().mockReturnValueOnce(createDbChain([{ id: 'be_7' }]))
-		const select = vi.fn().mockReturnValueOnce(
-			createDbChain([
-				{
-					id: 'sub_1',
-					userId: 'user_1',
-					cancelAtPeriodEnd: false,
-				},
-			]),
-		)
-		const update = vi.fn().mockReturnValue(createDbChain([]))
-
-		vi.mocked(db.transaction).mockImplementation(
-			createDbTransactionMock({ insert, select, update }) as never,
-		)
-
-		const response = await injectWebhook(app, body, sign(body))
+		const response = await injectWebhook(app, {
+			id: 'evt_overdue_cancel',
+			event: 'PAYMENT_OVERDUE',
+			payment: { id: 'pay_overdue_2', subscription: 'sub_asaas_1' },
+		})
 
 		expect(response.statusCode).toBe(200)
-		const subscriptionUpdateChain = update.mock.results[0].value
-		expect(subscriptionUpdateChain.set).toHaveBeenCalledWith(
-			expect.objectContaining({ status: 'canceled' }),
-		)
+		expect(subscriptionUpdateCalls(update)).toEqual([])
+		expect(sendBillingNotificationEmail).not.toHaveBeenCalled()
+	})
+
+	it.each([
+		['cancelamento agendado por nós', { cancelAtPeriodEnd: true }],
+		['assinatura já cancelada', { status: 'canceled' as const }],
+	])(
+		'não faz nada quando SUBSCRIPTION_DELETED chega após %s',
+		async (_label, overrides) => {
+			const subscription = makeSubscription({
+				asaasSubscriptionId: 'sub_asaas_1',
+				...overrides,
+			})
+			const { update } = mockTransaction({
+				select: vi.fn().mockReturnValueOnce(createDbChain([subscription])),
+			})
+
+			const response = await injectWebhook(app, {
+				id: 'evt_deleted_ours',
+				event: 'SUBSCRIPTION_DELETED',
+				subscription: { id: 'sub_asaas_1' },
+			})
+
+			expect(response.statusCode).toBe(200)
+			expect(subscriptionUpdateCalls(update)).toEqual([])
+			expect(sendBillingNotificationEmail).not.toHaveBeenCalled()
+		},
+	)
+
+	it('cancela e notifica quando a assinatura é excluída pelo painel do Asaas', async () => {
+		const subscription = makeSubscription({
+			userId: 'user_1',
+			asaasSubscriptionId: 'sub_asaas_1',
+			cancelAtPeriodEnd: false,
+		})
+		const { update } = mockTransaction({
+			select: vi.fn().mockReturnValueOnce(createDbChain([subscription])),
+		})
+
+		const response = await injectWebhook(app, {
+			id: 'evt_deleted_panel',
+			event: 'SUBSCRIPTION_DELETED',
+			subscription: { id: 'sub_asaas_1' },
+		})
+
+		expect(response.statusCode).toBe(200)
+		expect(subscriptionUpdateCalls(update)).toEqual([
+			{ status: 'canceled', updatedAt: expect.any(Date) },
+		])
 		expect(sendBillingNotificationEmail).toHaveBeenCalledWith({
 			type: 'subscription_canceled',
 			userId: 'user_1',
 		})
 	})
 
-	it('não faz nada quando subscription.cancelled chega para um cancelamento já iniciado por nós', async () => {
-		const body = JSON.stringify({
-			id: 'evt_cancel_3',
-			event: 'subscription.cancelled',
-			data: { id: 'subs_abc' },
+	it('retorna 200 e registra warn quando o evento não é tratado', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+		const { update } = mockTransaction()
+
+		const response = await injectWebhook(app, {
+			id: 'evt_unknown',
+			event: 'PAYMENT_CREATED',
+			payment: { id: 'pay_created' },
 		})
 
-		const insert = vi.fn().mockReturnValueOnce(createDbChain([{ id: 'be_8' }]))
-		const select = vi.fn().mockReturnValueOnce(
-			createDbChain([
-				{
-					id: 'sub_1',
-					userId: 'user_1',
-					cancelAtPeriodEnd: true,
-				},
-			]),
-		)
-		const update = vi.fn().mockReturnValue(createDbChain([]))
-
-		vi.mocked(db.transaction).mockImplementation(
-			createDbTransactionMock({ insert, select, update }) as never,
-		)
-
-		const response = await injectWebhook(app, body, sign(body))
-
 		expect(response.statusCode).toBe(200)
+		expect(warn).toHaveBeenCalledWith(
+			'[billing webhook] Evento recebido sem tratamento mapeado.',
+			{
+				eventId: 'evt_unknown',
+				event: 'PAYMENT_CREATED',
+				paymentId: 'pay_created',
+				asaasSubscriptionId: undefined,
+			},
+		)
 		expect(update).toHaveBeenCalledTimes(1)
-		expect(sendBillingNotificationEmail).not.toHaveBeenCalled()
-	})
-
-	it('loga um aviso e responde 200 para eventos sem tratamento mapeado', async () => {
-		const body = JSON.stringify({
-			id: 'evt_unmapped',
-			event: 'checkout.refunded',
-			data: {},
-		})
-
-		const insert = vi.fn().mockReturnValueOnce(createDbChain([{ id: 'be_4' }]))
-		const select = vi.fn()
-		const update = vi.fn().mockReturnValue(createDbChain([]))
-
-		vi.mocked(db.transaction).mockImplementation(
-			createDbTransactionMock({ insert, select, update }) as never,
-		)
-
-		const warnSpy = vi
-			.spyOn(console, 'warn')
-			.mockImplementation(() => undefined)
-
-		const response = await injectWebhook(app, body, sign(body))
-
-		expect(response.statusCode).toBe(200)
-		expect(warnSpy).toHaveBeenCalledWith(
-			expect.stringContaining('sem tratamento mapeado'),
-			expect.objectContaining({ event: 'checkout.refunded' }),
-		)
-
-		warnSpy.mockRestore()
 	})
 })

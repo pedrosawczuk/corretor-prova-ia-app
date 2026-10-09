@@ -3,7 +3,8 @@ import { z } from 'zod'
 export const billingWebhookPayloadSchema = z.object({
 	id: z.string(),
 	event: z.string(),
-	data: z.record(z.string(), z.unknown()).default({}),
+	payment: z.record(z.string(), z.unknown()).optional(),
+	subscription: z.record(z.string(), z.unknown()).optional(),
 })
 
 export type BillingWebhookPayload = z.infer<typeof billingWebhookPayloadSchema>

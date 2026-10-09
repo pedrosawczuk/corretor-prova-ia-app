@@ -1,5 +1,6 @@
 import {
 	and,
+	billingCustomersTable,
 	correctionCreditsTable,
 	db,
 	desc,
@@ -27,6 +28,7 @@ export async function getBillingStatusModule(
 		.select({
 			id: subscriptionsTable.id,
 			userId: subscriptionsTable.userId,
+			asaasSubscriptionId: subscriptionsTable.asaasSubscriptionId,
 			status: subscriptionsTable.status,
 			currentPeriodStart: subscriptionsTable.currentPeriodStart,
 			currentPeriodEnd: subscriptionsTable.currentPeriodEnd,
@@ -76,6 +78,11 @@ export async function getBillingStatusModule(
 		.from(correctionCreditsTable)
 		.where(eq(correctionCreditsTable.userId, user.id))
 
+	const [billingCustomer] = await db
+		.select({ userId: billingCustomersTable.userId })
+		.from(billingCustomersTable)
+		.where(eq(billingCustomersTable.userId, user.id))
+
 	return reply.status(200).send({
 		plan: subscription
 			? {
@@ -91,5 +98,6 @@ export async function getBillingStatusModule(
 		subscriberSince: subscription?.createdAt ?? null,
 		correctionsUsed,
 		creditBalance,
+		hasBillingCustomer: Boolean(billingCustomer),
 	})
 }

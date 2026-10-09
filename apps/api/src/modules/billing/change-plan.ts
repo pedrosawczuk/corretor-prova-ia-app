@@ -1,16 +1,14 @@
 import { and, db, eq, plansTable, subscriptionsTable } from '@app/db'
 import { env } from '@app/env'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import {
-	BillingProviderError,
-	ConflictError,
-	NotFoundError,
-} from '@/core/errors'
+import { ConflictError, NotFoundError } from '@/core/errors'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
-import { cancelAbacatePaySubscription } from '@/lib/billing/cancel-abacatepay-billing'
-import { createAbacatePayCustomer } from '@/lib/billing/create-abacatepay-customer'
-import { createAbacatePayBilling } from '@/lib/billing/create-billing'
+import { buildAsaasExternalReference } from '@/lib/billing/asaas-external-reference'
+import { cancelAsaasSubscription } from '@/lib/billing/cancel-asaas-subscription'
+import { createAsaasSubscription } from '@/lib/billing/create-asaas-subscription'
+import { getAsaasSubscriptionFirstPaymentUrl } from '@/lib/billing/get-asaas-subscription-first-payment-url'
 import type { ChangePlanBody } from './change-plan-schema'
+import { getOrCreateAsaasCustomer } from './get-or-create-asaas-customer'
 
 export async function changePlanModule(
 	request: FastifyRequest<{ Body: ChangePlanBody }>,
@@ -65,13 +63,7 @@ export async function changePlanModule(
 		})
 	}
 
-	if (!plan.abacatepayProductId) {
-		throw new BillingProviderError(
-			'Este plano ainda não está disponível para compra. Tente novamente mais tarde.',
-		)
-	}
-
-	await cancelAbacatePaySubscription(subscription.abacatepayBillingId)
+	await cancelAsaasSubscription(subscription.asaasSubscriptionId)
 
 	await db
 		.update(subscriptionsTable)
@@ -83,19 +75,24 @@ export async function changePlanModule(
 		})
 		.where(eq(subscriptionsTable.id, subscription.id))
 
-	const customer = await createAbacatePayCustomer({
-		email: user.email,
-		name: user.name,
+	const customerId = await getOrCreateAsaasCustomer({
+		user,
+		cpfCnpj: undefined,
 	})
 
-	const billing = await createAbacatePayBilling({
-		billingType: 'recurring',
-		productId: plan.abacatepayProductId,
-		customerId: customer.id,
-		returnUrl: `${env.WEB_URL}/dashboard/configuracoes?checkout=cancelled`,
-		completionUrl: `${env.WEB_URL}/dashboard/configuracoes?checkout=success`,
-		metadata: { userId: user.id, planSlug: plan.slug },
+	const newSubscription = await createAsaasSubscription({
+		customerId,
+		valueCents: plan.priceCents,
+		description: `Plano ${plan.name}`,
+		externalReference: buildAsaasExternalReference({
+			userId: user.id,
+			planSlug: plan.slug,
+		}),
+		successUrl: `${env.WEB_URL}/dashboard/configuracoes?checkout=success`,
 	})
+	const checkoutUrl = await getAsaasSubscriptionFirstPaymentUrl(
+		newSubscription.id,
+	)
 
-	return reply.status(200).send({ checkoutUrl: billing.url })
+	return reply.status(200).send({ checkoutUrl })
 }
