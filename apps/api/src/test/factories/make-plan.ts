@@ -10,7 +10,6 @@ export function makePlan(overrides: Partial<Plan> = {}): Plan {
 		name: 'Essencial',
 		billingType: 'recurring',
 		priceCents: 3990,
-		abacatepayProductId: `prod_${faker.string.alphanumeric(12)}`,
 		monthlyCorrectionsLimit: 100,
 		creditsGranted: null,
 		allowsDocxExport: false,

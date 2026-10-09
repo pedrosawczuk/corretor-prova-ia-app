@@ -14,7 +14,7 @@ export function makeSubscription(
 		planId: faker.string.uuid(),
 		pendingPlanId: null,
 		status: 'active',
-		abacatepayBillingId: `subs_${faker.string.alphanumeric(12)}`,
+		asaasSubscriptionId: `sub_${faker.string.alphanumeric(12)}`,
 		currentPeriodStart,
 		currentPeriodEnd: faker.date.future({ refDate: currentPeriodStart }),
 		cancelAtPeriodEnd: false,
