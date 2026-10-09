@@ -3,8 +3,8 @@
 import { Badge, Button, Card, CardContent, CardHeader } from '@app/ui'
 import { CreditCard } from 'lucide-react'
 import type { PlanSlug } from '@/hooks/use-billing'
-import { useCreateCheckout } from '@/hooks/use-billing'
-import { toastApiError } from '@/lib/api-error-handler'
+import { useStartCheckout } from '@/hooks/use-start-checkout'
+import { InformarDocumentoDialog } from './informar-documento-dialog'
 
 interface PlanOption {
 	slug: PlanSlug
@@ -45,27 +45,13 @@ interface AssinarPlanoCardsProps {
 }
 
 export function AssinarPlanoCards({ preselectedSlug }: AssinarPlanoCardsProps) {
-	const createCheckout = useCreateCheckout()
-
-	function handleSelect(slug: PlanSlug) {
-		createCheckout.mutate(slug, {
-			onSuccess: (data) => {
-				window.location.href = data.checkoutUrl
-			},
-			onError: (error) => {
-				toastApiError(
-					error,
-					'Não foi possível iniciar o checkout. Tente novamente.',
-				)
-			},
-		})
-	}
+	const { startCheckout, isPending, pendingPlanSlug, dialogProps } =
+		useStartCheckout()
 
 	return (
 		<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
 			{PLAN_OPTIONS.map((plan) => {
-				const isPending =
-					createCheckout.isPending && createCheckout.variables === plan.slug
+				const isPlanPending = pendingPlanSlug === plan.slug
 				const isPreselected = preselectedSlug === plan.slug
 
 				return (
@@ -103,10 +89,10 @@ export function AssinarPlanoCards({ preselectedSlug }: AssinarPlanoCardsProps) {
 								size="sm"
 								fullWidth
 								variant={plan.highlight ? 'default' : 'outline'}
-								isLoading={isPending}
-								disabled={createCheckout.isPending && !isPending}
+								isLoading={isPlanPending}
+								disabled={isPending && !isPlanPending}
 								leftIcon={<CreditCard className="size-3.5" />}
-								onClick={() => handleSelect(plan.slug)}
+								onClick={() => startCheckout(plan.slug)}
 							>
 								{plan.slug === 'avulso' ? 'Comprar' : 'Assinar'}
 							</Button>
@@ -114,6 +100,7 @@ export function AssinarPlanoCards({ preselectedSlug }: AssinarPlanoCardsProps) {
 					</Card>
 				)
 			})}
+			<InformarDocumentoDialog {...dialogProps} />
 		</div>
 	)
 }

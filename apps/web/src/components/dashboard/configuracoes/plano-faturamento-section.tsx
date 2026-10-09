@@ -20,11 +20,12 @@ import {
 import { usePathname, useRouter } from 'next/navigation'
 import * as React from 'react'
 import type { PlanSlug, RecurringPlanSlug } from '@/hooks/use-billing'
-import { useBillingStatus, useCreateCheckout } from '@/hooks/use-billing'
-import { toastApiError } from '@/lib/api-error-handler'
+import { useBillingStatus } from '@/hooks/use-billing'
+import { useStartCheckout } from '@/hooks/use-start-checkout'
 import { formatDate } from '@/lib/date'
 import { AssinarPlanoCards } from './assinar-plano-cards'
 import { CancelarAssinaturaDialog } from './cancelar-assinatura-dialog'
+import { InformarDocumentoDialog } from './informar-documento-dialog'
 import { TrocarPlanoDialog } from './trocar-plano-dialog'
 
 const STATUS_BADGE: Record<
@@ -57,7 +58,7 @@ export function PlanoFaturamentoSection({
 	const { data, isLoading, isError } = useBillingStatus({
 		refetchInterval: isPolling ? CHECKOUT_SUCCESS_POLL_MS : false,
 	})
-	const createCheckout = useCreateCheckout()
+	const buyCredits = useStartCheckout()
 
 	React.useEffect(() => {
 		if (!checkoutStatus || hasShownCheckoutToastRef.current) return
@@ -83,20 +84,6 @@ export function PlanoFaturamentoSection({
 		)
 		return () => clearTimeout(timeout)
 	}, [isPolling])
-
-	function handleBuyCredits() {
-		createCheckout.mutate('avulso', {
-			onSuccess: (checkout) => {
-				window.location.href = checkout.checkoutUrl
-			},
-			onError: (error) => {
-				toastApiError(
-					error,
-					'Não foi possível iniciar o checkout. Tente novamente.',
-				)
-			},
-		})
-	}
 
 	if (isLoading) {
 		return (
@@ -267,14 +254,16 @@ export function PlanoFaturamentoSection({
 						<Button
 							variant="outline"
 							size="sm"
-							isLoading={createCheckout.isPending}
-							onClick={handleBuyCredits}
+							isLoading={buyCredits.isPending}
+							onClick={() => buyCredits.startCheckout('avulso')}
 						>
 							Comprar créditos
 						</Button>
 					</div>
 				</CardContent>
 			</Card>
+
+			<InformarDocumentoDialog {...buyCredits.dialogProps} />
 
 			{plan && currentPeriodEnd && (
 				<>

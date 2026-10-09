@@ -19,6 +19,7 @@ export interface BillingStatus {
 	subscriberSince: string | null
 	correctionsUsed: number
 	creditBalance: number
+	hasBillingCustomer: boolean
 }
 
 interface CheckoutResponse {
@@ -52,11 +53,18 @@ export function useBillingStatus(options?: {
 
 export function useCreateCheckout() {
 	return useMutation({
-		mutationFn: (planSlug: PlanSlug) =>
+		mutationFn: ({
+			planSlug,
+			cpfCnpj,
+		}: {
+			planSlug: PlanSlug
+			cpfCnpj?: string
+		}) =>
 			apiClient<CheckoutResponse>('/billing/checkout', {
 				method: 'POST',
-				body: JSON.stringify({ planSlug }),
+				body: JSON.stringify({ planSlug, cpfCnpj }),
 			}),
+		gcTime: 0,
 	})
 }
 
