@@ -15,9 +15,12 @@ import {
 	Activity,
 	ArrowLeft,
 	BookOpen,
+	Gift,
 	LayoutDashboard,
 	LogOut,
+	MailPlus,
 	MonitorSmartphone,
+	Star,
 	Users,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -27,6 +30,9 @@ const NAV_ITEMS = [
 	{ title: 'Visão Geral', href: '/admin', icon: LayoutDashboard },
 	{ title: 'Usuários', href: '/admin/usuarios', icon: Users },
 	{ title: 'Disciplinas', href: '/admin/disciplinas', icon: BookOpen },
+	{ title: 'Convites', href: '/admin/convites', icon: MailPlus },
+	{ title: 'Privilegiados', href: '/admin/privilegiados', icon: Star },
+	{ title: 'Cortesias', href: '/admin/cortesias', icon: Gift },
 	{ title: 'Sessões', href: '/admin/sessoes', icon: MonitorSmartphone },
 	{ title: 'Atividade', href: '/admin/atividade', icon: Activity },
 ]
