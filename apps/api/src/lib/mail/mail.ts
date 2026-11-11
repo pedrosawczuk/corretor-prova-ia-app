@@ -1,5 +1,7 @@
 import { env } from '@app/env'
 import { Resend } from 'resend'
+import { AccessGrantReminderEmail } from './templates/access-grant-reminder-email'
+import { InviteEmail } from './templates/invite-email'
 import { NewLoginEmail } from './templates/new-login-email'
 import { PaymentFailedEmail } from './templates/payment-failed-email'
 import { PaymentReceivedEmail } from './templates/payment-received-email'
@@ -206,6 +208,67 @@ export async function sendSubscriptionCancelledEmail({
 		react: SubscriptionCancelledEmail({
 			name,
 			manageUrl: `${env.WEB_URL}/dashboard/configuracoes`,
+		}),
+	})
+}
+
+interface SendInviteEmailParams {
+	to: string
+	inviteUrl: string
+	grantDurationMonths: number
+	inviteExpiresInDays: number
+}
+
+export async function sendInviteEmail({
+	to,
+	inviteUrl,
+	grantDurationMonths,
+	inviteExpiresInDays,
+}: SendInviteEmailParams) {
+	if (!env.RESEND_API_KEY || !env.MAIL_FROM) {
+		return
+	}
+
+	await resend.emails.send({
+		from: env.MAIL_FROM,
+		to,
+		subject: `Você ganhou ${grantDurationMonths} meses do Pro — gabarita.app`,
+		react: InviteEmail({ inviteUrl, grantDurationMonths, inviteExpiresInDays }),
+	})
+}
+
+interface SendAccessGrantReminderEmailParams {
+	to: string
+	name: string
+	subject: string
+	title: string
+	message: string
+	buttonLabel: string
+}
+
+export async function sendAccessGrantReminderEmail({
+	to,
+	name,
+	subject,
+	title,
+	message,
+	buttonLabel,
+}: SendAccessGrantReminderEmailParams) {
+	if (!env.RESEND_API_KEY || !env.MAIL_FROM) {
+		return
+	}
+
+	await resend.emails.send({
+		from: env.MAIL_FROM,
+		to,
+		subject: `${subject} — gabarita.app`,
+		react: AccessGrantReminderEmail({
+			name,
+			title,
+			message,
+			buttonLabel,
+			preview: title,
+			subscribeUrl: `${env.WEB_URL}/dashboard/configuracoes`,
 		}),
 	})
 }

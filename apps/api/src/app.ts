@@ -24,6 +24,8 @@ import {
 	ensureAvatarsBucket,
 	MAX_AVATAR_SIZE_BYTES,
 } from '@/lib/storage/storage'
+import { accessGrantAdminRoutes } from '@/modules/access-grants/access-grant-admin-routes'
+import { inviteRoutes } from '@/modules/access-grants/invite-routes'
 import { adminRoutes } from '@/modules/admin/admin-routes'
 import { authRoutes } from '@/modules/auth/auth-routes'
 import { billingRoutes } from '@/modules/billing/billing-routes'
@@ -110,6 +112,8 @@ app.register(dashboardRoutes, { prefix: '/dashboard' })
 app.register(examRoutes, { prefix: '/exams' })
 app.register(subjectRoutes, { prefix: '/subjects' })
 app.register(adminRoutes, { prefix: '/admin' })
+app.register(accessGrantAdminRoutes, { prefix: '/admin' })
+app.register(inviteRoutes, { prefix: '/invites' })
 app.register(submissionRoutes)
 
 app.get('/', async () => {

@@ -4,6 +4,7 @@ import { env } from '@app/env'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { admin, twoFactor } from 'better-auth/plugins'
+import { claimAccessGrant } from '@/modules/access-grants/claim-access-grant'
 import {
 	sendNewLoginEmail,
 	sendPasswordResetEmail,
@@ -91,6 +92,13 @@ export const auth = betterAuth({
 						.where(eq(userTable.id, session.userId))
 
 					if (!loggedInUser) return
+
+					await claimAccessGrant(loggedInUser.id).catch((error) => {
+						console.error('[access grants] Falha ao aplicar cortesia no login.', {
+							userId: loggedInUser.id,
+							error,
+						})
+					})
 
 					sendNewLoginEmail({
 						to: loggedInUser.email,

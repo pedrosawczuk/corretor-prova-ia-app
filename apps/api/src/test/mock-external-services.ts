@@ -33,6 +33,8 @@ vi.mock('@/lib/auth/auth', () => ({
 }))
 
 vi.mock('@/lib/mail/mail', () => ({
+	sendAccessGrantReminderEmail: vi.fn().mockResolvedValue(undefined),
+	sendInviteEmail: vi.fn().mockResolvedValue(undefined),
 	sendNewLoginEmail: vi.fn().mockResolvedValue(undefined),
 	sendPasswordResetEmail: vi.fn().mockResolvedValue(undefined),
 	sendPaymentFailedEmail: vi.fn().mockResolvedValue(undefined),
