@@ -24,6 +24,11 @@ import { makeQuestionOption } from '@/test/factories/make-question-option'
 import { makeSubmission } from '@/test/factories/make-submission'
 import { makeSubmissionPage } from '@/test/factories/make-submission-page'
 
+vi.mock('@/lib/ai/read-page-marked-answers', () => ({
+	isMarkedAnswersReaderConfigured: vi.fn(() => false),
+	readPageMarkedAnswers: vi.fn(),
+}))
+
 vi.mock('@/lib/vision/read-submission-answers', () => ({
 	readSubmissionAnswers: vi.fn(),
 	extractMarkersFound: vi.fn((rawOcrPayload: unknown) => {
@@ -125,8 +130,8 @@ describe('POST /submissions/:submissionId/process', () => {
 
 		vi.mocked(readSubmissionAnswers).mockResolvedValue({
 			answers: [
-				{ order: 0, detectedLetter: 'B', confidence: 0.95 },
-				{ order: 1, detectedLetter: 'A', confidence: 0.4 },
+				{ order: 0, markedLetters: ['B'], confidence: 0.95 },
+				{ order: 1, markedLetters: ['A'], confidence: 0.4 },
 			],
 			pageDiagnostics: new Map([[1, { markersFound: true }]]),
 		})

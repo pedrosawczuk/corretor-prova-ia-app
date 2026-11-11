@@ -25,7 +25,7 @@ export interface SubmissionPageImage {
 
 export interface ExtractedAnswer {
 	order: number
-	detectedLetter: string | null
+	markedLetters: string[]
 	confidence: number | null
 }
 
@@ -71,6 +71,11 @@ const CORNER_SEARCH_MARGIN_FALLBACK = 0.45
  * a base-esquerda do texto, na convenção do pdfjs-dist), em pontos PDF.
  */
 const GLYPH_BOX = { left: -1, right: 13, belowBaseline: -2, aboveBaseline: 9 }
+
+const MIN_MARKER_SIZE_FRACTION = 0.004
+const MAX_MARKER_SIZE_FRACTION = 0.05
+const MIN_MARKER_SOLIDITY = 0.6
+const MIN_MARKER_SPAN_FRACTION = 0.3
 
 interface PixelPoint {
 	x: number
@@ -122,18 +127,27 @@ function findCornerCandidate(
 	const minY = isTop ? 0 : height * (1 - margin)
 	const maxY = isTop ? height * margin : height
 
+	const shortestSide = Math.min(width, height)
+	const minMarkerSize = Math.max(4, shortestSide * MIN_MARKER_SIZE_FRACTION)
+	const maxMarkerSize = shortestSide * MAX_MARKER_SIZE_FRACTION
+
 	let best: (PixelPoint & { squareness: number }) | null = null
 
 	for (let i = 0; i < contours.size(); i++) {
-		const rect = cv.boundingRect(contours.get(i))
+		const contour = contours.get(i)
+		const rect = cv.boundingRect(contour)
 		const cx = rect.x + rect.width / 2
 		const cy = rect.y + rect.height / 2
 
 		if (cx < minX || cx > maxX || cy < minY || cy > maxY) continue
-		if (rect.width < 4 || rect.height < 4) continue
+		if (rect.width < minMarkerSize || rect.height < minMarkerSize) continue
+		if (rect.width > maxMarkerSize || rect.height > maxMarkerSize) continue
 
 		const aspect = rect.width / rect.height
 		if (aspect < 0.5 || aspect > 2) continue
+
+		const solidity = cv.contourArea(contour) / (rect.width * rect.height)
+		if (solidity < MIN_MARKER_SOLIDITY) continue
 
 		const squareness = Math.abs(aspect - 1)
 		if (!best || squareness < best.squareness) {
@@ -166,7 +180,28 @@ function tryLocateAlignmentMarkers(
 		found[marker.id] = candidate
 	}
 
-	return found
+	return hasPlausibleMarkerLayout(found, width, height) ? found : null
+}
+
+function hasPlausibleMarkerLayout(
+	found: Record<string, PixelPoint>,
+	width: number,
+	height: number,
+): boolean {
+	const topLeft = found['top-left']
+	const topRight = found['top-right']
+	const bottomLeft = found['bottom-left']
+	const bottomRight = found['bottom-right']
+
+	const minHorizontalSpan = width * MIN_MARKER_SPAN_FRACTION
+	const minVerticalSpan = height * MIN_MARKER_SPAN_FRACTION
+
+	return (
+		topRight.x - topLeft.x >= minHorizontalSpan &&
+		bottomRight.x - bottomLeft.x >= minHorizontalSpan &&
+		bottomLeft.y - topLeft.y >= minVerticalSpan &&
+		bottomRight.y - topRight.y >= minVerticalSpan
+	)
 }
 
 /**
@@ -365,14 +400,14 @@ function decideQuestionAnswer(
 	const [top, second] = ranked
 
 	if (!top || top.ratio < MIN_FILL_RATIO) {
-		return { order: question.order, detectedLetter: null, confidence: 0 }
+		return { order: question.order, markedLetters: [], confidence: 0 }
 	}
 
 	const confidence = second
 		? Math.max(0, Math.min(1, (top.ratio - second.ratio) / top.ratio))
 		: 1
 
-	return { order: question.order, detectedLetter: top.letter, confidence }
+	return { order: question.order, markedLetters: [top.letter], confidence }
 }
 
 /**

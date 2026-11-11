@@ -1,4 +1,7 @@
+import type { ExtractedAnswer } from '@/lib/vision/read-submission-answers'
 import { MIN_ANSWER_CONFIDENCE } from './confidence-threshold'
+
+export type { ExtractedAnswer }
 
 export interface QuestionOptionForGrading {
 	id: string
@@ -13,12 +16,6 @@ export interface QuestionForGrading {
 	options: QuestionOptionForGrading[]
 }
 
-export interface ExtractedAnswer {
-	order: number
-	detectedLetter: string | null
-	confidence: number | null
-}
-
 export interface GradedAnswer {
 	questionId: string
 	markedOptionId: string | null
@@ -29,17 +26,43 @@ export interface GradedAnswer {
 	requiresReview: boolean
 }
 
-function findMarkedOption(
+const ZERO_SCORE = '0.00'
+
+function findOptionByLetter(
 	options: QuestionOptionForGrading[],
-	detectedLetter: string | null,
+	letter: string | undefined,
 ) {
-	if (!detectedLetter) return null
+	if (!letter) return null
 
 	return (
 		options.find(
-			(option) => option.letter.toUpperCase() === detectedLetter.toUpperCase(),
+			(option) => option.letter.toUpperCase() === letter.toUpperCase(),
 		) ?? null
 	)
+}
+
+function formatMarkedLetters(markedLetters: string[]): string | null {
+	return markedLetters.length > 0 ? markedLetters.join(',') : null
+}
+
+function scoreReadAnswer(
+	question: QuestionForGrading,
+	markedLetters: string[],
+) {
+	if (markedLetters.length === 0) return null
+
+	if (markedLetters.length > 1) {
+		return { markedOptionId: null, score: ZERO_SCORE }
+	}
+
+	const markedOption = findOptionByLetter(question.options, markedLetters[0])
+	if (!markedOption) return null
+
+	const correctOption = question.options.find((option) => option.isCorrect)
+	const score =
+		markedOption.id === correctOption?.id ? question.maxPoints : ZERO_SCORE
+
+	return { markedOptionId: markedOption.id, score }
 }
 
 export function gradeSubmissionAnswers(
@@ -48,42 +71,40 @@ export function gradeSubmissionAnswers(
 ): GradedAnswer[] {
 	return questions.map((question) => {
 		const extracted = extractedAnswers.find((a) => a.order === question.order)
-
-		const markedOption = extracted
-			? findMarkedOption(question.options, extracted.detectedLetter)
-			: null
-
+		const markedLetters = extracted?.markedLetters ?? []
 		const confidence = extracted?.confidence ?? null
+		const extractedText = formatMarkedLetters(markedLetters)
+		const formattedConfidence =
+			confidence === null ? null : confidence.toFixed(2)
 
-		const requiresReview =
-			!extracted ||
-			confidence === null ||
-			confidence < MIN_ANSWER_CONFIDENCE ||
-			!markedOption
+		const isConfident =
+			confidence !== null && confidence >= MIN_ANSWER_CONFIDENCE
+		const scored = isConfident ? scoreReadAnswer(question, markedLetters) : null
 
-		if (requiresReview) {
+		if (!scored) {
+			const hintedOption =
+				markedLetters.length === 1
+					? findOptionByLetter(question.options, markedLetters[0])
+					: null
+
 			return {
 				questionId: question.id,
-				markedOptionId: markedOption?.id ?? null,
-				extractedText: extracted?.detectedLetter ?? null,
-				confidence: confidence === null ? null : confidence.toFixed(2),
+				markedOptionId: hintedOption?.id ?? null,
+				extractedText,
+				confidence: formattedConfidence,
 				aiScore: null,
 				finalScore: null,
 				requiresReview: true,
 			}
 		}
 
-		const correctOption = question.options.find((option) => option.isCorrect)
-		const score =
-			markedOption.id === correctOption?.id ? question.maxPoints : '0.00'
-
 		return {
 			questionId: question.id,
-			markedOptionId: markedOption.id,
-			extractedText: extracted.detectedLetter,
-			confidence: confidence.toFixed(2),
-			aiScore: score,
-			finalScore: score,
+			markedOptionId: scored.markedOptionId,
+			extractedText,
+			confidence: formattedConfidence,
+			aiScore: scored.score,
+			finalScore: scored.score,
 			requiresReview: false,
 		}
 	})

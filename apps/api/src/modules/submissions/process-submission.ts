@@ -12,12 +12,10 @@ import {
 	downloadSubmissionPage,
 	getSubmissionPageSignedUrl,
 } from '@/lib/storage/storage'
-import {
-	extractMarkersFound,
-	readSubmissionAnswers,
-} from '@/lib/vision/read-submission-answers'
+import { extractMarkersFound } from '@/lib/vision/read-submission-answers'
 import { fetchQuestionsWithOptions } from '@/modules/exams/fetch-exam-detail'
 import { computeSubmissionTotals } from './compute-submission-totals'
+import { extractSubmissionAnswers } from './extract-submission-answers'
 import { fetchOwnedSubmission } from './fetch-owned-submission'
 import { gradeSubmissionAnswers } from './grade-submission-answers'
 import type { SubmissionParams } from './submission-params-schema'
@@ -84,10 +82,8 @@ export async function processSubmissionModule(
 			})),
 		)
 
-		const { answers: extracted, pageDiagnostics } = await readSubmissionAnswers(
-			pageImages,
-			questions,
-		)
+		const { answers: extracted, pageDiagnostics } =
+			await extractSubmissionAnswers(pageImages, questions)
 
 		const graded = gradeSubmissionAnswers(questions, extracted)
 

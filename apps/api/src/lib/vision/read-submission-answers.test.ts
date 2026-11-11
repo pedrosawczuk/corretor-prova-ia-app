@@ -136,7 +136,7 @@ describe('readSubmissionAnswers', () => {
 		const { answers } = await readSubmissionAnswers(pages, questions)
 		const [result] = answers
 
-		expect(result.detectedLetter).toBe('B')
+		expect(result.markedLetters).toEqual(['B'])
 		expect(result.confidence).toBeGreaterThan(0.5)
 	})
 
@@ -164,7 +164,7 @@ describe('readSubmissionAnswers', () => {
 		const { answers } = await readSubmissionAnswers(pages, questions)
 		const [result] = answers
 
-		expect(result.detectedLetter).toBeNull()
+		expect(result.markedLetters).toEqual([])
 	})
 
 	it('fica sem leitura (revisão manual) quando os marcadores de canto não são encontrados na foto', async () => {
@@ -198,7 +198,7 @@ describe('readSubmissionAnswers', () => {
 		)
 		const [result] = answers
 
-		expect(result.detectedLetter).toBeNull()
+		expect(result.markedLetters).toEqual([])
 		expect(result.confidence).toBe(0)
 		expect(pageDiagnostics.get(1)).toEqual({ markersFound: false })
 	})
@@ -252,7 +252,7 @@ describe('readSubmissionAnswers', () => {
 		)
 
 		expect(pageDiagnostics.get(1)).toEqual({ markersFound: true })
-		expect(answers[0].detectedLetter).toBe('B')
+		expect(answers[0].markedLetters).toEqual(['B'])
 	})
 
 	it('ainda lê corretamente sob rotação leve da foto', async () => {
@@ -285,7 +285,7 @@ describe('readSubmissionAnswers', () => {
 		)
 
 		expect(pageDiagnostics.get(1)).toEqual({ markersFound: true })
-		expect(answers[0].detectedLetter).toBe('B')
+		expect(answers[0].markedLetters).toEqual(['B'])
 	})
 
 	it('ainda lê corretamente sob iluminação desigual (gradiente de brilho)', async () => {
@@ -318,7 +318,7 @@ describe('readSubmissionAnswers', () => {
 		)
 
 		expect(pageDiagnostics.get(1)).toEqual({ markersFound: true })
-		expect(answers[0].detectedLetter).toBe('B')
+		expect(answers[0].markedLetters).toEqual(['B'])
 	})
 
 	it('fica sem leitura e sem lançar exceção quando um marcador de canto foi cortado da foto', async () => {
@@ -356,7 +356,7 @@ describe('readSubmissionAnswers', () => {
 		)
 
 		expect(pageDiagnostics.get(1)).toEqual({ markersFound: false })
-		expect(answers[0].detectedLetter).toBeNull()
+		expect(answers[0].markedLetters).toEqual([])
 		expect(answers[0].confidence).toBe(0)
 	})
 
@@ -396,7 +396,7 @@ describe('readSubmissionAnswers', () => {
 			questions,
 		)
 
-		expect(answers[0].detectedLetter).toBeNull()
+		expect(answers[0].markedLetters).toEqual([])
 		expect(answers[0].confidence).toBe(0)
 		expect(pageDiagnostics.size).toBe(0)
 	})

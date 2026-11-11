@@ -27,7 +27,7 @@ describe('gradeSubmissionAnswers', () => {
 
 		const [result] = gradeSubmissionAnswers(
 			[question],
-			[{ order: 0, detectedLetter: 'B', confidence: MIN_ANSWER_CONFIDENCE }],
+			[{ order: 0, markedLetters: ['B'], confidence: MIN_ANSWER_CONFIDENCE }],
 		)
 
 		expect(result).toEqual({
@@ -46,7 +46,7 @@ describe('gradeSubmissionAnswers', () => {
 
 		const [result] = gradeSubmissionAnswers(
 			[question],
-			[{ order: 0, detectedLetter: 'A', confidence: 0.9 }],
+			[{ order: 0, markedLetters: ['A'], confidence: 0.9 }],
 		)
 
 		expect(result.markedOptionId).toBe('opt-a')
@@ -63,7 +63,7 @@ describe('gradeSubmissionAnswers', () => {
 			[
 				{
 					order: 0,
-					detectedLetter: 'B',
+					markedLetters: ['B'],
 					confidence: MIN_ANSWER_CONFIDENCE - 0.01,
 				},
 			],
@@ -76,12 +76,50 @@ describe('gradeSubmissionAnswers', () => {
 		expect(result.extractedText).toBe('B')
 	})
 
-	it('marca para revisão manual quando a IA não identifica nenhuma marcação', () => {
+	it('marca para revisão manual quando a leitura indica questão em branco, para não zerar uma marcação fraca que passou despercebida', () => {
 		const question = makeQuestion()
 
 		const [result] = gradeSubmissionAnswers(
 			[question],
-			[{ order: 0, detectedLetter: null, confidence: 0.95 }],
+			[{ order: 0, markedLetters: [], confidence: 0.95 }],
+		)
+
+		expect(result).toEqual({
+			questionId: 'question-1',
+			markedOptionId: null,
+			extractedText: null,
+			confidence: '0.95',
+			aiScore: null,
+			finalScore: null,
+			requiresReview: true,
+		})
+	})
+
+	it('atribui nota zero automaticamente quando mais de uma alternativa foi marcada, mesmo incluindo a correta', () => {
+		const question = makeQuestion()
+
+		const [result] = gradeSubmissionAnswers(
+			[question],
+			[{ order: 0, markedLetters: ['A', 'B'], confidence: 0.95 }],
+		)
+
+		expect(result).toEqual({
+			questionId: 'question-1',
+			markedOptionId: null,
+			extractedText: 'A,B',
+			confidence: '0.95',
+			aiScore: '0.00',
+			finalScore: '0.00',
+			requiresReview: false,
+		})
+	})
+
+	it('marca para revisão manual quando a leitura não é confiável, mesmo sem marcação identificada', () => {
+		const question = makeQuestion()
+
+		const [result] = gradeSubmissionAnswers(
+			[question],
+			[{ order: 0, markedLetters: [], confidence: 0 }],
 		)
 
 		expect(result.requiresReview).toBe(true)
@@ -95,7 +133,7 @@ describe('gradeSubmissionAnswers', () => {
 
 		const [result] = gradeSubmissionAnswers(
 			[question],
-			[{ order: 0, detectedLetter: 'Z', confidence: 0.95 }],
+			[{ order: 0, markedLetters: ['Z'], confidence: 0.95 }],
 		)
 
 		expect(result.requiresReview).toBe(true)
@@ -118,7 +156,7 @@ describe('gradeSubmissionAnswers', () => {
 
 		const [result] = gradeSubmissionAnswers(
 			[question],
-			[{ order: 0, detectedLetter: 'b', confidence: 0.99 }],
+			[{ order: 0, markedLetters: ['b'], confidence: 0.99 }],
 		)
 
 		expect(result.markedOptionId).toBe('opt-b')
@@ -132,8 +170,8 @@ describe('gradeSubmissionAnswers', () => {
 		const results = gradeSubmissionAnswers(
 			[questionOne, questionTwo],
 			[
-				{ order: 0, detectedLetter: 'B', confidence: 0.95 },
-				{ order: 1, detectedLetter: 'B', confidence: 0.5 },
+				{ order: 0, markedLetters: ['B'], confidence: 0.95 },
+				{ order: 1, markedLetters: ['B'], confidence: 0.5 },
 			],
 		)
 
