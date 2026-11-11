@@ -29,11 +29,21 @@ export function getMisalignedPageNumbers(submission: Submission): number[] {
 }
 
 export function buildMisalignedPagesWarning(pageNumbers: number[]): string {
-	if (pageNumbers.length === 1) {
-		return `A página ${pageNumbers[0]} não pôde ser alinhada automaticamente — todas as questões dela precisam de revisão manual.`
-	}
+	const pagesLabel =
+		pageNumbers.length === 1
+			? `a página ${pageNumbers[0]}`
+			: `as páginas ${pageNumbers.join(', ')}`
 
-	return `As páginas ${pageNumbers.join(', ')} não puderam ser alinhadas automaticamente — todas as questões delas precisam de revisão manual.`
+	return `Não encontramos os marcadores de canto em ${pagesLabel}. Se alguma questão dessas páginas ficou para revisão, envie uma foto nova com a folha inteira, reta e bem iluminada.`
+}
+
+export function parseMarkedLetters(extractedText: string | null): string[] {
+	if (!extractedText) return []
+
+	return extractedText
+		.split(',')
+		.map((letter) => letter.trim().toUpperCase())
+		.filter(Boolean)
 }
 
 export function movePageInOrder<T>(

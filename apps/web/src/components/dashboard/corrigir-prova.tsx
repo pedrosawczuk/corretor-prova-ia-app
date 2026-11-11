@@ -242,7 +242,7 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 					Voltar para a prova
 				</Link>
 
-				{misalignedPages.length > 0 && (
+				{misalignedPages.length > 0 && pending > 0 && (
 					<div className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning/5 p-3 text-sm text-warning">
 						<AlertTriangle className="size-4 shrink-0 mt-0.5" />
 						<p>{buildMisalignedPagesWarning(misalignedPages)}</p>
@@ -270,8 +270,7 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 								{pending} pendente(s) de revisão
 							</Badge>
 						) : (
-							<Badge variant="success-outline">
-								<CheckCircle2 className="size-3.5" />
+							<Badge variant="success-outline" leftIcon={<CheckCircle2 />}>
 								Correção concluída
 							</Badge>
 						)}

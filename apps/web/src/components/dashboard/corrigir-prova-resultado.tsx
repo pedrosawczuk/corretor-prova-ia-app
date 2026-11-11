@@ -12,7 +12,11 @@ import {
 import { AlertTriangle, CheckCircle2, XCircle } from 'lucide-react'
 import { useReviewSubmissionAnswer } from '@/hooks/use-submissions'
 import { toastApiError } from '@/lib/api-error-handler'
-import { pairQuestionsWithAnswers } from './corrigir-prova.utils'
+import { AnswerReadingNote } from './answer-reading-note'
+import {
+	pairQuestionsWithAnswers,
+	parseMarkedLetters,
+} from './corrigir-prova.utils'
 
 interface CorrigirProvaResultadoProps {
 	exam: Exam
@@ -33,6 +37,7 @@ export function CorrigirProvaResultado({
 				const needsReview = !answer || answer.requiresReview
 				const isCorrect =
 					!needsReview && answer?.markedOptionId === correctOption?.id
+				const readLetters = parseMarkedLetters(answer?.extractedText ?? null)
 
 				function handleSelect(optionId: string | null) {
 					if (!answer) return
@@ -57,18 +62,30 @@ export function CorrigirProvaResultado({
 									{question.statement}
 								</span>
 								{needsReview ? (
-									<Badge variant="warning-outline" size="sm">
-										<AlertTriangle className="size-3.5" />
+									<Badge
+										variant="warning-outline"
+										size="sm"
+										className="shrink-0"
+										leftIcon={<AlertTriangle />}
+									>
 										Revisar
 									</Badge>
 								) : isCorrect ? (
-									<Badge variant="success-outline" size="sm">
-										<CheckCircle2 className="size-3.5" />
+									<Badge
+										variant="success-outline"
+										size="sm"
+										className="shrink-0"
+										leftIcon={<CheckCircle2 />}
+									>
 										Correta
 									</Badge>
 								) : (
-									<Badge variant="destructive-outline" size="sm">
-										<XCircle className="size-3.5" />
+									<Badge
+										variant="destructive-outline"
+										size="sm"
+										className="shrink-0"
+										leftIcon={<XCircle />}
+									>
 										Incorreta
 									</Badge>
 								)}
@@ -81,8 +98,7 @@ export function CorrigirProvaResultado({
 									const isAiHint =
 										needsReview &&
 										!isMarked &&
-										answer?.extractedText?.toUpperCase() ===
-											option.letter.toUpperCase()
+										readLetters.includes(option.letter.toUpperCase())
 
 									return (
 										<li key={option.id}>
@@ -107,6 +123,8 @@ export function CorrigirProvaResultado({
 									)
 								})}
 							</ul>
+
+							{answer && <AnswerReadingNote answer={answer} />}
 
 							{needsReview && answer && (
 								<Button
