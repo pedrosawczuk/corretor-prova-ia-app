@@ -1,5 +1,6 @@
 import { and, db, eq, plansTable, subscriptionsTable } from '@app/db'
 import { PaymentRequiredError } from '@/core/errors'
+import { findActiveAccessGrant } from '@/modules/access-grants/find-active-access-grant'
 
 export async function assertDocxExportAllowed(userId: string): Promise<void> {
 	const [subscription] = await db
@@ -13,9 +14,17 @@ export async function assertDocxExportAllowed(userId: string): Promise<void> {
 			),
 		)
 
-	if (!subscription?.allowsDocxExport) {
-		throw new PaymentRequiredError(
-			'A exportação em DOCX está disponível apenas no plano Pro.',
-		)
+	if (subscription?.allowsDocxExport) {
+		return
 	}
+
+	const accessGrant = await findActiveAccessGrant(db, userId)
+
+	if (accessGrant?.allowsDocxExport) {
+		return
+	}
+
+	throw new PaymentRequiredError(
+		'A exportação em DOCX está disponível apenas no plano Pro.',
+	)
 }

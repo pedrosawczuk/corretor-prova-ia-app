@@ -16,6 +16,9 @@ import {
 } from '@app/db'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
+import { claimAccessGrant } from '@/modules/access-grants/claim-access-grant'
+import { findActiveAccessGrant } from '@/modules/access-grants/find-active-access-grant'
+import { resolveAccessGrantUsagePeriod } from '@/modules/access-grants/resolve-access-grant-usage-period'
 import { reconcileSubscriptionStatus } from './reconcile-subscription-status'
 
 export async function getBillingStatusModule(
@@ -23,6 +26,13 @@ export async function getBillingStatusModule(
 	reply: FastifyReply,
 ) {
 	const user = await getAuthenticatedUser(request)
+
+	await claimAccessGrant(user.id).catch((error) => {
+		console.error('[access grants] Falha ao aplicar cortesia pendente.', {
+			userId: user.id,
+			error,
+		})
+	})
 
 	const [subscriptionRow] = await db
 		.select({
@@ -57,7 +67,19 @@ export async function getBillingStatusModule(
 	const subscription =
 		reconciled?.status === 'canceled' ? undefined : reconciled
 
-	const [{ correctionsUsed }] = subscription
+	const accessGrant = await findActiveAccessGrant(db, user.id)
+	const accessGrantPeriod = accessGrant
+		? resolveAccessGrantUsagePeriod(accessGrant)
+		: undefined
+	const usagePeriod = subscription
+		? {
+				start: subscription.currentPeriodStart,
+				end: subscription.currentPeriodEnd,
+			}
+		: accessGrantPeriod
+	const effectivePlan = subscription ?? accessGrant
+
+	const [{ correctionsUsed }] = usagePeriod
 		? await db
 				.select({ correctionsUsed: sql<number>`count(*)::int` })
 				.from(submissionsTable)
@@ -65,8 +87,8 @@ export async function getBillingStatusModule(
 				.where(
 					and(
 						eq(examsTable.creatorId, user.id),
-						gte(submissionsTable.createdAt, subscription.currentPeriodStart),
-						lte(submissionsTable.createdAt, subscription.currentPeriodEnd),
+						gte(submissionsTable.createdAt, usagePeriod.start),
+						lte(submissionsTable.createdAt, usagePeriod.end),
 					),
 				)
 		: [{ correctionsUsed: 0 }]
@@ -84,12 +106,12 @@ export async function getBillingStatusModule(
 		.where(eq(billingCustomersTable.userId, user.id))
 
 	return reply.status(200).send({
-		plan: subscription
+		plan: effectivePlan
 			? {
-					slug: subscription.planSlug,
-					name: subscription.planName,
-					monthlyCorrectionsLimit: subscription.monthlyCorrectionsLimit,
-					allowsDocxExport: subscription.allowsDocxExport,
+					slug: effectivePlan.planSlug,
+					name: effectivePlan.planName,
+					monthlyCorrectionsLimit: effectivePlan.monthlyCorrectionsLimit,
+					allowsDocxExport: effectivePlan.allowsDocxExport,
 				}
 			: null,
 		subscriptionStatus: subscription?.status ?? null,
@@ -99,5 +121,8 @@ export async function getBillingStatusModule(
 		correctionsUsed,
 		creditBalance,
 		hasBillingCustomer: Boolean(billingCustomer),
+		accessGrant: accessGrant
+			? { source: accessGrant.source, expiresAt: accessGrant.expiresAt }
+			: null,
 	})
 }

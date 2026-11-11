@@ -21,8 +21,10 @@ import { UnauthorizedError } from '@/core/errors'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
 import { cancelAsaasSubscription } from '@/lib/billing/cancel-asaas-subscription'
 import { createTestApp } from '@/test/create-test-app'
+import { insertAccessGrant } from '@/test/db-factories/insert-access-grant'
 import { insertBillingCustomer } from '@/test/db-factories/insert-billing-customer'
 import { insertCorrectionCredit } from '@/test/db-factories/insert-correction-credit'
+import { insertInvite } from '@/test/db-factories/insert-invite'
 import { insertPlan } from '@/test/db-factories/insert-plan'
 import { insertSubscription } from '@/test/db-factories/insert-subscription'
 import { insertUser } from '@/test/db-factories/insert-user'
@@ -52,6 +54,7 @@ const EMPTY_STATUS = {
 	correctionsUsed: 0,
 	creditBalance: 0,
 	hasBillingCustomer: false,
+	accessGrant: null,
 }
 
 async function insertExamFor(creatorId: string) {
@@ -164,6 +167,7 @@ describe('GET /billing/status (integração)', () => {
 			correctionsUsed: 2,
 			creditBalance: 3,
 			hasBillingCustomer: true,
+			accessGrant: null,
 		})
 	})
 
@@ -241,6 +245,90 @@ describe('GET /billing/status (integração)', () => {
 			status: 'past_due',
 			updatedAt: subscription.updatedAt,
 		})
+	})
+
+	it('retorna o plano da cortesia e o uso da janela mensal quando o usuário não tem assinatura', async () => {
+		const now = Date.now()
+		const accessGrant = await insertAccessGrant({
+			userId: user.id,
+			startsAt: new Date(now - 40 * DAY_MS),
+			expiresAt: new Date(now + 50 * DAY_MS),
+			source: 'privileged_email',
+		})
+		const exam = await insertExamFor(user.id)
+		await db.insert(submissionsTable).values([
+			makeSubmission({ examId: exam.id, createdAt: new Date(now - DAY_MS) }),
+			makeSubmission({
+				examId: exam.id,
+				createdAt: new Date(now - 20 * DAY_MS),
+			}),
+		])
+
+		const response = await app.inject({
+			method: 'GET',
+			url: '/billing/status',
+		})
+
+		expect(response.statusCode).toBe(200)
+		expect(response.json()).toEqual({
+			...EMPTY_STATUS,
+			plan: {
+				slug: 'pro',
+				name: 'Pro',
+				monthlyCorrectionsLimit: 500,
+				allowsDocxExport: true,
+			},
+			correctionsUsed: 1,
+			accessGrant: {
+				source: 'privileged_email',
+				expiresAt: accessGrant.expiresAt.toISOString(),
+			},
+		})
+	})
+
+	it('aplica a cortesia pendente de quem já estava logado ao receber o convite', async () => {
+		await insertPlan({ slug: 'pro', name: 'Pro', allowsDocxExport: true })
+		await insertInvite({ email: user.email })
+
+		const response = await app.inject({
+			method: 'GET',
+			url: '/billing/status',
+		})
+
+		expect(response.json()).toMatchObject({
+			plan: { slug: 'pro' },
+			accessGrant: { source: 'invite' },
+		})
+	})
+
+	it('ignora cortesia vencida ou revogada', async () => {
+		const plan = await insertPlan({ slug: 'pro', name: 'Pro' })
+		await insertAccessGrant({
+			userId: user.id,
+			planId: plan.id,
+			startsAt: new Date(Date.now() - 10 * DAY_MS),
+			revokedAt: new Date(),
+		})
+		const otherUser = await insertUser()
+		await insertAccessGrant({
+			userId: otherUser.id,
+			planId: plan.id,
+			startsAt: new Date(Date.now() - 100 * DAY_MS),
+			expiresAt: new Date(Date.now() - DAY_MS),
+		})
+
+		const revokedResponse = await app.inject({
+			method: 'GET',
+			url: '/billing/status',
+		})
+		vi.mocked(getAuthenticatedUser).mockResolvedValue(otherUser as never)
+		const expiredResponse = await app.inject({
+			method: 'GET',
+			url: '/billing/status',
+		})
+
+		expect(revokedResponse.json()).toEqual(EMPTY_STATUS)
+		expect(expiredResponse.json()).toEqual(EMPTY_STATUS)
 	})
 
 	it('retorna 401 quando o usuário não está autenticado', async () => {

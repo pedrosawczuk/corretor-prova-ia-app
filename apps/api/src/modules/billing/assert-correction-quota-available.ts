@@ -13,10 +13,28 @@ import {
 	user,
 } from '@app/db'
 import { PaymentRequiredError } from '@/core/errors'
+import { findActiveAccessGrant } from '@/modules/access-grants/find-active-access-grant'
+import { resolveAccessGrantUsagePeriod } from '@/modules/access-grants/resolve-access-grant-usage-period'
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
 const CORRECTION_QUOTA_CHECK_ENABLED = false
+
+async function resolveAccessGrantAllowance(tx: Transaction, userId: string) {
+	const accessGrant = await findActiveAccessGrant(tx, userId)
+
+	if (!accessGrant) {
+		return undefined
+	}
+
+	const period = resolveAccessGrantUsagePeriod(accessGrant)
+
+	return {
+		currentPeriodStart: period.start,
+		currentPeriodEnd: period.end,
+		monthlyCorrectionsLimit: accessGrant.monthlyCorrectionsLimit,
+	}
+}
 
 export async function assertCorrectionQuotaAvailable(
 	tx: Transaction,
@@ -47,8 +65,11 @@ export async function assertCorrectionQuotaAvailable(
 			),
 		)
 
-	if (subscription) {
-		if (subscription.monthlyCorrectionsLimit == null) {
+	const allowance =
+		subscription ?? (await resolveAccessGrantAllowance(tx, userId))
+
+	if (allowance) {
+		if (allowance.monthlyCorrectionsLimit == null) {
 			return
 		}
 
@@ -59,12 +80,12 @@ export async function assertCorrectionQuotaAvailable(
 			.where(
 				and(
 					eq(examsTable.creatorId, userId),
-					gte(submissionsTable.createdAt, subscription.currentPeriodStart),
-					lte(submissionsTable.createdAt, subscription.currentPeriodEnd),
+					gte(submissionsTable.createdAt, allowance.currentPeriodStart),
+					lte(submissionsTable.createdAt, allowance.currentPeriodEnd),
 				),
 			)
 
-		if (correctionsUsed < subscription.monthlyCorrectionsLimit) {
+		if (correctionsUsed < allowance.monthlyCorrectionsLimit) {
 			return
 		}
 	}
