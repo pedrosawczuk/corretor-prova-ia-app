@@ -1,7 +1,4 @@
-import type {
-	CreateInviteInput,
-	CreatePrivilegedEmailInput,
-} from '@app/shared'
+import type { CreateInviteInput, CreatePrivilegedEmailInput } from '@app/shared'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 

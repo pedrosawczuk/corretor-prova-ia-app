@@ -94,9 +94,9 @@ export function InviteEmail({
 							<Hr className="border-border my-8" />
 
 							<Text className="text-xs text-muted-foreground leading-relaxed m-0">
-								O convite vale por {inviteExpiresInDays} dias e só pode ser usado
-								com este e-mail. Se você não esperava este convite, pode ignorar esta
-								mensagem.
+								O convite vale por {inviteExpiresInDays} dias e só pode ser
+								usado com este e-mail. Se você não esperava este convite, pode
+								ignorar esta mensagem.
 							</Text>
 						</Section>
 					</Container>

@@ -37,8 +37,14 @@ describe('deriveInviteStatus', () => {
 
 describe('deriveAccessGrantStatus', () => {
 	it('diferencia ativa, vencida e revogada', () => {
-		expect(deriveAccessGrantStatus({ expiresAt: future, revokedAt: null }, now)).toBe('active')
-		expect(deriveAccessGrantStatus({ expiresAt: past, revokedAt: null }, now)).toBe('expired')
-		expect(deriveAccessGrantStatus({ expiresAt: future, revokedAt: past }, now)).toBe('revoked')
+		expect(
+			deriveAccessGrantStatus({ expiresAt: future, revokedAt: null }, now),
+		).toBe('active')
+		expect(
+			deriveAccessGrantStatus({ expiresAt: past, revokedAt: null }, now),
+		).toBe('expired')
+		expect(
+			deriveAccessGrantStatus({ expiresAt: future, revokedAt: past }, now),
+		).toBe('revoked')
 	})
 })

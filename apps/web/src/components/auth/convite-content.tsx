@@ -1,12 +1,7 @@
 'use client'
 
 import { Button, Skeleton } from '@app/ui'
-import {
-	ArrowRight,
-	CheckCircle2,
-	Gift,
-	MailWarning,
-} from 'lucide-react'
+import { ArrowRight, CheckCircle2, Gift, MailWarning } from 'lucide-react'
 import Link from 'next/link'
 import { useInviteLookup } from '@/hooks/use-invite-lookup'
 import { formatDate } from '@/lib/date'
@@ -111,8 +106,9 @@ export function ConviteContent({ token }: ConviteContentProps) {
 			</Button>
 
 			<p className="text-xs text-muted-foreground">
-				Aceite até {formatDate(invite.expiresAt)}. Os {invite.grantDurationMonths}{' '}
-				meses começam a contar no seu primeiro acesso.
+				Aceite até {formatDate(invite.expiresAt)}. Os{' '}
+				{invite.grantDurationMonths} meses começam a contar no seu primeiro
+				acesso.
 			</p>
 		</div>
 	)

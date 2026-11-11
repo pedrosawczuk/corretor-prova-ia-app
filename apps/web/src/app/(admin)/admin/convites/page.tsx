@@ -3,7 +3,8 @@ import { AdminInvitesTable } from '@/components/admin/access-grants/admin-invite
 
 export const metadata: Metadata = {
 	title: 'Convites — Admin — Gabarita.app',
-	description: 'Convide professores para usar o plano Pro de graça por 3 meses.',
+	description:
+		'Convide professores para usar o plano Pro de graça por 3 meses.',
 }
 
 export default function AdminConvitesPage() {

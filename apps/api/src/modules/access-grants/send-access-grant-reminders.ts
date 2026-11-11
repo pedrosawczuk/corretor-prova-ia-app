@@ -106,7 +106,11 @@ export async function sendAccessGrantReminders(
 		const inserted = await db
 			.insert(accessGrantRemindersTable)
 			.values(
-				due.kindsToMark.map((kind) => ({ grantId: grant.id, kind, sentAt: now })),
+				due.kindsToMark.map((kind) => ({
+					grantId: grant.id,
+					kind,
+					sentAt: now,
+				})),
 			)
 			.onConflictDoNothing()
 			.returning({ kind: accessGrantRemindersTable.kind })

@@ -33,7 +33,9 @@ export function AdminAccessGrantsTable() {
 	const [revokingGrant, setRevokingGrant] =
 		React.useState<AdminAccessGrant | null>(null)
 	const grants = data?.data
-	const activeCount = grants?.filter((grant) => grant.status === 'active').length
+	const activeCount = grants?.filter(
+		(grant) => grant.status === 'active',
+	).length
 
 	function handleRevoke() {
 		if (!revokingGrant) return

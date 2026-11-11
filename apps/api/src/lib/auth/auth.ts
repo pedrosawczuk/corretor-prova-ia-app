@@ -94,10 +94,13 @@ export const auth = betterAuth({
 					if (!loggedInUser) return
 
 					await claimAccessGrant(loggedInUser.id).catch((error) => {
-						console.error('[access grants] Falha ao aplicar cortesia no login.', {
-							userId: loggedInUser.id,
-							error,
-						})
+						console.error(
+							'[access grants] Falha ao aplicar cortesia no login.',
+							{
+								userId: loggedInUser.id,
+								error,
+							},
+						)
 					})
 
 					sendNewLoginEmail({

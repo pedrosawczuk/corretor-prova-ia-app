@@ -85,7 +85,9 @@ export async function claimAccessGrant(
 				source: invite ? 'invite' : 'privileged_email',
 				inviteId: invite?.id ?? null,
 				startsAt: now,
-				expiresAt: dayjs(now).add(ACCESS_GRANT_DURATION_MONTHS, 'month').toDate(),
+				expiresAt: dayjs(now)
+					.add(ACCESS_GRANT_DURATION_MONTHS, 'month')
+					.toDate(),
 			})
 			.onConflictDoNothing({ target: accessGrantsTable.userId })
 			.returning({ id: accessGrantsTable.id })

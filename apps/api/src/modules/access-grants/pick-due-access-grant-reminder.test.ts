@@ -21,9 +21,10 @@ describe('pickDueAccessGrantReminder', () => {
 	})
 
 	it('envia o de 7 dias quando o de 30 já foi enviado', () => {
-		expect(
-			pickDueAccessGrantReminder(expiresIn(6), ['30_days'], now),
-		).toEqual({ kind: '7_days', kindsToMark: ['30_days', '7_days'] })
+		expect(pickDueAccessGrantReminder(expiresIn(6), ['30_days'], now)).toEqual({
+			kind: '7_days',
+			kindsToMark: ['30_days', '7_days'],
+		})
 	})
 
 	it('envia só o mais urgente quando vários lembretes ficaram para trás', () => {

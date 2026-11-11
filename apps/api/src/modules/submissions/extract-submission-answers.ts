@@ -4,7 +4,10 @@ import {
 	type SubmissionPageImage,
 } from '@/lib/vision/read-submission-answers'
 import { combineAnswerReadings } from './combine-answer-readings'
-import { type AiReadingQuestion, readAnswersWithAi } from './read-answers-with-ai'
+import {
+	type AiReadingQuestion,
+	readAnswersWithAi,
+} from './read-answers-with-ai'
 
 export async function extractSubmissionAnswers(
 	pages: SubmissionPageImage[],
