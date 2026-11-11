@@ -1,7 +1,7 @@
 # Corretor & Gerador de Provas IA - Documento de Requisitos (MVP)
 
 ## Visão Geral
-O aplicativo é uma plataforma para o ciclo completo de avaliações escolares: desde a **criação e refinamento de provas com IA**, passando pela **formatação e impressão**, até a **correção automática por visão computacional clássica (OpenCV, sem Vision LLM)** através de fotos tiradas pela câmera ou escolhidas na galeria do smartphone do professor.
+O aplicativo é uma plataforma para o ciclo completo de avaliações escolares: desde a **criação e refinamento de provas com IA**, passando pela **formatação e impressão**, até a **correção automática por leitura de imagem com IA (Gemini Vision), conferida pelo pipeline OpenCV quando os marcadores de canto aparecem na foto,** através de fotos tiradas pela câmera ou escolhidas na galeria do smartphone do professor.
 
 ---
 
@@ -40,13 +40,21 @@ O aplicativo é uma plataforma para o ciclo completo de avaliações escolares: 
 ### 2.4. Correção por Visão Computacional
 *   **RF09 - Modo Scanner Direto:** Na página da prova (ou ao ler o QR Code da folha), o app abre a câmera em tela cheia otimizada para capturar fotos das folhas de respostas em sequência, com a opção de, em vez de fotografar, escolher uma foto já existente na galeria/arquivos do dispositivo para a página atual (inclusive arquivos `.heic`/`.heif` de iPhone).
 *   **RF10 - Feedback de Processamento:** Ao final do envio das fotos, o professor aciona o processamento e vê uma animação indicando que a leitura está em andamento; o backend processa a submissão de forma síncrona (sem streaming incremental por questão) e devolve o relatório completo de uma só vez ao final.
-*   **RF11 - Intervenção Manual (Dúvida do OCR/IA):** Modal para o professor indicar manualmente a alternativa caso a IA identifique ambiguidade ou ilegibilidade na foto.
+*   **RF10.1 - Leitura das Marcações:** Cada foto é lida por IA de visão (Gemini, duas leituras independentes por página) sem depender dos marcadores de canto, localizando cada questão pelo número impresso — funciona com bolinha preenchida, letra pintada, círculo, X ou check, com fotos fora de ordem e com questões que quebram de página. A IA transcreve o início do texto de cada alternativa marcada e o código o casa com o texto do gabarito, então a correção usa a alternativa certa mesmo se a letra impressa divergir da letra salva (prova editada depois de impressa); texto sem correspondência clara vai para revisão. Se o modelo principal (`GEMINI_MODEL`) estiver sem cota ou indisponível, a leitura tenta o modelo reserva (`GEMINI_READING_FALLBACK_MODEL`). Quando os 4 marcadores de canto são encontrados, o pipeline OpenCV (fill-ratio) roda em paralelo como conferência; se a IA não estiver configurada ou falhar, o OpenCV é usado sozinho.
+*   **RF10.2 - Regras de Correção Automática:** Uma alternativa marcada é corrigida contra o gabarito; mais de uma alternativa marcada na mesma questão anula a questão (nota zero, exibindo as letras marcadas). Questão lida como sem marcação vai para revisão do professor em vez de zerar automaticamente — evita penalizar o aluno quando uma marcação fraca passa despercebida. As regras só são aplicadas automaticamente quando a leitura é confiável.
+*   **RF11 - Intervenção Manual (Dúvida do OCR/IA):** O professor indica manualmente a alternativa quando a leitura não é confiável: as duas leituras da IA divergem, nenhuma marcação foi encontrada, a questão está ilegível/cortada/coberta na foto, ou a leitura OpenCV confiável discorda da IA.
 *   **RF12 - Relatório Final de Correção:** Exibição imediata da nota total, acertos/erros por questão e justificativas.
+
+### 2.5. Convites e Cortesia de Lançamento
+*   **RF13 - Convite por E-mail:** O admin convida um professor pelo e-mail (`/admin/convites`). O sistema envia um link `/convite/<token>` válido por 14 dias, de uso único e atrelado àquele e-mail. Só o hash do token é salvo. O admin pode reenviar (novo token e nova validade) ou revogar convites pendentes.
+*   **RF14 - E-mails Privilegiados:** O admin mantém uma lista de e-mails (`/admin/privilegiados`) que ganham a cortesia automaticamente ao entrar, sem convite e sem envio de e-mail.
+*   **RF15 - Cortesia de 3 Meses do Plano Pro:** Convidados e privilegiados ganham 3 meses do plano Pro, contados a partir do primeiro acesso com o e-mail verificado (login após verificação, login com Google ou a primeira carga do dashboard de quem já estava logado). Cada usuário recebe no máximo uma cortesia na vida. A assinatura paga tem prioridade sobre a cortesia; ao vencer, a conta volta para o plano gratuito sem nenhuma cobrança. O admin pode revogar uma cortesia (`/admin/cortesias`).
+*   **RF16 - Lembretes de Fim da Cortesia:** O professor recebe e-mails faltando 30 dias, 7 dias e 1 dia para a cortesia acabar. Cada lembrete é enviado uma única vez; se vários ficarem para trás, só o mais urgente é enviado. Quem já assinou não recebe lembretes. O dashboard mostra um banner com a data de fim, em destaque na última semana.
 
 ---
 
 ## 3. Requisitos Não-Funcionais (Non-Functional Requirements)
 *   **RNF01 - Saída Estruturada da IA (Structured Outputs):** A geração e refatoração de provas devem usar JSON Schemas estritos (Zod) para garantir a integridade estrutural das questões.
-*   **RNF02 - Processamento Síncrono da Correção:** A leitura por visão computacional (`read-submission-answers.ts`) roda de forma síncrona dentro da própria requisição HTTP de `POST /submissions/:submissionId/process` — não há SSE, WebSockets nem qualquer streaming incremental de progresso.
+*   **RNF02 - Processamento Síncrono da Correção:** A leitura (IA + visão computacional, `extract-submission-answers.ts`) roda de forma síncrona dentro da própria requisição HTTP de `POST /submissions/:submissionId/process` — não há SSE, WebSockets nem qualquer streaming incremental de progresso.
 *   **RNF03 - Responsividade Mobile-First:** A interface de escaneamento de provas deve ser 100% fluida e otimizada para uso em smartphones.
 *   **RNF04 - Arquitetura do Sistema:** Monorepo com Turborepo, Fastify (Backend), React (Frontend), PostgreSQL com Drizzle ORM e `better-auth`.

@@ -64,3 +64,14 @@ No cartão, o mesmo pagamento gera dois eventos: `PAYMENT_CONFIRMED` (aprovaçã
 - [ ] **Cadastrar o domínio do `WEB_URL`** nos dados comerciais da conta. O Asaas pode recusar `callback.successUrl` de domínios não cadastrados.
 - [ ] **Chaves de API:** gerar uma chave de sandbox para dev e outra de produção para o deploy. Cada uma vai com o seu `ASAAS_API_BASE_URL`.
 - [ ] **Validar o payload real:** fazer um pagamento na sandbox e conferir no log de webhooks do painel se `payment.subscription`, `payment.value` e `payment.externalReference` chegam como descrito acima.
+
+---
+
+## 6. Cortesia (access grants)
+
+A cortesia de lançamento (RF13 a RF16) não passa pelo Asaas. Ela vive em `access_grants` e é consultada como alternativa quando o usuário não tem assinatura `active`/`past_due`:
+
+- `GET /billing/status` devolve o plano da cortesia em `plan`, `subscriptionStatus: null` e `accessGrant: { source, expiresAt }`. O uso do mês é contado numa janela mensal ancorada em `starts_at`.
+- `assert-correction-quota-available.ts` e `assert-docx-export-allowed.ts` caem para a cortesia quando não há assinatura.
+- Quem assina durante a cortesia é cobrado no dia da assinatura (o webhook começa o período pago na data do pagamento), e a assinatura passa a valer no lugar da cortesia. A tela de planos avisa isso antes do checkout.
+- Os lembretes saem de um job `croner` de hora em hora (`apps/api/src/lib/jobs/start-scheduled-jobs.ts`), iniciado no `server.ts`.

@@ -15,6 +15,7 @@ Bem-vindo à documentação oficial do **Corretor de Prova IA** — uma platafor
 | [**Padrões de Código — Frontend**](./code-patterns-frontend.md) | Convenções do Next.js, formulários, data fetching e design system. |
 | [**Design System**](./design-system.md) | Tokens visuais e componentes do `packages/ui`. |
 | [**Pagamentos — Asaas**](./billing-asaas.md) | Checkout, webhook, credenciais e pendências da integração de cobrança (planos Avulso, Essencial, Pro). |
+| [**Mapa de Arquitetura**](./architecture-map.md) | Workspaces, configurações, migrations e o grafo de conhecimento (graphify) que mapeia o projeto inteiro. |
 
 ---
 

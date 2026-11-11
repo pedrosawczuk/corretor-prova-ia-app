@@ -37,6 +37,10 @@ export const apiEnvSchema = dbEnvSchema.extend({
 	MAIL_FROM: z.string().optional(),
 	GEMINI_API_KEY: z.string().min(1).optional().catch(undefined),
 	GEMINI_MODEL: z.string().min(1).default('gemini-2.5-flash'),
+	GEMINI_READING_FALLBACK_MODEL: z
+		.string()
+		.min(1)
+		.default('gemini-3-flash-preview'),
 	MINIO_ENDPOINT: z.string().min(1),
 	MINIO_PORT: z.coerce.number(),
 	MINIO_USE_SSL: z.stringbool(),

@@ -134,6 +134,15 @@ Armazenamento das folhas de resposta digitalizadas e corrigidas via visão compu
 
 ---
 
+### 2.6 `invites`, `privileged_emails`, `access_grants` & `access_grant_reminders` (Cortesia — RF13 a RF16)
+
+- **`invites`**: `id` (`uuid`), `email` (minúsculo), `token_hash` (`text`, único, sha256 do token enviado), `invited_by_user_id` (FK `user`, `on delete set null`), `expires_at`, `accepted_at`, `revoked_at`, `created_at`. Índice único parcial `invites_open_per_email_idx` garante no máximo um convite em aberto (nem aceito nem revogado) por e-mail; um convite expirado é reaproveitado ao convidar de novo.
+- **`privileged_emails`**: `id`, `email` (único, minúsculo), `note`, `created_by_user_id` (FK `user`, `on delete set null`), `created_at`.
+- **`access_grants`**: `id`, `user_id` (FK `user`, **único** — uma cortesia por usuário), `plan_id` (FK `plans`), `source` (enum `access_grant_source`: `invite`, `privileged_email`), `invite_id` (FK `invites`, `on delete set null`), `starts_at`, `expires_at`, `revoked_at`, `created_at`.
+- **`access_grant_reminders`**: `grant_id` (FK `access_grants`, `on delete cascade`), `kind` (enum `access_grant_reminder_kind`: `30_days`, `7_days`, `1_day`), `sent_at`. PK composta `(grant_id, kind)` torna o envio idempotente.
+
+---
+
 ## 3. Mudanças em relação à modelagem anterior
 
 Este documento substitui uma versão anterior que incluía entidades sem respaldo em `requisitos.md`. Alterações feitas para alinhar o modelo ao MVP:
