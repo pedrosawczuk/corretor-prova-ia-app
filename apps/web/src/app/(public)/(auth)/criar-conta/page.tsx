@@ -7,6 +7,14 @@ export const metadata: Metadata = {
 		'Cadastre-se gratuitamente e comece a elaborar e corrigir provas escolares com IA.',
 }
 
-export default function CriarContaPage() {
-	return <CriarContaForm />
+interface CriarContaPageProps {
+	searchParams: Promise<{ email?: string }>
+}
+
+export default async function CriarContaPage({
+	searchParams,
+}: CriarContaPageProps) {
+	const { email } = await searchParams
+
+	return <CriarContaForm defaultEmail={email} />
 }

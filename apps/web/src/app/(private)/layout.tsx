@@ -1,5 +1,6 @@
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@app/ui'
 import type * as React from 'react'
+import { CortesiaBanner } from '@/components/dashboard/cortesia-banner'
 import { DashboardSidebar } from '@/components/dashboard/dashboard-sidebar'
 
 export default function PrivateLayout({
@@ -15,6 +16,8 @@ export default function PrivateLayout({
 				<div className="flex h-12 shrink-0 items-center gap-2 border-b border-border/60 px-4 md:hidden">
 					<SidebarTrigger />
 				</div>
+
+				<CortesiaBanner />
 
 				{children}
 			</SidebarInset>

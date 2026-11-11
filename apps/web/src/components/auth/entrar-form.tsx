@@ -28,7 +28,11 @@ import { GoogleIcon } from './google-icon'
 
 type EntrarInput = z.input<typeof signInWithEmailSchema>
 
-export function EntrarForm() {
+interface EntrarFormProps {
+	defaultEmail?: string
+}
+
+export function EntrarForm({ defaultEmail }: EntrarFormProps) {
 	const router = useRouter()
 	const [isLoading, setIsLoading] = React.useState(false)
 	const { isLoading: isGoogleLoading, signInWithGoogle } = useGoogleAuth({
@@ -39,7 +43,7 @@ export function EntrarForm() {
 	const form = useForm<EntrarInput>({
 		resolver: zodResolver(signInWithEmailSchema),
 		defaultValues: {
-			email: '',
+			email: defaultEmail ?? '',
 			password: '',
 			remember: true,
 		},

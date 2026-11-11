@@ -7,6 +7,12 @@ export const metadata: Metadata = {
 		'Acesse seu painel docente para gerenciar turmas e corrigir avaliações com IA.',
 }
 
-export default function EntrarPage() {
-	return <EntrarForm />
+interface EntrarPageProps {
+	searchParams: Promise<{ email?: string }>
+}
+
+export default async function EntrarPage({ searchParams }: EntrarPageProps) {
+	const { email } = await searchParams
+
+	return <EntrarForm defaultEmail={email} />
 }

@@ -25,15 +25,20 @@ import { useStartCheckout } from '@/hooks/use-start-checkout'
 import { formatDate } from '@/lib/date'
 import { AssinarPlanoCards } from './assinar-plano-cards'
 import { CancelarAssinaturaDialog } from './cancelar-assinatura-dialog'
+import { CortesiaPlanoAviso } from './cortesia-plano-aviso'
 import { InformarDocumentoDialog } from './informar-documento-dialog'
 import { TrocarPlanoDialog } from './trocar-plano-dialog'
 
 const STATUS_BADGE: Record<
 	string,
-	{ label: string; variant: 'success-outline' | 'warning-outline' }
+	{
+		label: string
+		variant: 'success-outline' | 'warning-outline' | 'info-outline'
+	}
 > = {
 	active: { label: 'Ativa', variant: 'success-outline' },
 	past_due: { label: 'Pagamento pendente', variant: 'warning-outline' },
+	access_grant: { label: 'Cortesia', variant: 'info-outline' },
 }
 
 const CHECKOUT_SUCCESS_POLL_MS = 3000
@@ -115,10 +120,19 @@ export function PlanoFaturamentoSection({
 		)
 	}
 
-	const { plan, subscriptionStatus, currentPeriodEnd, cancelAtPeriodEnd } = data
+	const {
+		plan,
+		subscriptionStatus,
+		currentPeriodEnd,
+		cancelAtPeriodEnd,
+		accessGrant,
+	} = data
+	const isOnAccessGrant = !subscriptionStatus && Boolean(accessGrant)
 	const statusBadge = subscriptionStatus
 		? STATUS_BADGE[subscriptionStatus]
-		: null
+		: isOnAccessGrant
+			? STATUS_BADGE.access_grant
+			: null
 	const usagePercent =
 		plan?.monthlyCorrectionsLimit && plan.monthlyCorrectionsLimit > 0
 			? Math.min(
@@ -207,7 +221,14 @@ export function PlanoFaturamentoSection({
 								</p>
 							)}
 
-							{!cancelAtPeriodEnd && (
+							{accessGrant && isOnAccessGrant && (
+								<CortesiaPlanoAviso
+									expiresAt={accessGrant.expiresAt}
+									preselectedSlug={preselectedSlug}
+								/>
+							)}
+
+							{subscriptionStatus && !cancelAtPeriodEnd && (
 								<div className="flex flex-col gap-2 sm:flex-row pt-1">
 									<Button
 										variant="outline"

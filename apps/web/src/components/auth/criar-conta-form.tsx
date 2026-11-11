@@ -33,7 +33,11 @@ import { GoogleIcon } from './google-icon'
 
 type RegisterInput = z.infer<typeof signUpWithEmailSchema>
 
-export function CriarContaForm() {
+interface CriarContaFormProps {
+	defaultEmail?: string
+}
+
+export function CriarContaForm({ defaultEmail }: CriarContaFormProps) {
 	const [isLoading, setIsLoading] = React.useState(false)
 	const [registeredEmail, setRegisteredEmail] = React.useState<string | null>(
 		null,
@@ -47,7 +51,7 @@ export function CriarContaForm() {
 		resolver: zodResolver(signUpWithEmailSchema),
 		defaultValues: {
 			name: '',
-			email: '',
+			email: defaultEmail ?? '',
 			password: '',
 		},
 	})

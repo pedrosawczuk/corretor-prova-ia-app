@@ -16,6 +16,7 @@ const PUBLIC_INFORMATIVE_ROUTES = [
 	'/sair',
 	'/pricing',
 ]
+const PUBLIC_PREFIX_ROUTES = ['/convite/']
 
 export function proxy(request: NextRequest) {
 	const { pathname } = request.nextUrl
@@ -23,7 +24,9 @@ export function proxy(request: NextRequest) {
 
 	const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route))
 	const isPublicRoute =
-		isAuthRoute || PUBLIC_INFORMATIVE_ROUTES.some((route) => pathname === route)
+		isAuthRoute ||
+		PUBLIC_INFORMATIVE_ROUTES.some((route) => pathname === route) ||
+		PUBLIC_PREFIX_ROUTES.some((route) => pathname.startsWith(route))
 	const isPrivateRoute = !isPublicRoute
 
 	if (isPrivateRoute && !sessionCookie) {

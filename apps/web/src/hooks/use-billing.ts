@@ -20,6 +20,10 @@ export interface BillingStatus {
 	correctionsUsed: number
 	creditBalance: number
 	hasBillingCustomer: boolean
+	accessGrant: {
+		source: 'invite' | 'privileged_email'
+		expiresAt: string
+	} | null
 }
 
 interface CheckoutResponse {
