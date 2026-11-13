@@ -1,4 +1,4 @@
-import { db, eq, submissionPagesTable } from '@app/db'
+import { db, eq, submissionPagesTable, submissionsTable } from '@app/db'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { fileTypeFromBuffer } from 'file-type'
 import heicConvert from 'heic-convert'
@@ -19,11 +19,93 @@ const MIN_PAGE_DIMENSION = 900
 const HEIC_MIME_TYPES = new Set(['image/heic', 'image/heif'])
 const MAX_INPUT_PIXELS = 30_000_000
 
+const ISOBMFF_CONTAINER_BOXES = new Set([
+	'meta',
+	'iprp',
+	'ipco',
+	'moov',
+	'trak',
+	'mdia',
+	'minf',
+	'stbl',
+])
+
+function extractHeicIspeDimensions(
+	buffer: Buffer,
+	start = 0,
+	end = buffer.length,
+	results: Array<{ width: number; height: number }> = [],
+): Array<{ width: number; height: number }> {
+	let offset = start
+
+	while (offset + 8 <= end) {
+		const rawSize = buffer.readUInt32BE(offset)
+		const type = buffer.toString('ascii', offset + 4, offset + 8)
+		let headerSize = 8
+		let boxSize = rawSize
+
+		if (rawSize === 1) {
+			if (offset + 16 > end) break
+			const largeSize = Number(buffer.readBigUInt64BE(offset + 8))
+			if (!Number.isSafeInteger(largeSize) || largeSize < 16) break
+			headerSize = 16
+			boxSize = largeSize
+		} else if (rawSize === 0) {
+			boxSize = end - offset
+		} else if (rawSize < 8) {
+			break
+		}
+
+		const boxEnd = Math.min(offset + boxSize, end)
+		const payloadStart = offset + headerSize
+
+		if (type === 'ispe') {
+			// FullBox: 4 bytes version/flags + 4 bytes width + 4 bytes height
+			if (payloadStart + 12 <= boxEnd) {
+				const width = buffer.readUInt32BE(payloadStart + 4)
+				const height = buffer.readUInt32BE(payloadStart + 8)
+				results.push({ width, height })
+			}
+		} else if (ISOBMFF_CONTAINER_BOXES.has(type)) {
+			// `meta` is a FullBox (4-byte version/flags before child boxes)
+			const childStart = type === 'meta' ? payloadStart + 4 : payloadStart
+			if (childStart < boxEnd) {
+				extractHeicIspeDimensions(buffer, childStart, boxEnd, results)
+			}
+		}
+
+		if (boxEnd <= offset) break
+		offset = boxEnd
+	}
+
+	return results
+}
+
+function assertHeicDimensionsWithinLimit(buffer: Buffer): void {
+	const dimensions = extractHeicIspeDimensions(buffer)
+
+	if (dimensions.length === 0) {
+		throw new BadRequestError(
+			'Não foi possível ler com segurança as dimensões da imagem HEIC.',
+		)
+	}
+
+	for (const { width, height } of dimensions) {
+		if (width <= 0 || height <= 0 || width * height > MAX_INPUT_PIXELS) {
+			throw new BadRequestError(
+				'A imagem enviada é grande demais para ser processada.',
+			)
+		}
+	}
+}
+
 async function decodeToJpegCompatibleBuffer(
 	buffer: Buffer,
 	mime: string,
 ): Promise<Buffer> {
 	if (!HEIC_MIME_TYPES.has(mime)) return buffer
+
+	assertHeicDimensionsWithinLimit(buffer)
 
 	const converted = await heicConvert({
 		buffer,
@@ -41,7 +123,7 @@ export async function uploadSubmissionPageModule(
 	const user = await getAuthenticatedUser(request)
 	const { submissionId } = request.params
 
-	const { submission } = await fetchOwnedSubmission(submissionId, user.id)
+	const { submission, exam } = await fetchOwnedSubmission(submissionId, user.id)
 
 	if (NON_EDITABLE_SUBMISSION_STATUSES.has(submission.status)) {
 		throw new ConflictError(
@@ -109,19 +191,38 @@ export async function uploadSubmissionPageModule(
 
 	const objectName = await uploadSubmissionPage(normalizedBuffer, 'image/jpeg')
 
-	const existingPages = await db
-		.select({ pageNumber: submissionPagesTable.pageNumber })
-		.from(submissionPagesTable)
-		.where(eq(submissionPagesTable.submissionId, submissionId))
+	const page = await db.transaction(async (tx) => {
+		await tx
+			.select({ id: submissionsTable.id })
+			.from(submissionsTable)
+			.where(eq(submissionsTable.id, submissionId))
+			.for('update')
 
-	const [page] = await db
-		.insert(submissionPagesTable)
-		.values({
-			submissionId,
-			pageNumber: existingPages.length + 1,
-			imageUrl: objectName,
-		})
-		.returning()
+		const existingPages = await tx
+			.select({ pageNumber: submissionPagesTable.pageNumber })
+			.from(submissionPagesTable)
+			.where(eq(submissionPagesTable.submissionId, submissionId))
+
+		if (
+			exam.templatePageCount != null &&
+			existingPages.length >= exam.templatePageCount
+		) {
+			throw new ConflictError(
+				`Esta prova possui ${exam.templatePageCount} página(s); não é possível enviar mais páginas.`,
+			)
+		}
+
+		const [created] = await tx
+			.insert(submissionPagesTable)
+			.values({
+				submissionId,
+				pageNumber: existingPages.length + 1,
+				imageUrl: objectName,
+			})
+			.returning()
+
+		return created
+	})
 
 	return reply.status(201).send({
 		...page,

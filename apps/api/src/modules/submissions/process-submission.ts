@@ -2,7 +2,7 @@ import {
 	and,
 	db,
 	eq,
-	ne,
+	inArray,
 	submissionAnswersTable,
 	submissionPagesTable,
 	submissionsTable,
@@ -35,6 +35,15 @@ export async function processSubmissionModule(
 		throw new ConflictError('Esta submissão já está sendo processada.')
 	}
 
+	if (
+		submission.status !== 'pending_processing' &&
+		submission.status !== 'failed'
+	) {
+		throw new ConflictError(
+			'Esta submissão já foi corrigida e não pode ser reprocessada.',
+		)
+	}
+
 	if (!exam.templatePageCount) {
 		throw new BadRequestError(
 			'Exporte a prova em PDF antes de corrigir por foto — é isso que trava onde cada alternativa fica impressa.',
@@ -50,6 +59,12 @@ export async function processSubmissionModule(
 	if (pages.length === 0) {
 		throw new BadRequestError(
 			'Envie ao menos uma foto da folha de respostas antes de processar.',
+		)
+	}
+
+	if (pages.length > exam.templatePageCount) {
+		throw new BadRequestError(
+			`A submissão possui ${pages.length} página(s), acima do máximo de ${exam.templatePageCount} página(s) da prova.`,
 		)
 	}
 
@@ -77,7 +92,7 @@ export async function processSubmissionModule(
 		.where(
 			and(
 				eq(submissionsTable.id, submissionId),
-				ne(submissionsTable.status, 'processing'),
+				inArray(submissionsTable.status, ['pending_processing', 'failed']),
 			),
 		)
 		.returning({ id: submissionsTable.id })

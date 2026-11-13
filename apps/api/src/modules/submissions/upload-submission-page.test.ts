@@ -18,7 +18,7 @@ import {
 	uploadSubmissionPage,
 } from '@/lib/storage/storage'
 import { buildMultipartPayload } from '@/test/build-multipart-payload'
-import { createDbChain } from '@/test/create-db-chain'
+import { createDbChain, createDbTransactionMock } from '@/test/create-db-chain'
 import { createTestApp } from '@/test/create-test-app'
 import { makeAuthenticatedUser } from '@/test/factories/make-authenticated-user'
 import { makeExam } from '@/test/factories/make-exam'
@@ -76,21 +76,42 @@ describe('POST /submissions/:submissionId/pages', () => {
 		)
 	})
 
-	function mockOwnedSubmission(overrides: { examCreatorId?: string } = {}) {
-		const exam = makeExam({ creatorId: overrides.examCreatorId ?? user.id })
+	function mockOwnedSubmission(
+		overrides: {
+			examCreatorId?: string
+			templatePageCount?: number | null
+			existingPagesCount?: number
+		} = {},
+	) {
+		const exam = makeExam({
+			creatorId: overrides.examCreatorId ?? user.id,
+			templatePageCount: overrides.templatePageCount ?? null,
+		})
 		const submission = makeSubmission({ examId: exam.id })
+		const existingPages = Array.from(
+			{ length: overrides.existingPagesCount ?? 0 },
+			(_, i) => ({ pageNumber: i + 1 }),
+		)
 
 		vi.mocked(db.select)
 			.mockReturnValueOnce(createDbChain([{ submission, exam }]) as never)
-			.mockReturnValue(createDbChain([]) as never)
+			.mockReturnValue(createDbChain(existingPages) as never)
 
 		const page = makeSubmissionPage({
 			submissionId: submission.id,
-			pageNumber: 1,
+			pageNumber: existingPages.length + 1,
 		})
+		const txSelect = vi
+			.fn()
+			.mockReturnValueOnce(createDbChain([{ id: submission.id }]) as never)
+			.mockReturnValueOnce(createDbChain(existingPages) as never)
+		const txInsert = vi.fn().mockReturnValue(createDbChain([page]) as never)
+		vi.mocked(db.transaction).mockImplementation(
+			createDbTransactionMock({ select: txSelect, insert: txInsert }) as never,
+		)
 		vi.mocked(db.insert).mockReturnValue(createDbChain([page]) as never)
 
-		return { exam, submission, page }
+		return { exam, submission, page, txInsert }
 	}
 
 	it('aceita uma foto JPEG e cria a página da submissão', async () => {
@@ -332,5 +353,81 @@ describe('POST /submissions/:submissionId/pages', () => {
 		expect(response.statusCode).toBe(409)
 		expect(uploadSubmissionPage).not.toHaveBeenCalled()
 		expect(db.insert).not.toHaveBeenCalled()
+	})
+
+	it('rejeita com 400 payload HEIC com dimensões acima de 30.000.000 pixels no header ispe antes de decodificar', async () => {
+		const { submission } = mockOwnedSubmission()
+		const heicBuffer = Buffer.from(readFileSync(HEIC_FIXTURE_PATH))
+		const ispeIndex = heicBuffer.indexOf('ispe')
+		expect(ispeIndex).toBeGreaterThan(-1)
+		// ispe: [size(4)][type='ispe'(4)][version+flags(4)][width(4)][height(4)]
+		heicBuffer.writeUInt32BE(10_000, ispeIndex + 8)
+		heicBuffer.writeUInt32BE(10_000, ispeIndex + 12)
+
+		const { payload, headers } = buildMultipartPayload(
+			heicBuffer,
+			'bomba.heic',
+			'image/heic',
+		)
+
+		const response = await app.inject({
+			method: 'POST',
+			url: `/submissions/${submission.id}/pages`,
+			payload,
+			headers,
+		})
+
+		expect(response.statusCode).toBe(400)
+		expect(uploadSubmissionPage).not.toHaveBeenCalled()
+		expect(db.insert).not.toHaveBeenCalled()
+	})
+
+	it('rejeita com 400 payload HEIC sem box ispe válido', async () => {
+		const { submission } = mockOwnedSubmission()
+		// Minimal ftyp box for image/heic without any ispe box
+		const heicWithoutIspe = Buffer.from([
+			0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x63,
+			0x00, 0x00, 0x00, 0x00, 0x6d, 0x69, 0x66, 0x31, 0x68, 0x65, 0x69, 0x63,
+		])
+
+		const { payload, headers } = buildMultipartPayload(
+			heicWithoutIspe,
+			'sem-ispe.heic',
+			'image/heic',
+		)
+
+		const response = await app.inject({
+			method: 'POST',
+			url: `/submissions/${submission.id}/pages`,
+			payload,
+			headers,
+		})
+
+		expect(response.statusCode).toBe(400)
+		expect(uploadSubmissionPage).not.toHaveBeenCalled()
+		expect(db.insert).not.toHaveBeenCalled()
+	})
+
+	it('bloqueia com 409 quando a submissão já atingiu o limite de exam.templatePageCount', async () => {
+		const { submission, txInsert } = mockOwnedSubmission({
+			templatePageCount: 1,
+			existingPagesCount: 1,
+		})
+		const jpeg = await makeJpegBuffer(1200, 1600)
+		const { payload, headers } = buildMultipartPayload(
+			jpeg,
+			'pagina-extra.jpg',
+			'image/jpeg',
+		)
+
+		const response = await app.inject({
+			method: 'POST',
+			url: `/submissions/${submission.id}/pages`,
+			payload,
+			headers,
+		})
+
+		expect(response.statusCode).toBe(409)
+		expect(txInsert).not.toHaveBeenCalled()
 	})
 })

@@ -322,4 +322,53 @@ describe('POST /submissions/:submissionId/process', () => {
 			'Esta submissão já está sendo processada.',
 		)
 	})
+
+	it.each(['needs_review', 'completed'] as const)(
+		'bloqueia com 409 tentativa de reprocessamento quando status é %s',
+		async (status) => {
+			const exam = makeExam({ creatorId: user.id, templatePageCount: 1 })
+			const submission = makeSubmission({ examId: exam.id, status })
+
+			vi.mocked(db.select).mockReturnValueOnce(
+				createDbChain([{ submission, exam }]) as never,
+			)
+
+			const response = await app.inject({
+				method: 'POST',
+				url: `/submissions/${submission.id}/process`,
+			})
+
+			expect(response.statusCode).toBe(409)
+			expect(downloadSubmissionPage).not.toHaveBeenCalled()
+			expect(readSubmissionAnswers).not.toHaveBeenCalled()
+		},
+	)
+
+	it('rejeita com 400 quando a submissão possui mais páginas do que exam.templatePageCount', async () => {
+		const exam = makeExam({ creatorId: user.id, templatePageCount: 1 })
+		const submission = makeSubmission({
+			examId: exam.id,
+			status: 'pending_processing',
+		})
+		const page1 = makeSubmissionPage({
+			submissionId: submission.id,
+			pageNumber: 1,
+		})
+		const page2 = makeSubmissionPage({
+			submissionId: submission.id,
+			pageNumber: 2,
+		})
+
+		vi.mocked(db.select)
+			.mockReturnValueOnce(createDbChain([{ submission, exam }]) as never)
+			.mockReturnValueOnce(createDbChain([page1, page2]) as never)
+
+		const response = await app.inject({
+			method: 'POST',
+			url: `/submissions/${submission.id}/process`,
+		})
+
+		expect(response.statusCode).toBe(400)
+		expect(downloadSubmissionPage).not.toHaveBeenCalled()
+	})
 })
