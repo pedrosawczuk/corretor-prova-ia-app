@@ -9,6 +9,7 @@ import type {
 import { type AiReadableQuestion, mergeAiReadings } from './merge-ai-readings'
 
 const AI_READING_PASSES = 2
+const AI_READING_CONCURRENCY = 4
 
 export interface AiReadingQuestion extends OmrQuestion {
 	statement: string
@@ -37,12 +38,29 @@ export async function readAnswersWithAi(
 		}),
 	)
 
-	const passes = await Promise.all(
-		Array.from({ length: AI_READING_PASSES }, () =>
-			Promise.all(
-				pages.map((page) => readPageMarkedAnswers(page.data, promptQuestions)),
-			),
-		),
+	const passes: Awaited<ReturnType<typeof readPageMarkedAnswers>>[][] =
+		Array.from({ length: AI_READING_PASSES }, () => new Array(pages.length))
+
+	const tasks: Array<{ passIndex: number; pageIndex: number }> = []
+	for (let passIndex = 0; passIndex < AI_READING_PASSES; passIndex++) {
+		for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
+			tasks.push({ passIndex, pageIndex })
+		}
+	}
+
+	let nextTaskIndex = 0
+	const workerCount = Math.min(AI_READING_CONCURRENCY, tasks.length)
+	await Promise.all(
+		Array.from({ length: workerCount }, async () => {
+			while (nextTaskIndex < tasks.length) {
+				const currentIndex = nextTaskIndex++
+				const { passIndex, pageIndex } = tasks[currentIndex]
+				passes[passIndex][pageIndex] = await readPageMarkedAnswers(
+					pages[pageIndex].data,
+					promptQuestions,
+				)
+			}
+		}),
 	)
 
 	return mergeAiReadings(readableQuestions, passes)
