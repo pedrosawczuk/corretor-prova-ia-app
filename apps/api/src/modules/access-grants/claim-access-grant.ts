@@ -57,9 +57,16 @@ export async function claimAccessGrant(
 		const [privilegedEmail] = invite
 			? []
 			: await tx
-					.select({ id: privilegedEmailsTable.id })
-					.from(privilegedEmailsTable)
-					.where(eq(privilegedEmailsTable.email, email))
+					.update(privilegedEmailsTable)
+					.set({ claimedAt: now })
+					.where(
+						and(
+							eq(privilegedEmailsTable.email, email),
+							isNull(privilegedEmailsTable.claimedAt),
+							isNull(privilegedEmailsTable.revokedAt),
+						),
+					)
+					.returning({ id: privilegedEmailsTable.id })
 
 		if (!invite && !privilegedEmail) {
 			return false
