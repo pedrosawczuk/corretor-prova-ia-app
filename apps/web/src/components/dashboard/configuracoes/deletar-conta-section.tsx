@@ -24,7 +24,7 @@ import {
 	toast,
 } from '@app/ui'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { AlertTriangle, Mail, Trash2 } from 'lucide-react'
+import { AlertTriangle, Lock, Mail, Trash2 } from 'lucide-react'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -34,9 +34,13 @@ import type { AuthUser } from '@/lib/auth-server'
 
 interface DeletarContaSectionProps {
 	user: AuthUser
+	hasPassword?: boolean
 }
 
-export function DeletarContaSection({ user }: DeletarContaSectionProps) {
+export function DeletarContaSection({
+	user,
+	hasPassword = true,
+}: DeletarContaSectionProps) {
 	const [isOpen, setIsOpen] = React.useState(false)
 	const [isLoading, setIsLoading] = React.useState(false)
 
@@ -54,8 +58,11 @@ export function DeletarContaSection({ user }: DeletarContaSectionProps) {
 								'O e-mail digitado não corresponde ao seu e-mail cadastrado.',
 						},
 					),
+				password: hasPassword
+					? z.string().min(1, 'Digite sua senha atual para confirmar')
+					: z.string().optional(),
 			}),
-		[user.email],
+		[user.email, hasPassword],
 	)
 
 	type ConfirmDeleteInput = z.infer<typeof confirmDeleteSchema>
@@ -64,6 +71,7 @@ export function DeletarContaSection({ user }: DeletarContaSectionProps) {
 		resolver: zodResolver(confirmDeleteSchema),
 		defaultValues: {
 			email: '',
+			password: '',
 		},
 	})
 
@@ -71,15 +79,29 @@ export function DeletarContaSection({ user }: DeletarContaSectionProps) {
 		setIsLoading(true)
 
 		try {
-			await apiClient('/auth/delete-account', {
+			const response = await apiClient<{
+				message: string
+				requiresEmailVerification?: boolean
+			}>('/auth/delete-account', {
 				method: 'POST',
-				body: JSON.stringify({ email: data.email }),
+				body: JSON.stringify(
+					hasPassword
+						? { email: data.email, password: data.password }
+						: { email: data.email },
+				),
 			})
 
-			toast.success('Sua conta foi excluída com sucesso.')
 			setIsOpen(false)
 			form.reset()
 
+			if (response.requiresEmailVerification) {
+				toast.success(
+					'Enviamos um e-mail de confirmação. Acesse o link enviado para concluir a exclusão da conta.',
+				)
+				return
+			}
+
+			toast.success('Sua conta foi excluída com sucesso.')
 			window.location.href = '/entrar'
 		} catch (error) {
 			applyApiErrorsToForm(
@@ -196,6 +218,38 @@ export function DeletarContaSection({ user }: DeletarContaSectionProps) {
 												</FormItem>
 											)}
 										/>
+
+										{hasPassword ? (
+											<FormField
+												control={form.control}
+												name="password"
+												render={({ field }) => (
+													<FormItem>
+														<FormLabel
+															required
+															leftIcon={<Lock className="size-3.5" />}
+														>
+															Senha Atual
+														</FormLabel>
+														<FormControl>
+															<Input
+																placeholder="Digite sua senha atual"
+																type="password"
+																autoComplete="current-password"
+																disabled={isLoading}
+																{...field}
+															/>
+														</FormControl>
+														<FormMessage />
+													</FormItem>
+												)}
+											/>
+										) : (
+											<p className="text-xs text-muted-foreground rounded-lg border border-border/60 bg-muted/40 p-3">
+												Como sua conta usa login social, enviaremos um link de
+												confirmação para o seu e-mail para concluir a exclusão.
+											</p>
+										)}
 									</form>
 								</Form>
 							</div>

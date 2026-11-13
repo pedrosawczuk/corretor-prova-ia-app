@@ -10,6 +10,21 @@ describe('duração da sessão (better-auth session.expiresIn)', () => {
 
 		expect(auth.options.session?.expiresIn).toBe(60 * 60 * 24 * 30)
 	})
+
+	it('habilita revogação de sessões ao redefinir senha (revokeSessionsOnPasswordReset)', async () => {
+		const { auth } = await import('./auth')
+
+		expect(auth.options.emailAndPassword?.revokeSessionsOnPasswordReset).toBe(
+			true,
+		)
+	})
+
+	it('habilita exclusão de conta com step-up (user.deleteUser.enabled e session.freshAge)', async () => {
+		const { auth } = await import('./auth')
+
+		expect(auth.options.user?.deleteUser?.enabled).toBe(true)
+		expect(auth.options.session?.freshAge).toBe(60 * 30)
+	})
 })
 
 describe('criptografia de tokens OAuth (better-auth account.encryptOAuthTokens)', () => {

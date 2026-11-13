@@ -77,6 +77,23 @@ export async function sendVerificationEmail({
 	})
 }
 
+export async function sendDeleteAccountVerificationEmail({
+	to,
+	name,
+	verificationUrl,
+}: SendVerificationEmailParams) {
+	if (!env.RESEND_API_KEY || !env.MAIL_FROM) {
+		return
+	}
+
+	await resend.emails.send({
+		from: env.MAIL_FROM,
+		to,
+		subject: 'Confirme a exclusão da sua conta — gabarita.app',
+		html: `<p>Olá, ${name}.</p><p>Recebemos uma solicitação para excluir permanentemente sua conta no gabarita.app.</p><p>Se você deseja confirmar esta ação, acesse o link abaixo:</p><p><a href="${verificationUrl}">Confirmar exclusão da conta</a></p><p>Se você não solicitou a exclusão, ignore este e-mail.</p>`,
+	})
+}
+
 interface SendTwoFactorOtpEmailParams {
 	to: string
 	name: string

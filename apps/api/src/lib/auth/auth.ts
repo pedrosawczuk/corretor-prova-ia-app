@@ -1,11 +1,13 @@
 import dayjs from '@app/dayjs'
-import { db, eq, user as userTable } from '@app/db'
+import { db, eq, session as sessionTable, user as userTable } from '@app/db'
 import { env } from '@app/env'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import { createAuthMiddleware } from 'better-auth/api'
 import { admin, twoFactor } from 'better-auth/plugins'
 import { claimAccessGrant } from '@/modules/access-grants/claim-access-grant'
 import {
+	sendDeleteAccountVerificationEmail,
 	sendNewLoginEmail,
 	sendPasswordResetEmail,
 	sendTwoFactorOtpEmail,
@@ -20,6 +22,7 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 		requireEmailVerification: true,
+		revokeSessionsOnPasswordReset: true,
 		sendResetPassword: async ({ user, url }) => {
 			await sendPasswordResetEmail({
 				to: user.email,
@@ -40,6 +43,16 @@ export const auth = betterAuth({
 		},
 	},
 	user: {
+		deleteUser: {
+			enabled: true,
+			sendDeleteAccountVerification: async ({ user, url }) => {
+				await sendDeleteAccountVerificationEmail({
+					to: user.email,
+					name: user.name,
+					verificationUrl: url,
+				})
+			},
+		},
 		additionalFields: {
 			phoneNumber: {
 				type: 'string',
@@ -50,6 +63,14 @@ export const auth = betterAuth({
 	},
 	session: {
 		expiresIn: 60 * 60 * 24 * 30,
+		freshAge: 60 * 30,
+		additionalFields: {
+			twoFactorVerifiedAt: {
+				type: 'date',
+				required: false,
+				input: false,
+			},
+		},
 	},
 	onAPIError: {
 		errorURL: `${env.WEB_URL}/erro-autenticacao`,
@@ -82,6 +103,29 @@ export const auth = betterAuth({
 			},
 		}),
 	],
+	hooks: {
+		after: createAuthMiddleware(async (ctx) => {
+			if (
+				ctx.path === '/two-factor/verify-totp' ||
+				ctx.path === '/two-factor/verify-otp' ||
+				ctx.path === '/two-factor/verify-backup-code'
+			) {
+				if (ctx.context.returned instanceof Error) {
+					return
+				}
+
+				const verifiedSession =
+					ctx.context.newSession?.session ?? ctx.context.session?.session
+
+				if (verifiedSession?.id) {
+					await db
+						.update(sessionTable)
+						.set({ twoFactorVerifiedAt: new Date() })
+						.where(eq(sessionTable.id, verifiedSession.id))
+				}
+			}
+		}),
+	},
 	databaseHooks: {
 		session: {
 			create: {

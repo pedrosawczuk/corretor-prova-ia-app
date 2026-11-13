@@ -129,7 +129,10 @@ export default async function ConfiguracoesPage({
 					</section>
 
 					<section id="deletar-conta" className="scroll-mt-6">
-						<DeletarContaSection user={authSession.user} />
+						<DeletarContaSection
+							user={authSession.user}
+							hasPassword={hasPassword}
+						/>
 					</section>
 				</div>
 			</div>

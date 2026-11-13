@@ -1,4 +1,4 @@
-import { db, eq, user as userTable } from '@app/db'
+import { env } from '@app/env'
 import type { DeleteAccountInput } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { BadRequestError } from '@/core/errors'
@@ -11,7 +11,7 @@ export async function deleteAccountModule(
 	reply: FastifyReply,
 ) {
 	const authenticatedUser = await getAuthenticatedUser(request)
-	const { email } = request.body
+	const { email, password } = request.body
 
 	if (authenticatedUser.email.toLowerCase() !== email.trim().toLowerCase()) {
 		throw new BadRequestError(
@@ -19,14 +19,31 @@ export async function deleteAccountModule(
 		)
 	}
 
-	await db.delete(userTable).where(eq(userTable.id, authenticatedUser.id))
-
-	const response = await auth.api.signOut({
+	const response = await auth.api.deleteUser({
+		body: {
+			...(password ? { password } : {}),
+			callbackURL: `${env.WEB_URL}/entrar`,
+		},
 		asResponse: true,
 		headers: toFetchHeaders(request.headers),
 	})
 
 	forwardWebResponse(response, reply)
 
-	return reply.status(200).send({ message: 'Conta deletada com sucesso.' })
+	if (!response.ok) {
+		const data = await response.json()
+		return reply.status(response.status).send(data)
+	}
+
+	if (!password) {
+		return reply.status(200).send({
+			message: 'Enviamos um e-mail de confirmação para excluir sua conta.',
+			requiresEmailVerification: true,
+		})
+	}
+
+	return reply.status(200).send({
+		message: 'Conta deletada com sucesso.',
+		requiresEmailVerification: false,
+	})
 }

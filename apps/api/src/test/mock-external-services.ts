@@ -12,6 +12,7 @@ vi.mock('@/lib/auth/auth', () => ({
 	auth: {
 		api: {
 			changePassword: vi.fn(),
+			deleteUser: vi.fn(),
 			disableTwoFactor: vi.fn(),
 			enableTwoFactor: vi.fn(),
 			requestPasswordReset: vi.fn(),
