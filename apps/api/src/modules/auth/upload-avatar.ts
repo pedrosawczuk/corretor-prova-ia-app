@@ -61,7 +61,7 @@ export async function uploadAvatarModule(
 	forwardWebResponse(response, reply)
 
 	if (previousImage) {
-		await deleteObjectByPublicUrl(previousImage)
+		await deleteObjectByPublicUrl(previousImage, session.user.id)
 	}
 
 	const data = await response.json()

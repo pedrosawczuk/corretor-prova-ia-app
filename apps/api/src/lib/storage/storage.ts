@@ -43,8 +43,8 @@ function getPublicBaseUrl() {
 	return `${protocol}://${env.MINIO_ENDPOINT}:${env.MINIO_PORT}/${env.MINIO_BUCKET}/`
 }
 
-export async function uploadAvatar(_userId: string, buffer: Buffer) {
-	const objectName = `${AVATARS_PREFIX}${randomUUID()}.webp`
+export async function uploadAvatar(userId: string, buffer: Buffer) {
+	const objectName = `${AVATARS_PREFIX}${userId}/${randomUUID()}.webp`
 
 	await storageClient.putObject(
 		env.MINIO_BUCKET,
@@ -57,12 +57,18 @@ export async function uploadAvatar(_userId: string, buffer: Buffer) {
 	return `${getPublicBaseUrl()}${objectName}`
 }
 
-export async function deleteObjectByPublicUrl(url: string) {
+export async function deleteObjectByPublicUrl(url: string, userId: string) {
+	if (!userId) return
+
 	const baseUrl = getPublicBaseUrl()
 	if (!url.startsWith(baseUrl)) return
 
 	const objectName = url.slice(baseUrl.length)
-	if (!objectName.startsWith(AVATARS_PREFIX)) return
+	const escapedUserId = userId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+	const avatarKeyPattern = new RegExp(
+		`^${AVATARS_PREFIX}${escapedUserId}/[0-9a-f-]+\\.webp$`,
+	)
+	if (!avatarKeyPattern.test(objectName)) return
 
 	await storageClient.removeObject(env.MINIO_BUCKET, objectName).catch(() => {})
 }
