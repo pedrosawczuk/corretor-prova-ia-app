@@ -153,4 +153,28 @@ describe('DELETE /submissions/:submissionId/pages/:pageId', () => {
 		expect(response.statusCode).toBe(409)
 		expect(db.transaction).not.toHaveBeenCalled()
 	})
+
+	it('bloqueia com 409 quando a submissão está em needs_review', async () => {
+		const exam = makeExam({ creatorId: user.id })
+		const submission = makeSubmission({
+			examId: exam.id,
+			status: 'needs_review',
+		})
+		const page = makeSubmissionPage({
+			submissionId: submission.id,
+			pageNumber: 1,
+		})
+
+		vi.mocked(db.select).mockReturnValueOnce(
+			createDbChain([{ submission, exam }]) as never,
+		)
+
+		const response = await app.inject({
+			method: 'DELETE',
+			url: `/submissions/${submission.id}/pages/${page.id}`,
+		})
+
+		expect(response.statusCode).toBe(409)
+		expect(db.transaction).not.toHaveBeenCalled()
+	})
 })
