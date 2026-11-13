@@ -18,8 +18,6 @@ import { resolveAccessGrantUsagePeriod } from '@/modules/access-grants/resolve-a
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
-const CORRECTION_QUOTA_CHECK_ENABLED = false
-
 async function resolveAccessGrantAllowance(tx: Transaction, userId: string) {
 	const accessGrant = await findActiveAccessGrant(tx, userId)
 
@@ -40,10 +38,6 @@ export async function assertCorrectionQuotaAvailable(
 	tx: Transaction,
 	userId: string,
 ): Promise<void> {
-	if (!CORRECTION_QUOTA_CHECK_ENABLED) {
-		return
-	}
-
 	await tx
 		.select({ id: user.id })
 		.from(user)
