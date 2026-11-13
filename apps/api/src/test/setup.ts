@@ -9,12 +9,16 @@ import {
 } from '@/lib/mail/mail'
 
 vi.mock('@app/db', () => ({
+	accessGrantRemindersTable: {},
+	accessGrantsTable: {},
 	billingCustomersTable: {},
 	billingEventsTable: {},
 	classroomsTable: {},
 	correctionCreditsTable: {},
 	examsTable: {},
+	invitesTable: {},
 	plansTable: {},
+	privilegedEmailsTable: {},
 	questionsTable: {},
 	questionOptionsTable: {},
 	subjectsTable: {},
@@ -35,9 +39,11 @@ vi.mock('@app/db', () => ({
 	count: vi.fn(),
 	desc: vi.fn(),
 	eq: vi.fn(),
+	gt: vi.fn(),
 	gte: vi.fn(),
 	inArray: vi.fn(),
 	isNotNull: vi.fn(),
+	isNull: vi.fn(),
 	lte: vi.fn(),
 	ne: vi.fn(),
 	sql: vi.fn(),
