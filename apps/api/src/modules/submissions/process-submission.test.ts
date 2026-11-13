@@ -68,7 +68,9 @@ describe('POST /submissions/:submissionId/process', () => {
 		vi.mocked(getSubmissionPageSignedUrl).mockResolvedValue(
 			'https://minio.local/signed-url',
 		)
-		vi.mocked(db.update).mockReturnValue(createDbChain([]) as never)
+		vi.mocked(db.update).mockReturnValue(
+			createDbChain([{ id: 'sub-1' }]) as never,
+		)
 	})
 
 	it('corrige automaticamente as questões com confiança suficiente e deixa o resto pendente de revisão', async () => {
@@ -288,5 +290,36 @@ describe('POST /submissions/:submissionId/process', () => {
 		})
 
 		expect(response.statusCode).toBe(409)
+	})
+
+	it('retorna 409 quando a atualização atômica de status para processing falha por concorrência', async () => {
+		const exam = makeExam({ creatorId: user.id, templatePageCount: 1 })
+		const submission = makeSubmission({
+			examId: exam.id,
+			status: 'pending_processing',
+		})
+		const page = makeSubmissionPage({
+			submissionId: submission.id,
+			pageNumber: 1,
+		})
+		const question = makeQuestion({ examId: exam.id })
+
+		vi.mocked(db.select)
+			.mockReturnValueOnce(createDbChain([{ submission, exam }]) as never)
+			.mockReturnValueOnce(createDbChain([page]) as never)
+			.mockReturnValueOnce(createDbChain([question]) as never)
+			.mockReturnValueOnce(createDbChain([]) as never)
+
+		vi.mocked(db.update).mockReturnValueOnce(createDbChain([]) as never)
+
+		const response = await app.inject({
+			method: 'POST',
+			url: `/submissions/${submission.id}/process`,
+		})
+
+		expect(response.statusCode).toBe(409)
+		expect(response.json().message).toBe(
+			'Esta submissão já está sendo processada.',
+		)
 	})
 })

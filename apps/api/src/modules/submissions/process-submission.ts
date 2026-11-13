@@ -1,6 +1,8 @@
 import {
+	and,
 	db,
 	eq,
+	ne,
 	submissionAnswersTable,
 	submissionPagesTable,
 	submissionsTable,
@@ -69,10 +71,20 @@ export async function processSubmissionModule(
 		throw new BadRequestError('Esta prova ainda não possui questões.')
 	}
 
-	await db
+	const [updated] = await db
 		.update(submissionsTable)
 		.set({ status: 'processing' })
-		.where(eq(submissionsTable.id, submissionId))
+		.where(
+			and(
+				eq(submissionsTable.id, submissionId),
+				ne(submissionsTable.status, 'processing'),
+			),
+		)
+		.returning({ id: submissionsTable.id })
+
+	if (!updated) {
+		throw new ConflictError('Esta submissão já está sendo processada.')
+	}
 
 	try {
 		const pageImages = await Promise.all(
