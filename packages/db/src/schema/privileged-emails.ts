@@ -8,5 +8,7 @@ export const privilegedEmailsTable = pgTable('privileged_emails', {
 	createdByUserId: text('created_by_user_id').references(() => user.id, {
 		onDelete: 'set null',
 	}),
+	claimedAt: timestamp('claimed_at'),
+	revokedAt: timestamp('revoked_at'),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 })

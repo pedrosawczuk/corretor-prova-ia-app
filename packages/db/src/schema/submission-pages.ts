@@ -5,6 +5,7 @@ import {
 	pgTable,
 	text,
 	timestamp,
+	uniqueIndex,
 	uuid,
 } from 'drizzle-orm/pg-core'
 import { submissionsTable } from './submissions'
@@ -23,5 +24,9 @@ export const submissionPagesTable = pgTable(
 	},
 	(table) => [
 		index('submission_pages_submission_id_idx').on(table.submissionId),
+		uniqueIndex('submission_pages_submission_id_page_number_uidx').on(
+			table.submissionId,
+			table.pageNumber,
+		),
 	],
 )

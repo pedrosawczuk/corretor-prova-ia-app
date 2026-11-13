@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "submission_pages_submission_id_page_number_uidx" ON "submission_pages" USING btree ("submission_id","page_number");

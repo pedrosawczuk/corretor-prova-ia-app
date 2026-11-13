@@ -15,6 +15,7 @@ vi.mock('@app/db', () => ({
 	billingEventsTable: {},
 	classroomsTable: {},
 	correctionCreditsTable: {},
+	correctionUsageLogsTable: {},
 	examsTable: {},
 	invitesTable: {},
 	plansTable: {},
