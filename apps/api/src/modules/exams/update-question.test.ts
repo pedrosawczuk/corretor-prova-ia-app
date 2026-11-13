@@ -45,6 +45,9 @@ describe('PATCH /exams/:examId/questions/:questionId', () => {
 		vi.mocked(db.select)
 			.mockReturnValueOnce(createDbChain([exam]) as never)
 			.mockReturnValueOnce(createDbChain([question]) as never)
+			.mockReturnValueOnce(
+				createDbChain([{ id: optionA.id }, { id: optionB.id }]) as never,
+			)
 			.mockReturnValueOnce(createDbChain([optionA, optionB]) as never)
 
 		const tx = { update: vi.fn() }
@@ -108,6 +111,9 @@ describe('PATCH /exams/:examId/questions/:questionId', () => {
 		vi.mocked(db.select)
 			.mockReturnValueOnce(createDbChain([exam]) as never)
 			.mockReturnValueOnce(createDbChain([question]) as never)
+			.mockReturnValueOnce(
+				createDbChain([{ id: optionB.id }, { id: optionA.id }]) as never,
+			)
 			.mockReturnValueOnce(
 				createDbChain([
 					{ ...optionB, letter: 'A' },
@@ -176,5 +182,34 @@ describe('PATCH /exams/:examId/questions/:questionId', () => {
 		})
 
 		expect(response.statusCode).toBe(404)
+	})
+
+	it('retorna 404 se alguma alternativa não pertencer à questão', async () => {
+		const exam = makeExam({ creatorId: user.id })
+		const question = makeQuestion({ examId: exam.id })
+		const legitimateOption = makeQuestionOption({ questionId: question.id })
+		const foreignOptionId = crypto.randomUUID()
+
+		vi.mocked(db.select)
+			.mockReturnValueOnce(createDbChain([exam]) as never)
+			.mockReturnValueOnce(createDbChain([question]) as never)
+			.mockReturnValueOnce(
+				createDbChain([{ id: legitimateOption.id }]) as never,
+			)
+
+		const response = await app.inject({
+			method: 'PATCH',
+			url: `/exams/${exam.id}/questions/${question.id}`,
+			payload: {
+				statement: 'Novo enunciado',
+				options: [
+					{ id: legitimateOption.id, text: 'Nova A' },
+					{ id: foreignOptionId, text: 'Opção de outro exame' },
+				],
+			},
+		})
+
+		expect(response.statusCode).toBe(404)
+		expect(response.json().message).toBe('Alternativa não encontrada.')
 	})
 })

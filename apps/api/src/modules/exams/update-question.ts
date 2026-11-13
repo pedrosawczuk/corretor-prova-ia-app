@@ -1,4 +1,5 @@
 import {
+	and,
 	db,
 	eq,
 	examsTable,
@@ -42,6 +43,19 @@ export async function updateQuestionModule(
 		throw new NotFoundError('Questão não encontrada.')
 	}
 
+	const existingOptions = await db
+		.select({ id: questionOptionsTable.id })
+		.from(questionOptionsTable)
+		.where(eq(questionOptionsTable.questionId, questionId))
+
+	const existingOptionIds = new Set(existingOptions.map((option) => option.id))
+
+	for (const option of options) {
+		if (!existingOptionIds.has(option.id)) {
+			throw new NotFoundError('Alternativa não encontrada.')
+		}
+	}
+
 	await db.transaction(async (tx) => {
 		await tx
 			.update(questionsTable)
@@ -55,7 +69,12 @@ export async function updateQuestionModule(
 					text: option.text,
 					letter: letterForOptionIndex(question.type, index),
 				})
-				.where(eq(questionOptionsTable.id, option.id))
+				.where(
+					and(
+						eq(questionOptionsTable.id, option.id),
+						eq(questionOptionsTable.questionId, questionId),
+					),
+				)
 		}
 	})
 
