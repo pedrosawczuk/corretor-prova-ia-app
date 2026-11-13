@@ -2,16 +2,15 @@ import {
 	and,
 	billingCustomersTable,
 	correctionCreditsTable,
+	correctionUsageLogsTable,
 	db,
 	desc,
 	eq,
-	examsTable,
 	gte,
 	inArray,
 	lte,
 	plansTable,
 	sql,
-	submissionsTable,
 	subscriptionsTable,
 } from '@app/db'
 import type { FastifyReply, FastifyRequest } from 'fastify'
@@ -82,13 +81,12 @@ export async function getBillingStatusModule(
 	const [{ correctionsUsed }] = usagePeriod
 		? await db
 				.select({ correctionsUsed: sql<number>`count(*)::int` })
-				.from(submissionsTable)
-				.innerJoin(examsTable, eq(submissionsTable.examId, examsTable.id))
+				.from(correctionUsageLogsTable)
 				.where(
 					and(
-						eq(examsTable.creatorId, user.id),
-						gte(submissionsTable.createdAt, usagePeriod.start),
-						lte(submissionsTable.createdAt, usagePeriod.end),
+						eq(correctionUsageLogsTable.userId, user.id),
+						gte(correctionUsageLogsTable.createdAt, usagePeriod.start),
+						lte(correctionUsageLogsTable.createdAt, usagePeriod.end),
 					),
 				)
 		: [{ correctionsUsed: 0 }]

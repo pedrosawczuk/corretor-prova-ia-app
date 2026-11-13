@@ -1,4 +1,10 @@
-import { db, eq, examsTable, submissionsTable } from '@app/db'
+import {
+	correctionUsageLogsTable,
+	db,
+	eq,
+	examsTable,
+	submissionsTable,
+} from '@app/db'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { NotFoundError } from '@/core/errors'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
@@ -27,7 +33,7 @@ export async function createSubmissionModule(
 	}
 
 	const submission = await db.transaction(async (tx) => {
-		await assertCorrectionQuotaAvailable(tx, user.id)
+		const quotaResult = await assertCorrectionQuotaAvailable(tx, user.id)
 
 		const [created] = await tx
 			.insert(submissionsTable)
@@ -37,6 +43,14 @@ export async function createSubmissionModule(
 				status: 'pending_processing',
 			})
 			.returning()
+
+		if (quotaResult?.billingPeriodStart) {
+			await tx.insert(correctionUsageLogsTable).values({
+				userId: user.id,
+				submissionId: created.id,
+				billingPeriodStart: quotaResult.billingPeriodStart,
+			})
+		}
 
 		return created
 	})

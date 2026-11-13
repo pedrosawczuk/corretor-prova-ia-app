@@ -1,4 +1,4 @@
-import { db } from '@app/db'
+import { correctionUsageLogsTable, db } from '@app/db'
 import type { FastifyInstance } from 'fastify'
 import {
 	afterAll,
@@ -73,6 +73,36 @@ describe('POST /exams/:examId/submissions', () => {
 			expect.objectContaining({ insert }),
 			user.id,
 		)
+	})
+
+	it('registra consumo em correction_usage_logs quando a submissão consome cota mensal', async () => {
+		const exam = makeExam({ creatorId: user.id })
+		const submissionRow = makeSubmission({
+			examId: exam.id,
+			studentIdentifier: 'Aluno 15',
+		})
+		const billingPeriodStart = new Date('2026-11-01T00:00:00Z')
+
+		vi.mocked(assertCorrectionQuotaAvailable).mockResolvedValueOnce({
+			billingPeriodStart,
+		})
+		vi.mocked(db.select).mockReturnValueOnce(createDbChain([exam]) as never)
+		const insert = vi
+			.fn()
+			.mockReturnValueOnce(createDbChain([submissionRow]))
+			.mockReturnValueOnce(createDbChain([]))
+		vi.mocked(db.transaction).mockImplementation(
+			createDbTransactionMock({ insert }) as never,
+		)
+
+		const response = await app.inject({
+			method: 'POST',
+			url: `/exams/${exam.id}/submissions`,
+			payload: { studentIdentifier: 'Aluno 15' },
+		})
+
+		expect(response.statusCode).toBe(201)
+		expect(insert).toHaveBeenCalledWith(correctionUsageLogsTable)
 	})
 
 	it('retorna 404 quando a prova não existe', async () => {

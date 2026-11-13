@@ -1,14 +1,14 @@
 import {
 	and,
 	correctionCreditsTable,
+	correctionUsageLogsTable,
 	type db,
 	eq,
-	examsTable,
+	gt,
 	gte,
 	lte,
 	plansTable,
 	sql,
-	submissionsTable,
 	subscriptionsTable,
 	user,
 } from '@app/db'
@@ -34,15 +34,21 @@ async function resolveAccessGrantAllowance(tx: Transaction, userId: string) {
 	}
 }
 
+export interface CorrectionQuotaResult {
+	billingPeriodStart: Date
+}
+
 export async function assertCorrectionQuotaAvailable(
 	tx: Transaction,
 	userId: string,
-): Promise<void> {
+): Promise<CorrectionQuotaResult | undefined> {
 	await tx
 		.select({ id: user.id })
 		.from(user)
 		.where(eq(user.id, userId))
 		.for('update')
+
+	const now = new Date()
 
 	const [subscription] = await tx
 		.select({
@@ -56,6 +62,7 @@ export async function assertCorrectionQuotaAvailable(
 			and(
 				eq(subscriptionsTable.userId, userId),
 				eq(subscriptionsTable.status, 'active'),
+				gt(subscriptionsTable.currentPeriodEnd, now),
 			),
 		)
 
@@ -64,23 +71,22 @@ export async function assertCorrectionQuotaAvailable(
 
 	if (allowance) {
 		if (allowance.monthlyCorrectionsLimit == null) {
-			return
+			return { billingPeriodStart: allowance.currentPeriodStart }
 		}
 
 		const [{ correctionsUsed }] = await tx
 			.select({ correctionsUsed: sql<number>`count(*)::int` })
-			.from(submissionsTable)
-			.innerJoin(examsTable, eq(submissionsTable.examId, examsTable.id))
+			.from(correctionUsageLogsTable)
 			.where(
 				and(
-					eq(examsTable.creatorId, userId),
-					gte(submissionsTable.createdAt, allowance.currentPeriodStart),
-					lte(submissionsTable.createdAt, allowance.currentPeriodEnd),
+					eq(correctionUsageLogsTable.userId, userId),
+					gte(correctionUsageLogsTable.createdAt, allowance.currentPeriodStart),
+					lte(correctionUsageLogsTable.createdAt, allowance.currentPeriodEnd),
 				),
 			)
 
 		if (correctionsUsed < allowance.monthlyCorrectionsLimit) {
-			return
+			return { billingPeriodStart: allowance.currentPeriodStart }
 		}
 	}
 
@@ -97,7 +103,7 @@ export async function assertCorrectionQuotaAvailable(
 			delta: -1,
 			source: 'consumption',
 		})
-		return
+		return undefined
 	}
 
 	throw new PaymentRequiredError()

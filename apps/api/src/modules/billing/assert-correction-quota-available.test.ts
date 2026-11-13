@@ -1,3 +1,4 @@
+import { gt, subscriptionsTable } from '@app/db'
 import { describe, expect, it, vi } from 'vitest'
 import { PaymentRequiredError } from '@/core/errors'
 import { createDbChain } from '@/test/create-db-chain'
@@ -44,10 +45,14 @@ describe('assertCorrectionQuotaAvailable', () => {
 		const insert = vi.fn()
 		const tx = makeTx(select, insert)
 
-		await expect(
-			assertCorrectionQuotaAvailable(tx, 'user_1'),
-		).resolves.toBeUndefined()
+		await expect(assertCorrectionQuotaAvailable(tx, 'user_1')).resolves.toEqual(
+			{ billingPeriodStart: new Date('2026-09-01') },
+		)
 		expect(insert).not.toHaveBeenCalled()
+		expect(gt).toHaveBeenCalledWith(
+			subscriptionsTable.currentPeriodEnd,
+			expect.any(Date),
+		)
 	})
 
 	it('cai para o crédito avulso e desconta 1 quando a cota mensal da assinatura já foi usada', async () => {
