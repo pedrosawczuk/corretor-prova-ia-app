@@ -62,6 +62,8 @@ export async function deleteObjectByPublicUrl(url: string) {
 	if (!url.startsWith(baseUrl)) return
 
 	const objectName = url.slice(baseUrl.length)
+	if (!objectName.startsWith(AVATARS_PREFIX)) return
+
 	await storageClient.removeObject(env.MINIO_BUCKET, objectName).catch(() => {})
 }
 
