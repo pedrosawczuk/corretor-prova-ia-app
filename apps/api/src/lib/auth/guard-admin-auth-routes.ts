@@ -1,7 +1,11 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { recordAuditLog } from '@/lib/audit/audit-log'
+import { normalizePathname } from '@/lib/http/normalize-pathname'
 import { auth } from './auth'
-import { isSessionFreshForAdmin } from './get-authenticated-admin'
+import {
+	isSessionFreshForAdmin,
+	isTwoFactorVerifiedForAdmin,
+} from './get-authenticated-admin'
 import { toFetchHeaders } from './http-utils'
 
 const ADMIN_AUTH_PATH_PREFIX = '/api/auth/admin'
@@ -15,7 +19,11 @@ const ADMIN_AUTH_PATH_PREFIX = '/api/auth/admin'
  * closes both gaps before the request ever reaches better-auth's handler.
  */
 export function isAdminAuthRoute(url: string) {
-	return url.startsWith(ADMIN_AUTH_PATH_PREFIX)
+	const pathname = normalizePathname(url)
+	return (
+		pathname === ADMIN_AUTH_PATH_PREFIX ||
+		pathname.startsWith(`${ADMIN_AUTH_PATH_PREFIX}/`)
+	)
 }
 
 export async function guardAdminAuthRoute(
@@ -77,6 +85,24 @@ export async function guardAdminAuthRoute(
 			403,
 			'ADMIN_SESSION_STALE',
 			'Sua sessão expirou para o painel administrativo. Faça login novamente.',
+		)
+		return false
+	}
+
+	if (!session.session.twoFactorVerifiedAt) {
+		await deny(
+			403,
+			'ADMIN_TWO_FACTOR_REQUIRED',
+			'Verificação em duas etapas obrigatória para esta sessão administrativa.',
+		)
+		return false
+	}
+
+	if (!isTwoFactorVerifiedForAdmin(session.session.twoFactorVerifiedAt)) {
+		await deny(
+			403,
+			'ADMIN_SESSION_STALE',
+			'Sua verificação em duas etapas expirou para o painel administrativo. Faça login novamente.',
 		)
 		return false
 	}

@@ -15,6 +15,14 @@ export function isSessionFreshForAdmin(sessionCreatedAt: Date | string) {
 	return ageMs <= ADMIN_SESSION_FRESH_MINUTES * 60_000
 }
 
+export function isTwoFactorVerifiedForAdmin(
+	twoFactorVerifiedAt: Date | string | null | undefined,
+) {
+	if (!twoFactorVerifiedAt) return false
+	const ageMs = Date.now() - new Date(twoFactorVerifiedAt).getTime()
+	return ageMs >= 0 && ageMs <= ADMIN_SESSION_FRESH_MINUTES * 60_000
+}
+
 export async function getAuthenticatedAdmin(request: FastifyRequest) {
 	const user = await getAuthenticatedUser(request)
 
@@ -31,6 +39,14 @@ export async function getAuthenticatedAdmin(request: FastifyRequest) {
 	})
 
 	if (!session || !isSessionFreshForAdmin(session.session.createdAt)) {
+		throw new AdminSessionStaleError()
+	}
+
+	if (!session.session.twoFactorVerifiedAt) {
+		throw new AdminTwoFactorRequiredError()
+	}
+
+	if (!isTwoFactorVerifiedForAdmin(session.session.twoFactorVerifiedAt)) {
 		throw new AdminSessionStaleError()
 	}
 
