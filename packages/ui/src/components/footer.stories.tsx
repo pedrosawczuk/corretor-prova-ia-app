@@ -132,7 +132,10 @@ export const CompleteLandingPageFooter: Story = {
 				</span>
 
 				<FooterSocial>
-					<FooterLink href="mailto:contato@corrigego.com.br" aria-label="E-mail">
+					<FooterLink
+						href="mailto:contato@corrigego.com.br"
+						aria-label="E-mail"
+					>
 						<Mail className="size-4" />
 					</FooterLink>
 					<FooterLink href="#chat" aria-label="Comunidade">

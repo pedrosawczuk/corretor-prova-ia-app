@@ -1,6 +1,6 @@
+import { Skeleton } from '@app/ui'
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import { Skeleton } from '@app/ui'
 import { CorrigirProva } from '@/components/dashboard/corrigir-prova'
 
 export const metadata: Metadata = {

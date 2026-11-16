@@ -121,8 +121,8 @@ export default function TermosPage() {
 							<CardTitle className="text-sm">Humano no Controle</CardTitle>
 						</CardHeader>
 						<CardContent className="text-xs text-muted-foreground leading-relaxed">
-							O Corrige Go apoia a correção; a decisão e validação final da
-							nota cabem sempre ao professor.
+							O Corrige Go apoia a correção; a decisão e validação final da nota
+							cabem sempre ao professor.
 						</CardContent>
 					</Card>
 				</div>
@@ -185,8 +185,8 @@ export default function TermosPage() {
 							gabaritos cadastrados ou gerados continuam sendo de sua
 							titularidade.
 							<br />• <strong>A Plataforma:</strong> O código-fonte, layout,
-							marca "Corrige Go", design system e algoritmos são de
-							propriedade exclusiva dos desenvolvedores.
+							marca "Corrige Go", design system e algoritmos são de propriedade
+							exclusiva dos desenvolvedores.
 						</p>
 					</section>
 
@@ -211,7 +211,10 @@ export default function TermosPage() {
 							canal:
 						</p>
 						<p className="font-semibold text-primary">
-							<a href="mailto:contato@corrigego.com.br" className="hover:underline">
+							<a
+								href="mailto:contato@corrigego.com.br"
+								className="hover:underline"
+							>
 								contato@corrigego.com.br
 							</a>
 						</p>

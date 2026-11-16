@@ -82,8 +82,8 @@ export function NewLoginEmail({
 							</Text>
 
 							<Text className="text-sm text-muted-foreground text-center leading-relaxed mt-3 mb-0">
-								Olá, {name}. Identificamos um novo acesso à sua conta na
-								Corrige Go. Confira os detalhes abaixo.
+								Olá, {name}. Identificamos um novo acesso à sua conta na Corrige
+								Go. Confira os detalhes abaixo.
 							</Text>
 
 							<Section className="bg-muted rounded-lg px-4 py-4 mt-6">

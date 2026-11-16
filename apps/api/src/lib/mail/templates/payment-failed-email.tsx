@@ -77,10 +77,9 @@ export function PaymentFailedEmail({
 							</Text>
 
 							<Text className="text-sm text-muted-foreground text-center leading-relaxed mt-3 mb-0">
-								Olá, {name}. A cobrança da sua assinatura no Corrige Go não
-								foi confirmada. Sua conta continua ativa por enquanto, mas
-								atualize sua forma de pagamento para evitar interrupções no
-								acesso.
+								Olá, {name}. A cobrança da sua assinatura no Corrige Go não foi
+								confirmada. Sua conta continua ativa por enquanto, mas atualize
+								sua forma de pagamento para evitar interrupções no acesso.
 							</Text>
 
 							<Section className="text-center mt-8">

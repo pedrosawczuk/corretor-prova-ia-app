@@ -105,8 +105,7 @@ export function VerifyEmail({ name, verificationUrl }: VerifyEmailProps) {
 
 							<Section className="bg-[#fffbeb] border border-solid border-[#fde68a] rounded-lg px-4 py-3 mt-6">
 								<Text className="text-xs text-[#92400e] leading-relaxed m-0">
-									Se você não criou uma conta no Corrige Go, ignore este
-									e-mail.
+									Se você não criou uma conta no Corrige Go, ignore este e-mail.
 								</Text>
 							</Section>
 						</Section>

@@ -26,8 +26,8 @@ export function HeroSection() {
 
 				<p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl">
 					Aponte a câmera do seu celular para as folhas de respostas dos seus
-					alunos. O Corrige Go confere as alternativas, calcula a nota e
-					aponta rasuras na hora.
+					alunos. O Corrige Go confere as alternativas, calcula a nota e aponta
+					rasuras na hora.
 				</p>
 
 				<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto pt-2">

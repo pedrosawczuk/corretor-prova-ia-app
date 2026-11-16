@@ -93,8 +93,8 @@ export function WelcomeEmail({ name, dashboardUrl }: WelcomeEmailProps) {
 							</Text>
 
 							<Text className="text-sm text-muted-foreground text-center leading-relaxed mt-3 mb-0">
-								Sua conta no Corrige Go foi criada com sucesso. Agora você
-								pode elaborar provas, diagramar para impressão e corrigir
+								Sua conta no Corrige Go foi criada com sucesso. Agora você pode
+								elaborar provas, diagramar para impressão e corrigir
 								automaticamente com a câmera do celular — tudo em um só lugar.
 							</Text>
 

@@ -3,8 +3,7 @@ import { ProvaDetail } from '@/components/dashboard/prova-detail'
 
 export const metadata: Metadata = {
 	title: 'Prova — Corrige Go',
-	description:
-		'Configure e gere as questões da prova com a IA do Corrige Go.',
+	description: 'Configure e gere as questões da prova com a IA do Corrige Go.',
 }
 
 interface ProvaDetailPageProps {

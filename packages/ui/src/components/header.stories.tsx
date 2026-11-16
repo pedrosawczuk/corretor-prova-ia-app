@@ -92,9 +92,7 @@ export const FloatingLandingHeader: Story = {
 					<div className="size-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs">
 						G
 					</div>
-					<span className="text-sm font-bold text-foreground">
-						Corrige Go
-					</span>
+					<span className="text-sm font-bold text-foreground">Corrige Go</span>
 					<Badge size="xs" variant="primary">
 						BETA
 					</Badge>

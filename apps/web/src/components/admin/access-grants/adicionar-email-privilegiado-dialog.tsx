@@ -74,8 +74,8 @@ export function AdicionarEmailPrivilegiadoDialog() {
 						Adicionar e-mail privilegiado
 					</DialogTitle>
 					<DialogDescription>
-						Quando este e-mail entrar no Corrige Go, ganha 3 meses do plano
-						Pro automaticamente. Nenhum e-mail é enviado.
+						Quando este e-mail entrar no Corrige Go, ganha 3 meses do plano Pro
+						automaticamente. Nenhum e-mail é enviado.
 					</DialogDescription>
 				</DialogHeader>
 
