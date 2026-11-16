@@ -1,6 +1,7 @@
 import { env } from '@app/env'
 import { Resend } from 'resend'
 import { AccessGrantReminderEmail } from './templates/access-grant-reminder-email'
+import { DeleteAccountVerificationEmail } from './templates/delete-account-verification-email'
 import { InviteEmail } from './templates/invite-email'
 import { NewLoginEmail } from './templates/new-login-email'
 import { PaymentFailedEmail } from './templates/payment-failed-email'
@@ -90,7 +91,7 @@ export async function sendDeleteAccountVerificationEmail({
 		from: env.MAIL_FROM,
 		to,
 		subject: 'Confirme a exclusão da sua conta — Corrige Go',
-		html: `<p>Olá, ${name}.</p><p>Recebemos uma solicitação para excluir permanentemente sua conta no Corrige Go.</p><p>Se você deseja confirmar esta ação, acesse o link abaixo:</p><p><a href="${verificationUrl}">Confirmar exclusão da conta</a></p><p>Se você não solicitou a exclusão, ignore este e-mail.</p>`,
+		react: DeleteAccountVerificationEmail({ name, verificationUrl }),
 	})
 }
 

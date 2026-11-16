@@ -1,4 +1,14 @@
-import { index, integer, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
+import {
+	index,
+	integer,
+	pgEnum,
+	pgTable,
+	text,
+	timestamp,
+	uniqueIndex,
+	uuid,
+} from 'drizzle-orm/pg-core'
 import { user } from './users'
 
 export const correctionCreditSourceEnum = pgEnum('correction_credit_source', [
@@ -19,5 +29,12 @@ export const correctionCreditsTable = pgTable(
 		referenceId: text('reference_id'),
 		createdAt: timestamp('created_at').notNull().defaultNow(),
 	},
-	(table) => [index('correction_credits_user_id_idx').on(table.userId)],
+	(table) => [
+		index('correction_credits_user_id_idx').on(table.userId),
+		uniqueIndex('correction_credits_purchase_reference_uidx')
+			.on(table.referenceId, table.source)
+			.where(
+				sql`${table.source} = 'purchase' AND ${table.referenceId} IS NOT NULL`,
+			),
+	],
 )

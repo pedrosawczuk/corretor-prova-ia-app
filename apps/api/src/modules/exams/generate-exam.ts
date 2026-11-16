@@ -10,6 +10,7 @@ import {
 import type { GenerateExamInput } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { NotFoundError } from '@/core/errors'
+import { assertAiGenerationRateLimit } from '@/lib/ai/ai-rate-limit'
 import { generateExamQuestions } from '@/lib/ai/gemini'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
 import { invalidateExamCache } from './exam-cache'
@@ -49,6 +50,12 @@ export async function generateExamModule(
 	if (!classroom) {
 		throw new NotFoundError('Turma não encontrada.')
 	}
+
+	await assertAiGenerationRateLimit(
+		user.id,
+		'generate-exam',
+		questionType === 'mixed' ? 2 : 1,
+	)
 
 	const generatedQuestions =
 		questionType === 'mixed'

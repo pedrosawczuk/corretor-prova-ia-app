@@ -17,7 +17,7 @@ import {
 	isAdminAuthRoute,
 	recordAdminAuthAuditLog,
 } from '@/lib/auth/guard-admin-auth-routes'
-import { redis } from '@/lib/cache/redis'
+import { ResilientRateLimitStore } from '@/lib/cache/resilient-rate-limit-store'
 import { registerErrorHandler } from '@/lib/http/register-error-handler'
 import { isSensitiveAuthPath } from '@/lib/http/sensitive-auth-paths'
 import {
@@ -62,10 +62,10 @@ await app.register(multipart, {
 await app.register(rateLimit, {
 	max: 100,
 	timeWindow: '1 minute',
-	redis,
+	store: ResilientRateLimitStore,
 	nameSpace: 'rate-limit:',
 	ban: 5,
-	skipOnError: true,
+	skipOnError: false,
 	errorResponseBuilder: (_request, context) => ({
 		code: context.ban ? 'RATE_LIMIT_BANNED' : 'RATE_LIMIT_EXCEEDED',
 		message: `Muitas requisições. Tente novamente em ${context.after}.`,

@@ -1,7 +1,7 @@
+import { Worker } from 'node:worker_threads'
 import { db, eq, submissionPagesTable, submissionsTable } from '@app/db'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { fileTypeFromBuffer } from 'file-type'
-import heicConvert from 'heic-convert'
 import sharp from 'sharp'
 import { BadRequestError, ConflictError } from '@/core/errors'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
@@ -18,6 +18,25 @@ const MAX_PAGE_DIMENSION = 1600
 const MIN_PAGE_DIMENSION = 900
 const HEIC_MIME_TYPES = new Set(['image/heic', 'image/heif'])
 const MAX_INPUT_PIXELS = 30_000_000
+const MAX_ISOBMFF_DEPTH = 16
+const HEIC_DECODE_TIMEOUT_MS = 15_000
+
+const HEIC_WORKER_SCRIPT = `
+const { parentPort, workerData } = require('node:worker_threads');
+const heicConvert = require('heic-convert');
+
+(async () => {
+	const converted = await heicConvert({
+		buffer: Buffer.from(workerData.buffer),
+		format: 'JPEG',
+		quality: 0.92,
+	});
+	const out = Buffer.from(converted);
+	parentPort.postMessage(out, [out.buffer]);
+})().catch((err) => {
+	setImmediate(() => { throw err; });
+});
+`
 
 const ISOBMFF_CONTAINER_BOXES = new Set([
 	'meta',
@@ -35,7 +54,10 @@ function extractHeicIspeDimensions(
 	start = 0,
 	end = buffer.length,
 	results: Array<{ width: number; height: number }> = [],
+	depth = 0,
 ): Array<{ width: number; height: number }> {
+	if (depth >= MAX_ISOBMFF_DEPTH) return results
+
 	let offset = start
 
 	while (offset + 8 <= end) {
@@ -70,7 +92,13 @@ function extractHeicIspeDimensions(
 			// `meta` is a FullBox (4-byte version/flags before child boxes)
 			const childStart = type === 'meta' ? payloadStart + 4 : payloadStart
 			if (childStart < boxEnd) {
-				extractHeicIspeDimensions(buffer, childStart, boxEnd, results)
+				extractHeicIspeDimensions(
+					buffer,
+					childStart,
+					boxEnd,
+					results,
+					depth + 1,
+				)
 			}
 		}
 
@@ -99,6 +127,63 @@ function assertHeicDimensionsWithinLimit(buffer: Buffer): void {
 	}
 }
 
+function convertHeicInWorker(buffer: Buffer): Promise<Buffer> {
+	return new Promise((resolve, reject) => {
+		const worker = new Worker(HEIC_WORKER_SCRIPT, {
+			eval: true,
+			workerData: { buffer },
+			resourceLimits: {
+				maxOldGenerationSizeMb: 256,
+				maxYoungGenerationSizeMb: 64,
+			},
+		})
+
+		let settled = false
+		const timer = setTimeout(() => {
+			if (settled) return
+			settled = true
+			void worker.terminate()
+			reject(
+				new BadRequestError(
+					'Tempo limite excedido ao decodificar a imagem HEIC.',
+				),
+			)
+		}, HEIC_DECODE_TIMEOUT_MS)
+
+		worker.once('message', (result: Uint8Array) => {
+			if (settled) return
+			settled = true
+			clearTimeout(timer)
+			void worker.terminate()
+			resolve(Buffer.from(result))
+		})
+
+		worker.once('error', () => {
+			if (settled) return
+			settled = true
+			clearTimeout(timer)
+			reject(
+				new BadRequestError(
+					'Não foi possível decodificar com segurança a imagem HEIC.',
+				),
+			)
+		})
+
+		worker.once('exit', (code) => {
+			if (settled) return
+			settled = true
+			clearTimeout(timer)
+			if (code !== 0) {
+				reject(
+					new BadRequestError(
+						'Não foi possível decodificar com segurança a imagem HEIC.',
+					),
+				)
+			}
+		})
+	})
+}
+
 async function decodeToJpegCompatibleBuffer(
 	buffer: Buffer,
 	mime: string,
@@ -107,13 +192,7 @@ async function decodeToJpegCompatibleBuffer(
 
 	assertHeicDimensionsWithinLimit(buffer)
 
-	const converted = await heicConvert({
-		buffer,
-		format: 'JPEG',
-		quality: 0.92,
-	})
-
-	return Buffer.from(converted)
+	return convertHeicInWorker(buffer)
 }
 
 export async function uploadSubmissionPageModule(
@@ -189,8 +268,6 @@ export async function uploadSubmissionPageModule(
 		.jpeg({ quality: 90 })
 		.toBuffer()
 
-	const objectName = await uploadSubmissionPage(normalizedBuffer, 'image/jpeg')
-
 	const page = await db.transaction(async (tx) => {
 		await tx
 			.select({ id: submissionsTable.id })
@@ -211,6 +288,11 @@ export async function uploadSubmissionPageModule(
 				`Esta prova possui ${exam.templatePageCount} página(s); não é possível enviar mais páginas.`,
 			)
 		}
+
+		const objectName = await uploadSubmissionPage(
+			normalizedBuffer,
+			'image/jpeg',
+		)
 
 		const [created] = await tx
 			.insert(submissionPagesTable)

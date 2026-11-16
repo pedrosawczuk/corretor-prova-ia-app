@@ -6,6 +6,9 @@ const SENSITIVE_KEYS = new Set([
 	'currentpassword',
 	'confirmpassword',
 	'token',
+	'access_token',
+	'refresh_token',
+	'id_token',
 	'otp',
 	'code',
 	'secret',
@@ -34,4 +37,26 @@ export function sanitizePayload(payload: unknown, depth = 0): unknown {
 			: sanitizePayload(value, depth + 1)
 	}
 	return result
+}
+
+export function sanitizeHttpPath(url: string): string {
+	const queryIndex = url.indexOf('?')
+	if (queryIndex === -1) return url
+
+	const pathname = url.slice(0, queryIndex)
+	const search = url.slice(queryIndex + 1)
+	if (!search) return pathname
+
+	const params = new URLSearchParams(search)
+	const sanitized = new URLSearchParams()
+
+	for (const [key, value] of params.entries()) {
+		sanitized.append(
+			key,
+			SENSITIVE_KEYS.has(key.toLowerCase()) ? REDACTED : value,
+		)
+	}
+
+	const serialized = sanitized.toString()
+	return serialized ? `${pathname}?${serialized}` : pathname
 }

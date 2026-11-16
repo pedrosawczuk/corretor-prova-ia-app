@@ -3,7 +3,11 @@ import { db, eq, session as sessionTable, user as userTable } from '@app/db'
 import { env } from '@app/env'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { createAuthMiddleware } from 'better-auth/api'
+import {
+	APIError,
+	createAuthMiddleware,
+	getSessionFromCtx,
+} from 'better-auth/api'
 import { admin, twoFactor } from 'better-auth/plugins'
 import { claimAccessGrant } from '@/modules/access-grants/claim-access-grant'
 import {
@@ -14,6 +18,13 @@ import {
 	sendVerificationEmail,
 } from '../mail/mail'
 import { parseUserAgent } from './parse-user-agent'
+
+const TWO_FACTOR_MANAGEMENT_PATHS = new Set([
+	'/two-factor/get-totp-uri',
+	'/two-factor/enable',
+	'/two-factor/disable',
+	'/two-factor/generate-backup-codes',
+])
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
@@ -104,6 +115,28 @@ export const auth = betterAuth({
 		}),
 	],
 	hooks: {
+		before: createAuthMiddleware(async (ctx) => {
+			if (!TWO_FACTOR_MANAGEMENT_PATHS.has(ctx.path)) return
+
+			const session = await getSessionFromCtx(ctx)
+			const user = session?.user as
+				| { twoFactorEnabled?: boolean | null }
+				| undefined
+			const activeSession = session?.session as
+				| { twoFactorVerifiedAt?: Date | string | null }
+				| undefined
+
+			// Impede que sessões com 2FA ativo mas ainda não verificado (ex.: login
+			// social/passwordless antes do desafio TOTP) leiam ou sobrescrevam o
+			// segredo TOTP, gerem códigos de backup ou desativem o 2FA.
+			if (user?.twoFactorEnabled && !activeSession?.twoFactorVerifiedAt) {
+				throw new APIError('FORBIDDEN', {
+					code: 'TWO_FACTOR_VERIFICATION_REQUIRED',
+					message:
+						'Verificação em duas etapas obrigatória antes de gerenciar o 2FA.',
+				})
+			}
+		}),
 		after: createAuthMiddleware(async (ctx) => {
 			if (
 				ctx.path === '/two-factor/verify-totp' ||
@@ -162,4 +195,7 @@ export const auth = betterAuth({
 	secret: env.BETTER_AUTH_SECRET,
 	baseURL: env.BETTER_AUTH_URL,
 	trustedOrigins: [env.WEB_URL],
+	advanced: {
+		useSecureCookies: env.NODE_ENV === 'prod',
+	},
 })

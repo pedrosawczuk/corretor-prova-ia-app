@@ -2,6 +2,7 @@ import type { ExtractedAnswer } from '@/lib/vision/read-submission-answers'
 import { MIN_ANSWER_CONFIDENCE } from './confidence-threshold'
 
 export const READERS_DISAGREEMENT_CONFIDENCE = 0.3
+export const UNCORROBORATED_AI_CONFIDENCE = 0.7
 
 function isConfidentSingleMark(answer: ExtractedAnswer): boolean {
 	return (
@@ -29,10 +30,23 @@ export function combineAnswerReadings(
 			(answer) => answer.order === aiAnswer.order,
 		)
 
-		const readersDisagree =
-			omrAnswer !== undefined &&
-			isConfidentSingleMark(omrAnswer) &&
-			!haveSameLetters(aiAnswer.markedLetters, omrAnswer.markedLetters)
+		const hasConfidentOmr =
+			omrAnswer !== undefined && isConfidentSingleMark(omrAnswer)
+
+		if (!hasConfidentOmr) {
+			return {
+				...aiAnswer,
+				confidence: Math.min(
+					aiAnswer.confidence ?? 0,
+					UNCORROBORATED_AI_CONFIDENCE,
+				),
+			}
+		}
+
+		const readersDisagree = !haveSameLetters(
+			aiAnswer.markedLetters,
+			omrAnswer.markedLetters,
+		)
 
 		if (!readersDisagree) return aiAnswer
 

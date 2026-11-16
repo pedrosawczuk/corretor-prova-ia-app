@@ -34,8 +34,8 @@ export async function exportExamPdfModule(
 	// coordenadas de cada alternativa usadas depois na correção por foto.
 	const buffer = isExamTemplateLocked(exam)
 		? await buildExamPdf(examData)
-		: await lockExamTemplate(examData).then(({ pdfBuffer }) => {
-				invalidateCache(examCacheKey(examId))
+		: await lockExamTemplate(examData).then(async ({ pdfBuffer }) => {
+				await invalidateCache(examCacheKey(examId))
 				return pdfBuffer
 			})
 

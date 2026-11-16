@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { recordAuditLog } from '@/lib/audit/audit-log'
+import { sanitizeHttpPath } from '@/lib/audit/sanitize-payload'
 import { normalizePathname } from '@/lib/http/normalize-pathname'
 import { auth } from './auth'
 import {
@@ -40,13 +41,13 @@ export async function guardAdminAuthRoute(
 			actorId: session?.user.id ?? null,
 			actorEmail: session?.user.email ?? null,
 			sessionId: session?.session.id ?? null,
-			action: `${request.method} ${request.url}`,
+			action: `${request.method} ${normalizePathname(request.url)}`,
 			resourceType: 'admin-auth',
 			resourceId: null,
 			outcome: 'failure',
 			errorMessage: message,
 			httpMethod: request.method,
-			httpPath: request.url,
+			httpPath: sanitizeHttpPath(request.url),
 			requestPayload: null,
 			responseStatusCode: statusCode,
 			ipAddress: request.ip ?? null,
@@ -124,13 +125,13 @@ export async function recordAdminAuthAuditLog(
 		actorId: request.currentUser?.id ?? null,
 		actorEmail: request.currentUser?.email ?? null,
 		sessionId: request.currentSessionId ?? null,
-		action: `${request.method} ${request.url}`,
+		action: `${request.method} ${normalizePathname(request.url)}`,
 		resourceType: 'admin-auth',
 		resourceId: null,
 		outcome: statusCode < 400 ? 'success' : 'failure',
 		errorMessage: null,
 		httpMethod: request.method,
-		httpPath: request.url,
+		httpPath: sanitizeHttpPath(request.url),
 		requestPayload: null,
 		responseStatusCode: statusCode,
 		ipAddress: request.ip ?? null,

@@ -7,6 +7,7 @@ import { forwardWebResponse, toFetchHeaders } from '@/lib/auth/http-utils'
 import { deleteObjectByPublicUrl, uploadAvatar } from '@/lib/storage/storage'
 
 const AVATAR_DIMENSION = 512
+const MAX_AVATAR_INPUT_PIXELS = 30_000_000
 
 export async function uploadAvatarModule(
 	request: FastifyRequest,
@@ -44,7 +45,9 @@ export async function uploadAvatarModule(
 		throw new BadRequestError('O arquivo enviado precisa ser uma imagem.')
 	}
 
-	const webpBuffer = await sharp(originalBuffer)
+	const webpBuffer = await sharp(originalBuffer, {
+		limitInputPixels: MAX_AVATAR_INPUT_PIXELS,
+	})
 		.resize(AVATAR_DIMENSION, AVATAR_DIMENSION, { fit: 'cover' })
 		.webp({ quality: 80 })
 		.toBuffer()
@@ -60,7 +63,7 @@ export async function uploadAvatarModule(
 
 	forwardWebResponse(response, reply)
 
-	if (previousImage) {
+	if (response.ok && previousImage) {
 		await deleteObjectByPublicUrl(previousImage, session.user.id)
 	}
 

@@ -1,4 +1,4 @@
-import { billingEventsTable, db, eq } from '@app/db'
+import { billingEventsTable, db, eq, sql } from '@app/db'
 import { env } from '@app/env'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { fromAsaasValue } from '@/lib/billing/to-asaas-value'
@@ -88,6 +88,7 @@ function handleWebhookEvent(
 				eventId,
 				paymentId,
 				asaasSubscriptionId,
+				paymentDueDate: extractStringField(payload.payment, 'dueDate'),
 			})
 
 		case 'SUBSCRIPTION_DELETED':
@@ -171,6 +172,18 @@ export async function billingWebhookModule(
 			.returning({ id: billingEventsTable.id })
 
 		if (!inserted) return null
+
+		if (paymentId) {
+			await tx.execute(
+				sql`SELECT pg_advisory_xact_lock(hashtext(${paymentId}))`,
+			)
+		}
+
+		if (asaasSubscriptionId) {
+			await tx.execute(
+				sql`SELECT pg_advisory_xact_lock(hashtext(${asaasSubscriptionId}))`,
+			)
+		}
 
 		const alreadyProcessed =
 			isPaidEvent && paymentId

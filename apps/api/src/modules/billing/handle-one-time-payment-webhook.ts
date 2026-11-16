@@ -36,12 +36,20 @@ export async function handleOneTimePaymentWebhook(
 		return null
 	}
 
-	await tx.insert(correctionCreditsTable).values({
-		userId: owner.userId,
-		delta: plan.creditsGranted,
-		source: 'purchase',
-		referenceId: paymentId,
-	})
+	const [insertedCredit] = await tx
+		.insert(correctionCreditsTable)
+		.values({
+			userId: owner.userId,
+			delta: plan.creditsGranted,
+			source: 'purchase',
+			referenceId: paymentId,
+		})
+		.onConflictDoNothing()
+		.returning({ id: correctionCreditsTable.id })
+
+	if (!insertedCredit) {
+		return null
+	}
 
 	return {
 		type: 'payment_received',

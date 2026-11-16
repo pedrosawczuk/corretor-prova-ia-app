@@ -21,10 +21,37 @@ export const dbEnvSchema = z.object({
 
 export type DbEnv = z.infer<typeof dbEnvSchema>
 
+const trustProxySchema = z
+	.union([z.boolean(), z.number().int().min(0), z.string()])
+	.optional()
+	.transform(
+		(val): boolean | ((address: string, hop: number) => boolean) | string[] => {
+			if (val === undefined || val === '' || val === false || val === 'false') {
+				return false
+			}
+			if (val === true || val === 'true') {
+				return (_address: string, hop: number) => hop <= 1
+			}
+			if (typeof val === 'number') {
+				return (_address: string, hop: number) => hop <= val
+			}
+			const trimmed = val.trim()
+			if (/^\d+$/.test(trimmed)) {
+				const maxHops = Number(trimmed)
+				return (_address: string, hop: number) => hop <= maxHops
+			}
+			const cidrs = trimmed
+				.split(',')
+				.map((entry) => entry.trim())
+				.filter(Boolean)
+			return cidrs.length > 0 ? cidrs : false
+		},
+	)
+
 export const apiEnvSchema = dbEnvSchema.extend({
 	PORT: z.coerce.number(),
 	HOST: z.string(),
-	TRUST_PROXY: z.stringbool().default(false),
+	TRUST_PROXY: trustProxySchema,
 	REDIS_URL: z.url(),
 	REDIS_HOST: z.string(),
 	REDIS_PORT: z.coerce.number(),

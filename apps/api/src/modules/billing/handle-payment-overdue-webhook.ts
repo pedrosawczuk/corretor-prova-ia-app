@@ -1,11 +1,33 @@
-import { eq, subscriptionsTable } from '@app/db'
+import {
+	and,
+	billingEventsTable,
+	eq,
+	inArray,
+	isNotNull,
+	subscriptionsTable,
+} from '@app/db'
 import type { BillingTransaction } from './billing-transaction'
+import { PAID_PAYMENT_EVENTS } from './paid-payment-events'
 import type { BillingNotification } from './send-billing-notification-email'
 
 interface HandlePaymentOverdueWebhookParams {
 	eventId: string
 	paymentId: string | undefined
 	asaasSubscriptionId: string | undefined
+	paymentDueDate?: string
+}
+
+function isStaleOverdueDate(
+	paymentDueDate: string | undefined,
+	currentPeriodStart: Date,
+): boolean {
+	if (!paymentDueDate) return false
+	const normalized = /^\d{4}-\d{2}-\d{2}$/.test(paymentDueDate)
+		? `${paymentDueDate}T23:59:59.999Z`
+		: paymentDueDate
+	const dueTime = new Date(normalized).getTime()
+	if (Number.isNaN(dueTime)) return false
+	return dueTime < currentPeriodStart.getTime()
 }
 
 export async function handlePaymentOverdueWebhook(
@@ -14,6 +36,7 @@ export async function handlePaymentOverdueWebhook(
 		eventId,
 		paymentId,
 		asaasSubscriptionId,
+		paymentDueDate,
 	}: HandlePaymentOverdueWebhookParams,
 ): Promise<BillingNotification | null> {
 	if (!asaasSubscriptionId) {
@@ -40,6 +63,30 @@ export async function handlePaymentOverdueWebhook(
 	if (
 		existingSubscription.status !== 'active' ||
 		existingSubscription.cancelAtPeriodEnd
+	) {
+		return null
+	}
+
+	if (paymentId) {
+		const [alreadyPaid] = await tx
+			.select({ id: billingEventsTable.id })
+			.from(billingEventsTable)
+			.where(
+				and(
+					eq(billingEventsTable.asaasPaymentId, paymentId),
+					inArray(billingEventsTable.eventType, PAID_PAYMENT_EVENTS),
+					isNotNull(billingEventsTable.processedAt),
+				),
+			)
+			.limit(1)
+
+		if (alreadyPaid) {
+			return null
+		}
+	}
+
+	if (
+		isStaleOverdueDate(paymentDueDate, existingSubscription.currentPeriodStart)
 	) {
 		return null
 	}

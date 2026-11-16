@@ -2,17 +2,22 @@ import { describe, expect, it } from 'vitest'
 import {
 	combineAnswerReadings,
 	READERS_DISAGREEMENT_CONFIDENCE,
+	UNCORROBORATED_AI_CONFIDENCE,
 } from './combine-answer-readings'
 
 describe('combineAnswerReadings', () => {
-	it('usa a leitura da IA quando a leitura por marcadores não é confiável', () => {
+	it('manda para revisão quando a leitura por marcadores não é confiável', () => {
 		const result = combineAnswerReadings(
 			[{ order: 0, markedLetters: ['B'], confidence: 0.95 }],
 			[{ order: 0, markedLetters: ['A'], confidence: 0.2 }],
 		)
 
 		expect(result).toEqual([
-			{ order: 0, markedLetters: ['B'], confidence: 0.95 },
+			{
+				order: 0,
+				markedLetters: ['B'],
+				confidence: UNCORROBORATED_AI_CONFIDENCE,
+			},
 		])
 	})
 
@@ -38,7 +43,7 @@ describe('combineAnswerReadings', () => {
 		})
 	})
 
-	it('usa a leitura da IA quando não há leitura por marcadores para a questão', () => {
+	it('manda para revisão quando não há leitura por marcadores para a questão', () => {
 		const result = combineAnswerReadings(
 			[{ order: 3, markedLetters: ['A', 'C'], confidence: 0.95 }],
 			[],
@@ -47,7 +52,7 @@ describe('combineAnswerReadings', () => {
 		expect(result[0]).toEqual({
 			order: 3,
 			markedLetters: ['A', 'C'],
-			confidence: 0.95,
+			confidence: UNCORROBORATED_AI_CONFIDENCE,
 		})
 	})
 })

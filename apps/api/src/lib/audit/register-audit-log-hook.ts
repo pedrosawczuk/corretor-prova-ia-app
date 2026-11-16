@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { recordAuditLog } from './audit-log'
-import { sanitizePayload } from './sanitize-payload'
+import { sanitizeHttpPath, sanitizePayload } from './sanitize-payload'
 
 function resolveResourceType(routePath: string) {
 	const [, firstSegment] = routePath.split('/')
@@ -45,7 +45,7 @@ export function registerAuditLogHook(app: FastifyInstance) {
 			errorMessage:
 				outcome === 'failure' ? (request.auditErrorMessage ?? null) : null,
 			httpMethod: request.method,
-			httpPath: request.url,
+			httpPath: sanitizeHttpPath(request.url),
 			requestPayload: sanitizePayload(request.body) ?? null,
 			responseStatusCode: statusCode,
 			ipAddress: request.ip ?? null,

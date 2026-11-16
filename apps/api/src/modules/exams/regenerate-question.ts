@@ -13,6 +13,7 @@ import type {
 } from '@app/shared'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { NotFoundError } from '@/core/errors'
+import { assertAiGenerationRateLimit } from '@/lib/ai/ai-rate-limit'
 import { generateExamQuestions } from '@/lib/ai/gemini'
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user'
 import { invalidateExamCache } from './exam-cache'
@@ -56,6 +57,8 @@ export async function regenerateQuestionModule(
 	if (!question || question.examId !== examId) {
 		throw new NotFoundError('Questão não encontrada.')
 	}
+
+	await assertAiGenerationRateLimit(user.id, 'regenerate-question', 1)
 
 	const generatedQuestions = await generateExamQuestions({
 		subject: classroom.subjectName,

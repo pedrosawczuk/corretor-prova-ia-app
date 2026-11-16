@@ -135,23 +135,27 @@ function findCornerCandidate(
 
 	for (let i = 0; i < contours.size(); i++) {
 		const contour = contours.get(i)
-		const rect = cv.boundingRect(contour)
-		const cx = rect.x + rect.width / 2
-		const cy = rect.y + rect.height / 2
+		try {
+			const rect = cv.boundingRect(contour)
+			const cx = rect.x + rect.width / 2
+			const cy = rect.y + rect.height / 2
 
-		if (cx < minX || cx > maxX || cy < minY || cy > maxY) continue
-		if (rect.width < minMarkerSize || rect.height < minMarkerSize) continue
-		if (rect.width > maxMarkerSize || rect.height > maxMarkerSize) continue
+			if (cx < minX || cx > maxX || cy < minY || cy > maxY) continue
+			if (rect.width < minMarkerSize || rect.height < minMarkerSize) continue
+			if (rect.width > maxMarkerSize || rect.height > maxMarkerSize) continue
 
-		const aspect = rect.width / rect.height
-		if (aspect < 0.5 || aspect > 2) continue
+			const aspect = rect.width / rect.height
+			if (aspect < 0.5 || aspect > 2) continue
 
-		const solidity = cv.contourArea(contour) / (rect.width * rect.height)
-		if (solidity < MIN_MARKER_SOLIDITY) continue
+			const solidity = cv.contourArea(contour) / (rect.width * rect.height)
+			if (solidity < MIN_MARKER_SOLIDITY) continue
 
-		const squareness = Math.abs(aspect - 1)
-		if (!best || squareness < best.squareness) {
-			best = { x: cx, y: cy, squareness }
+			const squareness = Math.abs(aspect - 1)
+			if (!best || squareness < best.squareness) {
+				best = { x: cx, y: cy, squareness }
+			}
+		} finally {
+			contour.delete()
 		}
 	}
 

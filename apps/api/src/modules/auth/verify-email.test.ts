@@ -69,4 +69,16 @@ describe('GET /auth/verify-email', () => {
 		expect(response.statusCode).toBe(400)
 		expect(auth.api.verifyEmail).not.toHaveBeenCalled()
 	})
+
+	it('rejeita callbackURL de origem externa para prevenir open redirect', async () => {
+		const token = faker.string.alphanumeric(32)
+
+		const response = await app.inject({
+			method: 'GET',
+			url: `/auth/verify-email?token=${token}&callbackURL=${encodeURIComponent('https://evil.example/phish')}`,
+		})
+
+		expect(response.statusCode).toBe(400)
+		expect(auth.api.verifyEmail).not.toHaveBeenCalled()
+	})
 })
