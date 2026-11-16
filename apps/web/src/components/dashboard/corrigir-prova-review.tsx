@@ -96,6 +96,7 @@ export function CorrigirProvaReview({
 					Refazer última foto
 				</Button>
 				<Button
+					variant="success"
 					leftIcon={<CheckCircle2 />}
 					fullWidth
 					isLoading={isProcessing}

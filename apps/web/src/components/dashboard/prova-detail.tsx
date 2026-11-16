@@ -175,7 +175,7 @@ export function ProvaDetail({ turmaId, examId }: ProvaDetailProps) {
 
 				{hasQuestions && (
 					<div className="flex items-center gap-2">
-						<Button variant="default" size="sm" asChild leftIcon={<ScanLine />}>
+						<Button variant="success" size="sm" asChild leftIcon={<ScanLine />}>
 							<Link
 								href={`/dashboard/turmas/${turmaId}/provas/${examId}/corrigir`}
 							>

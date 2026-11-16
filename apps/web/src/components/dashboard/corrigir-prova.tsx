@@ -294,7 +294,7 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 				</Link>
 
 				<div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-					<div className="size-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+					<div className="size-14 rounded-2xl bg-success/10 text-success flex items-center justify-center">
 						<ScanLine className="size-7" />
 					</div>
 					<div>
@@ -325,6 +325,7 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 							</datalist>
 
 							<Button
+								variant="success"
 								leftIcon={<Camera />}
 								size="lg"
 								isLoading={createSubmission.isPending}
