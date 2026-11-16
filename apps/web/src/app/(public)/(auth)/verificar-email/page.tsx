@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { VerificarEmailContent } from '@/components/auth/verificar-email-content'
 
 export const metadata: Metadata = {
-	title: 'Confirmar E-mail — Gabarita.app',
+	title: 'Confirmar E-mail — Corrige Go',
 	description: 'Confirme seu e-mail para ativar sua conta.',
 }
 

@@ -12,7 +12,7 @@ describe('Header', () => {
 	it('renders as a banner landmark with brand, nav and actions', () => {
 		render(
 			<Header>
-				<HeaderBrand>Gabarita.app</HeaderBrand>
+				<HeaderBrand>Corrige Go</HeaderBrand>
 				<HeaderNav>
 					<HeaderNavItem href="/dashboard" isActive>
 						Dashboard
@@ -26,7 +26,7 @@ describe('Header', () => {
 		)
 
 		expect(screen.getByRole('banner')).toBeInTheDocument()
-		expect(screen.getByText('Gabarita.app')).toBeInTheDocument()
+		expect(screen.getByText('Corrige Go')).toBeInTheDocument()
 		expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute(
 			'href',
 			'/dashboard',
@@ -38,12 +38,12 @@ describe('Header', () => {
 		render(
 			<Header>
 				<HeaderBrand asChild>
-					<a href="/">Gabarita.app</a>
+					<a href="/">Corrige Go</a>
 				</HeaderBrand>
 			</Header>,
 		)
 
-		expect(screen.getByRole('link', { name: 'Gabarita.app' })).toHaveAttribute(
+		expect(screen.getByRole('link', { name: 'Corrige Go' })).toHaveAttribute(
 			'href',
 			'/',
 		)

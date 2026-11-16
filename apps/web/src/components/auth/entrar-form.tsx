@@ -62,7 +62,7 @@ export function EntrarForm({ defaultEmail }: EntrarFormProps) {
 				}),
 			})
 
-			toast.success('Bem-vindo de volta ao Gabarita.app!')
+			toast.success('Bem-vindo de volta ao Corrige Go!')
 			window.location.href = '/dashboard'
 		} catch (error) {
 			if (error instanceof ApiError && error.code === 'EMAIL_NOT_VERIFIED') {

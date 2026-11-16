@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { RedefinirSenhaForm } from '@/components/auth/redefinir-senha-form'
 
 export const metadata: Metadata = {
-	title: 'Redefinir Senha — Gabarita.app',
+	title: 'Redefinir Senha — Corrige Go',
 	description: 'Crie uma nova senha para acessar sua conta.',
 }
 

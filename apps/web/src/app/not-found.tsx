@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { LandingFooter, LandingHeader } from './(public)/_components'
 
 export const metadata: Metadata = {
-	title: 'Página não encontrada — Gabarita.app',
+	title: 'Página não encontrada — Corrige Go',
 	description: 'A página que você procura não existe ou foi movida.',
 }
 
@@ -60,10 +60,10 @@ export default function NotFound() {
 							<span>
 								Precisa de ajuda? Fale com a gente em{' '}
 								<a
-									href="mailto:contato@gabarita.app"
+									href="mailto:contato@corrigego.com.br"
 									className="font-semibold text-primary hover:underline"
 								>
-									contato@gabarita.app
+									contato@corrigego.com.br
 								</a>
 							</span>
 						</div>

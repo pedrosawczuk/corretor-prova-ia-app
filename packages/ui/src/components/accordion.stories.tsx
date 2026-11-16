@@ -36,7 +36,7 @@ export const FAQExample: Story = {
 						Como funciona a segurança dos dados dos alunos (LGPD)?
 					</AccordionTrigger>
 					<AccordionContent>
-						O Gabarita.app não exige cadastro prévio ou matrícula de alunos. As
+						O Corrige Go não exige cadastro prévio ou matrícula de alunos. As
 						fotos das provas são processadas apenas para o cálculo da nota e não
 						são compartilhadas com terceiros.
 					</AccordionContent>

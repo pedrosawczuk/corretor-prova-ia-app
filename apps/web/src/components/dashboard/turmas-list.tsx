@@ -40,7 +40,7 @@ export function TurmasList() {
 				</h2>
 				<p className="max-w-sm text-sm text-muted-foreground">
 					Crie sua primeira turma para começar a gerar e organizar provas com a
-					IA do Gabarita.app.
+					IA do Corrige Go.
 				</p>
 				<CriarTurmaDialog />
 			</div>

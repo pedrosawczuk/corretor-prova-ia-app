@@ -32,9 +32,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-	title: 'Termos de Uso — Gabarita.app',
+	title: 'Termos de Uso — Corrige Go',
 	description:
-		'Condições claras, justas e sem letras miúdas para a utilização da plataforma Gabarita.app.',
+		'Condições claras, justas e sem letras miúdas para a utilização da plataforma Corrige Go.',
 }
 
 export default function TermosPage() {
@@ -49,7 +49,7 @@ export default function TermosPage() {
 							G
 						</div>
 						<span className="text-base font-bold tracking-tight">
-							gabarita<span className="text-primary">.app</span>
+							Corrige <span className="text-success">Go</span>
 						</span>
 					</Link>
 				</HeaderBrand>
@@ -121,7 +121,7 @@ export default function TermosPage() {
 							<CardTitle className="text-sm">Humano no Controle</CardTitle>
 						</CardHeader>
 						<CardContent className="text-xs text-muted-foreground leading-relaxed">
-							O Gabarita.app apoia a correção; a decisão e validação final da
+							O Corrige Go apoia a correção; a decisão e validação final da
 							nota cabem sempre ao professor.
 						</CardContent>
 					</Card>
@@ -134,7 +134,7 @@ export default function TermosPage() {
 						</h2>
 						<p className="text-muted-foreground">
 							Ao criar uma conta ou utilizar os serviços do{' '}
-							<strong>Gabarita.app</strong>, você concorda expressamente com as
+							<strong>Corrige Go</strong>, você concorda expressamente com as
 							disposições aqui estabelecidas. Caso não concorde com qualquer
 							termo, solicitamos que não utilize a plataforma.
 						</p>
@@ -145,7 +145,7 @@ export default function TermosPage() {
 							2. Descrição dos Serviços
 						</h2>
 						<p className="text-muted-foreground">
-							O Gabarita.app fornece ferramentas de software SaaS destinadas
+							O Corrige Go fornece ferramentas de software SaaS destinadas
 							exclusivamente a professores, educadores e gestores escolares
 							para:
 						</p>
@@ -185,7 +185,7 @@ export default function TermosPage() {
 							gabaritos cadastrados ou gerados continuam sendo de sua
 							titularidade.
 							<br />• <strong>A Plataforma:</strong> O código-fonte, layout,
-							marca "Gabarita.app", design system e algoritmos são de
+							marca "Corrige Go", design system e algoritmos são de
 							propriedade exclusiva dos desenvolvedores.
 						</p>
 					</section>
@@ -211,8 +211,8 @@ export default function TermosPage() {
 							canal:
 						</p>
 						<p className="font-semibold text-primary">
-							<a href="mailto:contato@gabarita.app" className="hover:underline">
-								contato@gabarita.app
+							<a href="mailto:contato@corrigego.com.br" className="hover:underline">
+								contato@corrigego.com.br
 							</a>
 						</p>
 					</section>
@@ -227,7 +227,7 @@ export default function TermosPage() {
 								G
 							</div>
 							<span className="text-base font-bold tracking-tight">
-								gabarita<span className="text-primary">.app</span>
+								Corrige <span className="text-success">Go</span>
 							</span>
 						</div>
 						<p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
@@ -278,8 +278,8 @@ export default function TermosPage() {
 						<FooterGroupTitle>Fale Conosco</FooterGroupTitle>
 						<FooterLinkList>
 							<li>
-								<FooterLink href="mailto:contato@gabarita.app">
-									contato@gabarita.app
+								<FooterLink href="mailto:contato@corrigego.com.br">
+									contato@corrigego.com.br
 								</FooterLink>
 							</li>
 							<li>
@@ -297,12 +297,12 @@ export default function TermosPage() {
 
 				<FooterBottom>
 					<span>
-						© {new Date().getFullYear()} gabarita.app — Todos os direitos
+						© {new Date().getFullYear()} Corrige Go — Todos os direitos
 						reservados.
 					</span>
 					<FooterSocial>
 						<FooterLink
-							href="mailto:contato@gabarita.app"
+							href="mailto:contato@corrigego.com.br"
 							aria-label="E-mail de Contato"
 						>
 							<Mail className="size-4" />

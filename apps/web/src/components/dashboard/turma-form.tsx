@@ -87,7 +87,7 @@ export function TurmaForm({
 					<p className="text-xs text-muted-foreground">
 						Não encontrou a disciplina?{' '}
 						<a
-							href="mailto:contato@gabarita.app?subject=Nova%20disciplina"
+							href="mailto:contato@corrigego.com.br?subject=Nova%20disciplina"
 							className="text-primary hover:underline"
 						>
 							Peça pra gente adicionar

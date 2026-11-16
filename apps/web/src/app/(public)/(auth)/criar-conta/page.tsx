@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { CriarContaForm } from '@/components/auth/criar-conta-form'
 
 export const metadata: Metadata = {
-	title: 'Criar Conta Gratuita — Gabarita.app',
+	title: 'Criar Conta Gratuita — Corrige Go',
 	description:
 		'Cadastre-se gratuitamente e comece a elaborar e corrigir provas escolares com IA.',
 }

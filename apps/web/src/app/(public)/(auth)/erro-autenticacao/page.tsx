@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { getAuthErrorInfo } from '@/lib/auth-error-messages'
 
 export const metadata: Metadata = {
-	title: 'Erro ao Entrar — Gabarita.app',
+	title: 'Erro ao Entrar — Corrige Go',
 	description: 'Não foi possível concluir sua autenticação.',
 }
 

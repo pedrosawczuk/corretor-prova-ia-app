@@ -28,7 +28,7 @@ const meta: Meta<typeof Header> = {
 		docs: {
 			description: {
 				component:
-					'Componente de cabeçalho principal do **Gabarita.app**, atendendo tanto a Landing Page pública com efeito de vidro fosco (`glass`), quanto a Topbar privada com barra de ferramentas e perfil do docente.',
+					'Componente de cabeçalho principal do **Corrige Go**, atendendo tanto a Landing Page pública com efeito de vidro fosco (`glass`), quanto a Topbar privada com barra de ferramentas e perfil do docente.',
 			},
 		},
 	},
@@ -58,7 +58,7 @@ export const PublicLandingPageHeader: Story = {
 						G
 					</div>
 					<span className="text-base font-bold text-foreground tracking-tight">
-						Gabarita<span className="text-primary">.app</span>
+						Corrige <span className="text-success">Go</span>
 					</span>
 				</HeaderBrand>
 
@@ -93,7 +93,7 @@ export const FloatingLandingHeader: Story = {
 						G
 					</div>
 					<span className="text-sm font-bold text-foreground">
-						Gabarita.app
+						Corrige Go
 					</span>
 					<Badge size="xs" variant="primary">
 						BETA

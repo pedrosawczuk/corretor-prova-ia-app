@@ -2,9 +2,9 @@ import type { Metadata } from 'next'
 import { ProvaDetail } from '@/components/dashboard/prova-detail'
 
 export const metadata: Metadata = {
-	title: 'Prova — Gabarita.app',
+	title: 'Prova — Corrige Go',
 	description:
-		'Configure e gere as questões da prova com a IA do Gabarita.app.',
+		'Configure e gere as questões da prova com a IA do Corrige Go.',
 }
 
 interface ProvaDetailPageProps {

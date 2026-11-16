@@ -1,6 +1,6 @@
 import type { DriveStep } from 'driver.js'
 
-export const ONBOARDING_TOUR_STORAGE_KEY = 'gabarita:onboarding-tour-completed'
+export const ONBOARDING_TOUR_STORAGE_KEY = 'corrigego:onboarding-tour-completed'
 
 export function isOnboardingTourCompleted() {
 	return window.localStorage.getItem(ONBOARDING_TOUR_STORAGE_KEY) === '1'
@@ -15,7 +15,7 @@ export function buildOnboardingTourSteps(): DriveStep[] {
 		{
 			element: '[data-tour="brand"]',
 			popover: {
-				title: 'Bem-vindo ao gabarita.app 👋',
+				title: 'Bem-vindo ao Corrige Go 👋',
 				description:
 					'Vamos fazer um tour rápido pelas principais áreas da plataforma antes de você começar.',
 				side: 'bottom',

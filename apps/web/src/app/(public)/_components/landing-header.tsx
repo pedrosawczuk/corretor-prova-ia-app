@@ -14,10 +14,10 @@ export function LandingHeader() {
 			<HeaderBrand asChild>
 				<Link href="/" className="flex items-center gap-2.5">
 					<div className="size-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-xs">
-						G
+						C
 					</div>
 					<span className="text-base font-bold tracking-tight">
-						gabarita<span className="text-primary">.app</span>
+						Corrige <span className="text-success">Go</span>
 					</span>
 				</Link>
 			</HeaderBrand>

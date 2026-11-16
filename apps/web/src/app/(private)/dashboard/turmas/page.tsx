@@ -3,7 +3,7 @@ import { CriarTurmaDialog } from '@/components/dashboard/criar-turma-dialog'
 import { TurmasList } from '@/components/dashboard/turmas-list'
 
 export const metadata: Metadata = {
-	title: 'Turmas — Gabarita.app',
+	title: 'Turmas — Corrige Go',
 	description: 'Acompanhe e organize suas turmas.',
 }
 

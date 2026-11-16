@@ -19,10 +19,10 @@ export function LandingFooter() {
 				<FooterBrand>
 					<div className="flex items-center gap-2.5">
 						<div className="size-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-xs">
-							G
+							C
 						</div>
 						<span className="text-base font-bold tracking-tight">
-							gabarita<span className="text-primary">.app</span>
+							Corrige <span className="text-success">Go</span>
 						</span>
 					</div>
 					<p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
@@ -70,8 +70,8 @@ export function LandingFooter() {
 					<FooterGroupTitle>Fale Conosco</FooterGroupTitle>
 					<FooterLinkList>
 						<li>
-							<FooterLink href="mailto:contato@gabarita.app">
-								contato@gabarita.app
+							<FooterLink href="mailto:contato@corrigego.com.br">
+								contato@corrigego.com.br
 							</FooterLink>
 						</li>
 						<li>
@@ -89,12 +89,12 @@ export function LandingFooter() {
 
 			<FooterBottom>
 				<span>
-					© {new Date().getFullYear()} gabarita.app — Todos os direitos
+					© {new Date().getFullYear()} Corrige Go — Todos os direitos
 					reservados.
 				</span>
 				<FooterSocial>
 					<FooterLink
-						href="mailto:contato@gabarita.app"
+						href="mailto:contato@corrigego.com.br"
 						aria-label="E-mail de Contato"
 					>
 						<Mail className="size-4" />

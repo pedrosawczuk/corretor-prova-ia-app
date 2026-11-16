@@ -22,7 +22,7 @@ export function OnboardingTour() {
 			stagePadding: 6,
 			stageRadius: 12,
 			popoverOffset: 12,
-			popoverClass: 'gabarita-tour',
+			popoverClass: 'corrigego-tour',
 			allowClose: true,
 			nextBtnText: 'Próximo',
 			prevBtnText: 'Voltar',

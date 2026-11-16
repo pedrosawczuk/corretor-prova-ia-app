@@ -4,8 +4,8 @@ import { Skeleton } from '@app/ui'
 import { CorrigirProva } from '@/components/dashboard/corrigir-prova'
 
 export const metadata: Metadata = {
-	title: 'Corrigir prova — Gabarita.app',
-	description: 'Corrija provas por foto com o Gabarita.app.',
+	title: 'Corrigir prova — Corrige Go',
+	description: 'Corrija provas por foto com o Corrige Go.',
 }
 
 interface CorrigirProvaPageProps {

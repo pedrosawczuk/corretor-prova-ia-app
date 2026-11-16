@@ -295,11 +295,11 @@ export const AsLink: Story = {
 		<div className="flex flex-wrap items-center gap-3">
 			<Button asChild variant="default" rightIcon={<ExternalLink />}>
 				<a
-					href="https://gabarita.app"
+					href="https://corrigego.com.br"
 					target="_blank"
 					rel="noopener noreferrer"
 				>
-					Acessar Gabarita.app
+					Acessar Corrige Go
 				</a>
 			</Button>
 			<Button asChild variant="outline" leftIcon={<FileText />}>

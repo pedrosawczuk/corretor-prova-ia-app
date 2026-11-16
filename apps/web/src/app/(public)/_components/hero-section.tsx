@@ -26,7 +26,7 @@ export function HeroSection() {
 
 				<p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl">
 					Aponte a câmera do seu celular para as folhas de respostas dos seus
-					alunos. O Gabarita.app confere as alternativas, calcula a nota e
+					alunos. O Corrige Go confere as alternativas, calcula a nota e
 					aponta rasuras na hora.
 				</p>
 

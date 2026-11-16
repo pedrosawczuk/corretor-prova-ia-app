@@ -13,7 +13,7 @@ describe('Footer', () => {
 	it('renders as a footer landmark with its content', () => {
 		render(
 			<Footer>
-				<FooterBrand>Gabarita.app</FooterBrand>
+				<FooterBrand>Corrige Go</FooterBrand>
 				<FooterGroup>
 					<FooterGroupTitle>Produto</FooterGroupTitle>
 					<FooterLinkList>
@@ -26,7 +26,7 @@ describe('Footer', () => {
 		)
 
 		expect(screen.getByRole('contentinfo')).toBeInTheDocument()
-		expect(screen.getByText('Gabarita.app')).toBeInTheDocument()
+		expect(screen.getByText('Corrige Go')).toBeInTheDocument()
 		expect(screen.getByRole('link', { name: 'Preços' })).toHaveAttribute(
 			'href',
 			'/precos',

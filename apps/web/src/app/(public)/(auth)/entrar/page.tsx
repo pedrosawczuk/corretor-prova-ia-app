@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { EntrarForm } from '@/components/auth/entrar-form'
 
 export const metadata: Metadata = {
-	title: 'Entrar — Gabarita.app',
+	title: 'Entrar — Corrige Go',
 	description:
 		'Acesse seu painel docente para gerenciar turmas e corrigir avaliações com IA.',
 }

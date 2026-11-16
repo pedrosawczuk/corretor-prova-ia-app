@@ -51,7 +51,7 @@ export function AdminSidebar() {
 						A
 					</div>
 					<span className="font-bold text-sm text-foreground tracking-tight truncate group-data-[collapsible=icon]:hidden">
-						gabarita<span className="text-primary">.admin</span>
+						Corrige <span className="text-success">Go</span> <span className="text-muted-foreground font-medium">Admin</span>
 					</span>
 				</Link>
 			</SidebarHeader>

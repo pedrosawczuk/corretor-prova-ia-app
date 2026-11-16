@@ -21,7 +21,7 @@ import {
 } from '@/lib/auth-server'
 
 export const metadata: Metadata = {
-	title: 'Configurações — Gabarita.app',
+	title: 'Configurações — Corrige Go',
 	description: 'Gerencie seu perfil, segurança e sessões ativas.',
 }
 

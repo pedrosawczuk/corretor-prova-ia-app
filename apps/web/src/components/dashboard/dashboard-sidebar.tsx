@@ -48,10 +48,10 @@ export function DashboardSidebar() {
 					className="flex items-center gap-2.5 px-1 py-1 min-w-0"
 				>
 					<div className="size-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
-						G
+						C
 					</div>
 					<span className="font-bold text-sm text-foreground tracking-tight truncate group-data-[collapsible=icon]:hidden">
-						gabarita<span className="text-primary">.app</span>
+						Corrige <span className="text-success">Go</span>
 					</span>
 				</Link>
 			</SidebarHeader>

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { TurmaDetail } from '@/components/dashboard/turma-detail'
 
 export const metadata: Metadata = {
-	title: 'Turma — Gabarita.app',
+	title: 'Turma — Corrige Go',
 	description: 'Detalhes da turma, provas e histórico de correções.',
 }
 

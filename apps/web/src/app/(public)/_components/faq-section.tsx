@@ -32,7 +32,7 @@ export function FaqSection() {
 							Como funciona a segurança dos dados dos alunos (LGPD e Menores)?
 						</AccordionTrigger>
 						<AccordionContent>
-							O Gabarita.app foi desenvolvido com privacidade em primeiro lugar:
+							O Corrige Go foi desenvolvido com privacidade em primeiro lugar:
 							você não precisa cadastrar dados pessoais sensíveis, documentos ou
 							matrículas de menores. As fotos das provas são utilizadas
 							unicamente para a apuração das notas e ficam sob seu controle

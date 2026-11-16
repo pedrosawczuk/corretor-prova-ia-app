@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import { ConviteContent } from '@/components/auth/convite-content'
 
 export const metadata: Metadata = {
-	title: 'Convite — Gabarita.app',
-	description: 'Você foi convidado para usar o plano Pro da gabarita.app.',
+	title: 'Convite — Corrige Go',
+	description: 'Você foi convidado para usar o plano Pro do Corrige Go.',
 	robots: { index: false, follow: false },
 }
 

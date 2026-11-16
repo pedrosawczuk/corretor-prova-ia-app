@@ -22,7 +22,7 @@ const meta: Meta<typeof Footer> = {
 		docs: {
 			description: {
 				component:
-					'Componente de rodapé estruturado e modular para o **Gabarita.app**, com colunas de links, branding institucional, links de termos e redes sociais.',
+					'Componente de rodapé estruturado e modular para o **Corrige Go**, com colunas de links, branding institucional, links de termos e redes sociais.',
 			},
 		},
 	},
@@ -48,7 +48,7 @@ export const CompleteLandingPageFooter: Story = {
 							G
 						</div>
 						<span className="text-base font-bold text-foreground tracking-tight">
-							Gabarita<span className="text-primary">.app</span>
+							Corrige <span className="text-success">Go</span>
 						</span>
 						<Badge size="xs" variant="secondary" leftIcon={<Sparkles />}>
 							IA Vision
@@ -127,12 +127,12 @@ export const CompleteLandingPageFooter: Story = {
 
 			<FooterBottom>
 				<span>
-					© {new Date().getFullYear()} Gabarita.app — Todos os direitos
+					© {new Date().getFullYear()} Corrige Go — Todos os direitos
 					reservados.
 				</span>
 
 				<FooterSocial>
-					<FooterLink href="mailto:contato@gabarita.app" aria-label="E-mail">
+					<FooterLink href="mailto:contato@corrigego.com.br" aria-label="E-mail">
 						<Mail className="size-4" />
 					</FooterLink>
 					<FooterLink href="#chat" aria-label="Comunidade">
@@ -141,7 +141,7 @@ export const CompleteLandingPageFooter: Story = {
 					<FooterLink href="#share" aria-label="Compartilhar">
 						<Share2 className="size-4" />
 					</FooterLink>
-					<FooterLink href="https://gabarita.app" aria-label="Website">
+					<FooterLink href="https://corrigego.com.br" aria-label="Website">
 						<Globe className="size-4" />
 					</FooterLink>
 				</FooterSocial>
@@ -156,7 +156,7 @@ export const MinimalAuthFooter: Story = {
 			<div className="mx-auto max-w-4xl px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
 				<div className="flex items-center gap-2">
 					<Globe className="size-3.5" />
-					<span>Gabarita.app • Brasil (PT-BR)</span>
+					<span>Corrige Go • Brasil (PT-BR)</span>
 				</div>
 
 				<div className="flex items-center gap-4">

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { AdminSubjectsTable } from '@/components/admin/admin-subjects-table'
 
 export const metadata: Metadata = {
-	title: 'Disciplinas — Admin — Gabarita.app',
+	title: 'Disciplinas — Admin — Corrige Go',
 	description:
 		'Gerencie a lista global de disciplinas disponível para os professores.',
 }

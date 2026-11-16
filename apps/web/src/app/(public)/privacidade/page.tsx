@@ -32,7 +32,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-	title: 'Política de Privacidade — Gabarita.app',
+	title: 'Política de Privacidade — Corrige Go',
 	description:
 		'Transparência total sobre como tratamos e protegemos seus dados e avaliações em conformidade com a LGPD.',
 }
@@ -49,7 +49,7 @@ export default function PrivacidadePage() {
 							G
 						</div>
 						<span className="text-base font-bold tracking-tight">
-							gabarita<span className="text-primary">.app</span>
+							Corrige <span className="text-success">Go</span>
 						</span>
 					</Link>
 				</HeaderBrand>
@@ -133,7 +133,7 @@ export default function PrivacidadePage() {
 							1. Compromisso com a Privacidade Docente e Escolar
 						</h2>
 						<p className="text-muted-foreground">
-							O <strong>Gabarita.app</strong> foi concebido desde a sua primeira
+							O <strong>Corrige Go</strong> foi concebido desde a sua primeira
 							linha de código com o princípio de <em>Privacy by Design</em>.
 							Nosso objetivo é acelerar a rotina do professor sem criar riscos
 							de conformidade ou exposição de informações escolares.
@@ -178,7 +178,7 @@ export default function PrivacidadePage() {
 						</p>
 						<div className="p-4 rounded-xl bg-muted/40 border border-border/60 text-muted-foreground space-y-2">
 							<p>
-								• O Gabarita.app <strong>não cria perfis de estudantes</strong>,
+								• O Corrige Go <strong>não cria perfis de estudantes</strong>,
 								não armazena dados de contato de menores e não realiza
 								cruzamento de dados escolares para fins comerciais.
 							</p>
@@ -194,7 +194,7 @@ export default function PrivacidadePage() {
 							4. Não Compartilhamento com Terceiros
 						</h2>
 						<p className="text-muted-foreground">
-							O Gabarita.app{' '}
+							O Corrige Go{' '}
 							<strong>nunca comercializa, aluga ou compartilha</strong> seus
 							dados pedagógicos ou imagens de provas com empresas de
 							publicidade, corretores de dados ou terceiros não autorizados.
@@ -231,10 +231,10 @@ export default function PrivacidadePage() {
 						</p>
 						<p className="font-semibold text-primary">
 							<a
-								href="mailto:privacidade@gabarita.app"
+								href="mailto:privacidade@Corrige Go"
 								className="hover:underline"
 							>
-								privacidade@gabarita.app
+								privacidade@Corrige Go
 							</a>
 						</p>
 					</section>
@@ -249,7 +249,7 @@ export default function PrivacidadePage() {
 								G
 							</div>
 							<span className="text-base font-bold tracking-tight">
-								gabarita<span className="text-primary">.app</span>
+								Corrige <span className="text-success">Go</span>
 							</span>
 						</div>
 						<p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
@@ -300,8 +300,8 @@ export default function PrivacidadePage() {
 						<FooterGroupTitle>Fale Conosco</FooterGroupTitle>
 						<FooterLinkList>
 							<li>
-								<FooterLink href="mailto:contato@gabarita.app">
-									contato@gabarita.app
+								<FooterLink href="mailto:contato@corrigego.com.br">
+									contato@corrigego.com.br
 								</FooterLink>
 							</li>
 							<li>
@@ -319,12 +319,12 @@ export default function PrivacidadePage() {
 
 				<FooterBottom>
 					<span>
-						© {new Date().getFullYear()} gabarita.app — Todos os direitos
+						© {new Date().getFullYear()} Corrige Go — Todos os direitos
 						reservados.
 					</span>
 					<FooterSocial>
 						<FooterLink
-							href="mailto:contato@gabarita.app"
+							href="mailto:contato@corrigego.com.br"
 							aria-label="E-mail de Contato"
 						>
 							<Mail className="size-4" />

@@ -26,7 +26,7 @@ import Link from 'next/link'
 import { getAuthSession } from '@/lib/auth-server'
 
 export const metadata: Metadata = {
-	title: 'Planos e Preços — Gabarita.app',
+	title: 'Planos e Preços — Corrige Go',
 	description:
 		'Escolha o plano ideal para corrigir provas por foto com IA: pacote avulso ou assinatura mensal com correções ilimitadas dentro da sua cota.',
 }
@@ -110,7 +110,7 @@ export default async function PricingPage() {
 							G
 						</div>
 						<span className="text-base font-bold tracking-tight">
-							gabarita<span className="text-primary">.app</span>
+							Corrige <span className="text-success">Go</span>
 						</span>
 					</Link>
 				</HeaderBrand>
@@ -232,7 +232,7 @@ export default async function PricingPage() {
 								G
 							</div>
 							<span className="text-base font-bold tracking-tight">
-								gabarita<span className="text-primary">.app</span>
+								Corrige <span className="text-success">Go</span>
 							</span>
 						</div>
 						<p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
@@ -285,8 +285,8 @@ export default async function PricingPage() {
 						<FooterGroupTitle>Fale Conosco</FooterGroupTitle>
 						<FooterLinkList>
 							<li>
-								<FooterLink href="mailto:contato@gabarita.app">
-									contato@gabarita.app
+								<FooterLink href="mailto:contato@corrigego.com.br">
+									contato@corrigego.com.br
 								</FooterLink>
 							</li>
 							<li>
@@ -304,12 +304,12 @@ export default async function PricingPage() {
 
 				<FooterBottom>
 					<span>
-						© {new Date().getFullYear()} gabarita.app — Todos os direitos
+						© {new Date().getFullYear()} Corrige Go — Todos os direitos
 						reservados.
 					</span>
 					<FooterSocial>
 						<FooterLink
-							href="mailto:contato@gabarita.app"
+							href="mailto:contato@corrigego.com.br"
 							aria-label="E-mail de Contato"
 						>
 							<Mail className="size-4" />

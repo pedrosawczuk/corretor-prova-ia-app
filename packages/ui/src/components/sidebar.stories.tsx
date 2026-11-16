@@ -39,7 +39,7 @@ const meta: Meta<typeof Sidebar> = {
 		docs: {
 			description: {
 				component:
-					'Barra lateral de navegação completa e responsiva do **Gabarita.app**. Suporta colapso para modo ícones, gaveta mobile com overlay, atalho global de teclado (`Ctrl+B` / `⌘B`), grupos de navegação, badges de notificação e menus aninhados.',
+					'Barra lateral de navegação completa e responsiva do **Corrige Go**. Suporta colapso para modo ícones, gaveta mobile com overlay, atalho global de teclado (`Ctrl+B` / `⌘B`), grupos de navegação, badges de notificação e menus aninhados.',
 			},
 		},
 	},
@@ -48,7 +48,7 @@ const meta: Meta<typeof Sidebar> = {
 export default meta
 type Story = StoryObj<typeof Sidebar>
 
-export const GabaritaAppSidebar: Story = {
+export const CorrigeGoSidebar: Story = {
 	render: () => (
 		<SidebarProvider defaultOpen>
 			<Sidebar variant="sidebar" collapsible="icon">
@@ -60,7 +60,7 @@ export const GabaritaAppSidebar: Story = {
 							</div>
 							<div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
 								<span className="font-bold text-sm text-foreground tracking-tight flex items-center gap-1.5">
-									Gabarita.app
+									Corrige Go
 									<Badge size="xs" variant="primary">
 										AI
 									</Badge>

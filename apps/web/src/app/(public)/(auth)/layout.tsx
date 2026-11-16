@@ -23,10 +23,10 @@ export default function AuthLayout({
 						className="flex items-center gap-2.5 group transition-opacity hover:opacity-90"
 					>
 						<div className="size-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-xs transition-transform group-hover:scale-105">
-							G
+							C
 						</div>
 						<span className="text-lg font-bold tracking-tight text-foreground">
-							gabarita<span className="text-primary">.app</span>
+							Corrige <span className="text-success">Go</span>
 						</span>
 					</Link>
 
@@ -41,7 +41,7 @@ export default function AuthLayout({
 				<main className="my-auto py-8 w-full max-w-md mx-auto">{children}</main>
 
 				<footer className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground pt-6 border-t border-border/40">
-					<span>© {new Date().getFullYear()} gabarita.app</span>
+					<span>© {new Date().getFullYear()} Corrige Go</span>
 					<div className="flex items-center gap-4">
 						<Link
 							href="/privacidade"
@@ -128,7 +128,7 @@ export default function AuthLayout({
 						</h3>
 						<p className="text-sm text-zinc-300 leading-relaxed">
 							Do gerador de avaliações em PDF à leitura de gabarito por foto: o
-							Gabarita.app cuida da rotina mecânica para você focar no ensino.
+							Corrige Go cuida da rotina mecânica para você focar no ensino.
 						</p>
 					</div>
 				</div>

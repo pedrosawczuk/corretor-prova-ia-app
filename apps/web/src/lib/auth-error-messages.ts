@@ -26,7 +26,7 @@ const AUTH_ERROR_MESSAGES: Record<string, AuthErrorInfo> = {
 	account_already_linked_to_different_user: {
 		title: 'Conta já vinculada',
 		description:
-			'Esta conta Google já está vinculada a outro usuário do Gabarita.app.',
+			'Esta conta Google já está vinculada a outro usuário do Corrige Go.',
 		action: 'retry',
 	},
 	unable_to_link_account: {

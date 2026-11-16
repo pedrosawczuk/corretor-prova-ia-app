@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { AdminPrivilegedEmailsTable } from '@/components/admin/access-grants/admin-privileged-emails-table'
 
 export const metadata: Metadata = {
-	title: 'E-mails privilegiados — Admin — Gabarita.app',
+	title: 'E-mails privilegiados — Admin — Corrige Go',
 	description: 'E-mails que ganham a cortesia do plano Pro automaticamente.',
 }
 

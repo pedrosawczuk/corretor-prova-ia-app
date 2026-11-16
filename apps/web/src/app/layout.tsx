@@ -11,7 +11,7 @@ const sora = Sora({
 })
 
 export const metadata: Metadata = {
-	title: 'Gabarita.app — Correção Inteligente de Provas com IA',
+	title: 'Corrige Go — Correção Inteligente de Provas com IA',
 	description:
 		'Corrija pilhas de provas escolares em minutos com a câmera do seu celular. Sem cadastro de alunos e com total privacidade.',
 }

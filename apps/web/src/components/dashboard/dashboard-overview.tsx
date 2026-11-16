@@ -426,7 +426,7 @@ export function DashboardOverview() {
 								Nenhuma prova criada ainda
 							</h2>
 							<p className="max-w-sm text-xs text-muted-foreground">
-								Gere provas com a IA do Gabarita.app a partir de cada turma.
+								Gere provas com a IA do Corrige Go a partir de cada turma.
 							</p>
 						</div>
 					) : (
