@@ -12,7 +12,8 @@
 			"!**/next-env.d.ts",
 			"!**/.next",
 			"!**/storybook-static",
-			"!graphify-out"
+			"!graphify-out",
+			"!brand"
 		]
 	},
 	"formatter": {
