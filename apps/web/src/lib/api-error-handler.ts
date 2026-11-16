@@ -3,7 +3,13 @@ import type { FieldValues, Path, UseFormSetError } from 'react-hook-form'
 import { ApiError } from './api-client'
 
 const CONNECTION_ERROR_MESSAGE =
-	'Não foi possível conectar ao servidor. Verifique sua conexão.'
+	'Sem conexão com o servidor. Verifique sua internet e tente novamente.'
+
+const SERVER_ERROR_MESSAGE =
+	'Algo deu errado no servidor no momento. Tente novamente em alguns instantes.'
+
+const RAW_TECHNICAL_MESSAGE_RE =
+	/^(internal server error|bad gateway|service unavailable|gateway timeout|unexpected token|failed to fetch|networkerror|request failed|error:?\s*\d{3}|something went wrong)/i
 
 const KNOWN_ERROR_CODE_MESSAGES: Record<string, string> = {
 	INVALID_PASSWORD: 'Senha atual incorreta.',
@@ -23,13 +29,47 @@ const KNOWN_ERROR_CODE_MESSAGES: Record<string, string> = {
 	USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL:
 		'Este e-mail já está cadastrado no sistema.',
 	INVALID_CREDENTIALS: 'E-mail ou senha incorretos.',
+	INVALID_EMAIL_OR_PASSWORD: 'E-mail ou senha incorretos.',
+	INVALID_EMAIL: 'Digite um e-mail válido.',
+	USER_NOT_FOUND: 'Nenhuma conta encontrada com este e-mail.',
+	PASSWORD_TOO_SHORT: 'A senha está muito curta.',
+	PASSWORD_TOO_LONG: 'A senha ultrapassou o limite de caracteres.',
+	TOO_MANY_REQUESTS:
+		'Muitas tentativas seguidas. Aguarde alguns instantes e tente novamente.',
+	RATE_LIMIT_EXCEEDED:
+		'Muitas tentativas seguidas. Aguarde alguns instantes e tente novamente.',
+	UNAUTHORIZED: 'Sua sessão expirou. Entre novamente para continuar.',
+	FORBIDDEN: 'Você não tem permissão para realizar esta ação.',
+	INTERNAL_SERVER_ERROR: SERVER_ERROR_MESSAGE,
+	SERVICE_UNAVAILABLE: SERVER_ERROR_MESSAGE,
+	BAD_GATEWAY: SERVER_ERROR_MESSAGE,
+	GATEWAY_TIMEOUT: SERVER_ERROR_MESSAGE,
 }
 
 function resolveErrorMessage(error: ApiError, fallback: string) {
-	if (error.code && error.code in KNOWN_ERROR_CODE_MESSAGES) {
-		return KNOWN_ERROR_CODE_MESSAGES[error.code]
+	const code = error.code?.toUpperCase()
+	if (code && code in KNOWN_ERROR_CODE_MESSAGES) {
+		return KNOWN_ERROR_CODE_MESSAGES[code]
 	}
-	return error.message || fallback
+
+	if (error.status && error.status >= 500) {
+		return SERVER_ERROR_MESSAGE
+	}
+	if (error.status === 429) {
+		return KNOWN_ERROR_CODE_MESSAGES.TOO_MANY_REQUESTS
+	}
+	if (error.status === 401) {
+		return KNOWN_ERROR_CODE_MESSAGES.UNAUTHORIZED
+	}
+	if (error.status === 403) {
+		return KNOWN_ERROR_CODE_MESSAGES.FORBIDDEN
+	}
+
+	if (!error.message || RAW_TECHNICAL_MESSAGE_RE.test(error.message.trim())) {
+		return fallback
+	}
+
+	return error.message
 }
 
 export function toastApiError(error: unknown, fallback: string) {
@@ -73,7 +113,10 @@ export function applyApiErrorsToForm<TFieldValues extends FieldValues>(
 			}
 		}
 		toast.error(
-			error.message || 'Verifique os campos destacados no formulário.',
+			resolveErrorMessage(
+				error,
+				'Verifique os campos destacados no formulário.',
+			),
 		)
 		return
 	}
@@ -101,7 +144,10 @@ export function applyApiErrorsToForm<TFieldValues extends FieldValues>(
 		return
 	}
 
-	if (error.code === 'INVALID_CREDENTIALS') {
+	if (
+		error.code === 'INVALID_CREDENTIALS' ||
+		error.code === 'INVALID_EMAIL_OR_PASSWORD'
+	) {
 		setError('email' as Path<TFieldValues>, {
 			type: 'manual',
 			message: 'E-mail ou senha incorretos.',
@@ -110,7 +156,9 @@ export function applyApiErrorsToForm<TFieldValues extends FieldValues>(
 			type: 'manual',
 			message: 'E-mail ou senha incorretos.',
 		})
-		toast.error('E-mail ou senha incorretos. Verifique suas credenciais.')
+		toast.error(
+			'E-mail ou senha incorretos. Confira seus dados e tente novamente.',
+		)
 		return
 	}
 

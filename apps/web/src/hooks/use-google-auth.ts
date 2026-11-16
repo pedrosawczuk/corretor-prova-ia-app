@@ -38,7 +38,7 @@ export function useGoogleAuth({
 			toast.error(
 				error instanceof ApiError
 					? startErrorMessage
-					: 'Erro ao comunicar com o servidor de autenticação.',
+					: 'Sem conexão com o servidor. Verifique sua internet e tente novamente.',
 			)
 		} finally {
 			setIsLoading(false)

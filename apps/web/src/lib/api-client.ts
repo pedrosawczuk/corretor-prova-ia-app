@@ -6,16 +6,19 @@ export interface ApiErrorIssue {
 export class ApiError extends Error {
 	code?: string
 	issues?: ApiErrorIssue[] | Record<string, { _errors?: string[] }>
+	status?: number
 
 	constructor(
 		message: string,
 		code?: string,
 		issues?: ApiErrorIssue[] | Record<string, { _errors?: string[] }>,
+		status?: number,
 	) {
 		super(message)
 		this.name = 'ApiError'
 		this.code = code
 		this.issues = issues
+		this.status = status
 	}
 }
 
@@ -23,10 +26,15 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
 
 async function throwApiError(response: Response): Promise<never> {
 	const errorData = await response.json().catch(() => ({}))
+	const defaultMessage =
+		response.status >= 500
+			? 'Algo deu errado no servidor no momento. Tente novamente em alguns instantes.'
+			: 'Não foi possível concluir a solicitação. Tente novamente.'
 	throw new ApiError(
-		errorData.message || 'Ocorreu um erro ao processar a solicitação.',
+		errorData.message || defaultMessage,
 		errorData.code,
 		errorData.issues,
+		response.status,
 	)
 }
 
