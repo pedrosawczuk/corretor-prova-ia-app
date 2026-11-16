@@ -19,7 +19,7 @@ import {
 	SearchX,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import * as React from 'react'
 import { useClassroomStudentSuggestions } from '@/hooks/use-classrooms'
 import { useExam, useExportExam } from '@/hooks/use-exams'
@@ -53,6 +53,7 @@ interface CorrigirProvaProps {
 }
 
 export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
+	const router = useRouter()
 	const searchParams = useSearchParams()
 	const querySubmissionId = searchParams.get('submissionId')
 
@@ -220,6 +221,17 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 		)
 	}
 
+	function handleNextStudent() {
+		for (const page of pagesRef.current) URL.revokeObjectURL(page.previewUrl)
+		setPages([])
+		setStudentName('')
+		setSubmissionId(undefined)
+		setStep('intro')
+		if (querySubmissionId) {
+			router.replace(`/dashboard/turmas/${turmaId}/provas/${examId}/corrigir`)
+		}
+	}
+
 	if (step === 'result') {
 		if (!submission) {
 			return (
@@ -234,13 +246,25 @@ export function CorrigirProva({ turmaId, examId }: CorrigirProvaProps) {
 
 		return (
 			<div className="flex flex-1 flex-col gap-6 p-6 bg-muted/20">
-				<Link
-					href={`/dashboard/turmas/${turmaId}/provas/${examId}`}
-					className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-				>
-					<ArrowLeft className="size-3.5" />
-					Voltar para a prova
-				</Link>
+				<div className="flex flex-wrap items-center justify-between gap-3">
+					<Link
+						href={`/dashboard/turmas/${turmaId}/provas/${examId}`}
+						className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+					>
+						<ArrowLeft className="size-3.5" />
+						Voltar para a prova
+					</Link>
+
+					<Button
+						type="button"
+						variant="success"
+						size="sm"
+						leftIcon={<Camera />}
+						onClick={handleNextStudent}
+					>
+						Corrigir próximo aluno
+					</Button>
+				</div>
 
 				{misalignedPages.length > 0 && pending > 0 && (
 					<div className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning/5 p-3 text-sm text-warning">

@@ -31,10 +31,35 @@ export function CorrigirProvaCamera({
 }: CorrigirProvaCameraProps) {
 	const { videoRef, isReady, error, captureFrame } = useCamera()
 	const galleryInputRef = React.useRef<HTMLInputElement>(null)
+	const [isFlashing, setIsFlashing] = React.useState(false)
+	const flashTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+		null,
+	)
+
+	React.useEffect(() => {
+		return () => {
+			if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current)
+		}
+	}, [])
+
+	function triggerCaptureFeedback() {
+		if (
+			typeof navigator !== 'undefined' &&
+			typeof navigator.vibrate === 'function'
+		) {
+			navigator.vibrate(25)
+		}
+		setIsFlashing(true)
+		if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current)
+		flashTimeoutRef.current = setTimeout(() => setIsFlashing(false), 180)
+	}
 
 	async function handleCapture() {
 		const blob = await captureFrame()
-		if (blob) onCapture([blob])
+		if (blob) {
+			triggerCaptureFeedback()
+			onCapture([blob])
+		}
 	}
 
 	function handleGallerySelected(event: React.ChangeEvent<HTMLInputElement>) {
@@ -61,6 +86,13 @@ export function CorrigirProvaCamera({
 				playsInline
 				muted
 				className="absolute inset-0 h-full w-full object-cover"
+			/>
+
+			<div
+				aria-hidden="true"
+				className={`pointer-events-none absolute inset-0 bg-white transition-opacity duration-150 ${
+					isFlashing ? 'opacity-45' : 'opacity-0'
+				}`}
 			/>
 
 			{!isReady && !error && (
