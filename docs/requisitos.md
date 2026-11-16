@@ -1,4 +1,4 @@
-# Corretor & Gerador de Provas IA - Documento de Requisitos (MVP)
+# Corrige Go - Documento de Requisitos (MVP)
 
 ## Visão Geral
 O aplicativo é uma plataforma para o ciclo completo de avaliações escolares: desde a **criação e refinamento de provas com IA**, passando pela **formatação e impressão**, até a **correção automática por leitura de imagem com IA (Gemini Vision), conferida pelo pipeline OpenCV quando os marcadores de canto aparecem na foto,** através de fotos tiradas pela câmera ou escolhidas na galeria do smartphone do professor.

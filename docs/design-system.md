@@ -1,4 +1,4 @@
-# Brand Identity & Design System Specification: CorretorProvaIa
+# Brand Identity & Design System Specification: Corrige Go
 
 > **Technical Design System Specification Document**
 > Generated on: 2026-08-26 | Designed for AI code generators, LLM prompt engineering, frontend developers, and UI/UX designers.

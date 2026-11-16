@@ -1,6 +1,6 @@
-# 📚 Documentação do Projeto: Corretor de Prova IA
+# 📚 Documentação do Projeto: Corrige Go
 
-Bem-vindo à documentação oficial do **Corretor de Prova IA** — uma plataforma SaaS projetada para professores e instituições de ensino automatizarem a criação de avaliações, digitalização de respostas e correção inteligente com IA.
+Bem-vindo à documentação oficial do **Corrige Go** — uma plataforma SaaS projetada para professores e instituições de ensino automatizarem a criação de avaliações, digitalização de respostas e correção inteligente com IA.
 
 ---
 
