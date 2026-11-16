@@ -49,7 +49,7 @@ export default function PrivacidadePage() {
 							G
 						</div>
 						<span className="text-base font-bold tracking-tight">
-							Corrige <span className="text-success">Go</span>
+							Corrige<span className="text-primary">Go</span>
 						</span>
 					</Link>
 				</HeaderBrand>
@@ -231,10 +231,10 @@ export default function PrivacidadePage() {
 						</p>
 						<p className="font-semibold text-primary">
 							<a
-								href="mailto:privacidade@Corrige Go"
+								href="mailto:privacidade@corrigego.com.br"
 								className="hover:underline"
 							>
-								privacidade@Corrige Go
+								privacidade@corrigego.com.br
 							</a>
 						</p>
 					</section>
@@ -249,7 +249,7 @@ export default function PrivacidadePage() {
 								G
 							</div>
 							<span className="text-base font-bold tracking-tight">
-								Corrige <span className="text-success">Go</span>
+								Corrige<span className="text-primary">Go</span>
 							</span>
 						</div>
 						<p className="text-xs text-muted-foreground leading-relaxed max-w-sm">

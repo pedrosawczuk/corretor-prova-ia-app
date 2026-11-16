@@ -11,6 +11,7 @@ import {
 	Tailwind,
 	Text,
 } from '@react-email/components'
+import { EmailBrandHeader } from './email-brand-header'
 
 interface ResetPasswordEmailProps {
 	name: string
@@ -49,27 +50,7 @@ export function ResetPasswordEmail({
 						<Section className="bg-primary h-1" />
 
 						<Section className="px-10 py-8">
-							<table
-								role="presentation"
-								cellPadding={0}
-								cellSpacing={0}
-								align="center"
-							>
-								<tbody>
-									<tr>
-										<td className="size-8 rounded-xl bg-primary text-center align-middle">
-											<Text className="text-primary-foreground text-sm font-bold m-0 leading-8">
-												G
-											</Text>
-										</td>
-										<td className="pl-2.5 align-middle">
-											<Text className="text-base font-bold text-foreground m-0">
-												Corrige <span className="text-success">Go</span>
-											</Text>
-										</td>
-									</tr>
-								</tbody>
-							</table>
+							<EmailBrandHeader />
 
 							<Text className="text-xl font-bold text-foreground text-center m-0 mt-8">
 								Redefinir sua senha

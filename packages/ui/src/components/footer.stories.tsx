@@ -48,7 +48,7 @@ export const CompleteLandingPageFooter: Story = {
 							G
 						</div>
 						<span className="text-base font-bold text-foreground tracking-tight">
-							Corrige <span className="text-success">Go</span>
+							Corrige<span className="text-primary">Go</span>
 						</span>
 						<Badge size="xs" variant="secondary" leftIcon={<Sparkles />}>
 							IA Vision

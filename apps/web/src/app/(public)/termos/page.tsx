@@ -49,7 +49,7 @@ export default function TermosPage() {
 							G
 						</div>
 						<span className="text-base font-bold tracking-tight">
-							Corrige <span className="text-success">Go</span>
+							Corrige<span className="text-primary">Go</span>
 						</span>
 					</Link>
 				</HeaderBrand>
@@ -230,7 +230,7 @@ export default function TermosPage() {
 								G
 							</div>
 							<span className="text-base font-bold tracking-tight">
-								Corrige <span className="text-success">Go</span>
+								Corrige<span className="text-primary">Go</span>
 							</span>
 						</div>
 						<p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
