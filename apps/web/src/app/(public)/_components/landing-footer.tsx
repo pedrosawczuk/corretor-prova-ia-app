@@ -11,6 +11,7 @@ import {
 } from '@app/ui'
 import { Mail, MessageSquare, ShieldCheck } from 'lucide-react'
 import Link from 'next/link'
+import { BrandIcon } from '@/components/brand-icon'
 
 export function LandingFooter() {
 	return (
@@ -18,11 +19,9 @@ export function LandingFooter() {
 			<FooterContent>
 				<FooterBrand>
 					<div className="flex items-center gap-2.5">
-						<div className="size-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-xs">
-							C
-						</div>
+						<BrandIcon className="size-8 shrink-0" />
 						<span className="text-base font-bold tracking-tight">
-							Corrige <span className="text-success">Go</span>
+							Corrige<span className="text-primary">Go</span>
 						</span>
 					</div>
 					<p className="text-xs text-muted-foreground leading-relaxed max-w-sm">

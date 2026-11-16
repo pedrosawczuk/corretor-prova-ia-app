@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import type * as React from 'react'
+import { BrandIcon } from '@/components/brand-icon'
 
 export default function AuthLayout({
 	children,
@@ -22,11 +23,9 @@ export default function AuthLayout({
 						href="/"
 						className="flex items-center gap-2.5 group transition-opacity hover:opacity-90"
 					>
-						<div className="size-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-xs transition-transform group-hover:scale-105">
-							C
-						</div>
+						<BrandIcon className="size-9 shrink-0 transition-transform group-hover:scale-105" />
 						<span className="text-lg font-bold tracking-tight text-foreground">
-							Corrige <span className="text-success">Go</span>
+							Corrige<span className="text-primary">Go</span>
 						</span>
 					</Link>
 
