@@ -21,7 +21,7 @@ describe('POST /auth/two-factor/enable', () => {
 		const password = faker.internet.password({ length: 10 })
 		const responseBody = {
 			method: 'totp',
-			totpURI: 'otpauth://totp/gabarita.app?secret=ABC123',
+			totpURI: 'otpauth://totp/Corrige%20Go?secret=ABC123',
 			backupCodes: [
 				faker.string.alphanumeric(10),
 				faker.string.alphanumeric(10),
@@ -54,7 +54,7 @@ describe('POST /auth/two-factor/enable', () => {
 		vi.mocked(auth.api.enableTwoFactor).mockResolvedValue(
 			makeAuthResponse({
 				method: 'totp',
-				totpURI: 'otpauth://totp/gabarita.app?secret=ABC123',
+				totpURI: 'otpauth://totp/Corrige%20Go?secret=ABC123',
 				backupCodes: [],
 			}) as never,
 		)

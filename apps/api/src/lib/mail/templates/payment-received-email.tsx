@@ -67,7 +67,7 @@ export function PaymentReceivedEmail({
 										</td>
 										<td className="pl-2.5 align-middle">
 											<Text className="text-base font-bold text-foreground m-0">
-												gabarita<span className="text-primary">.app</span>
+												Corrige <span className="text-success">Go</span>
 											</Text>
 										</td>
 									</tr>
@@ -79,7 +79,7 @@ export function PaymentReceivedEmail({
 							</Text>
 
 							<Text className="text-sm text-muted-foreground text-center leading-relaxed mt-3 mb-0">
-								Olá, {name}. Obrigado por assinar a gabarita.app! Confirmamos o
+								Olá, {name}. Obrigado por assinar o Corrige Go! Confirmamos o
 								pagamento do plano {planName} e sua conta já está liberada para
 								uso.
 							</Text>
@@ -128,7 +128,7 @@ export function PaymentReceivedEmail({
 					</Container>
 
 					<Text className="text-xs text-muted-foreground text-center mt-6 mb-0">
-						© {new Date().getFullYear()} gabarita.app — Todos os direitos
+						© {new Date().getFullYear()} Corrige Go — Todos os direitos
 						reservados.
 					</Text>
 				</Body>

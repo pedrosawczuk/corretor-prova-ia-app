@@ -65,7 +65,7 @@ export function PaymentFailedEmail({
 										</td>
 										<td className="pl-2.5 align-middle">
 											<Text className="text-base font-bold text-foreground m-0">
-												gabarita<span className="text-primary">.app</span>
+												Corrige <span className="text-success">Go</span>
 											</Text>
 										</td>
 									</tr>
@@ -77,7 +77,7 @@ export function PaymentFailedEmail({
 							</Text>
 
 							<Text className="text-sm text-muted-foreground text-center leading-relaxed mt-3 mb-0">
-								Olá, {name}. A cobrança da sua assinatura na gabarita.app não
+								Olá, {name}. A cobrança da sua assinatura no Corrige Go não
 								foi confirmada. Sua conta continua ativa por enquanto, mas
 								atualize sua forma de pagamento para evitar interrupções no
 								acesso.
@@ -101,7 +101,7 @@ export function PaymentFailedEmail({
 					</Container>
 
 					<Text className="text-xs text-muted-foreground text-center mt-6 mb-0">
-						© {new Date().getFullYear()} gabarita.app — Todos os direitos
+						© {new Date().getFullYear()} Corrige Go — Todos os direitos
 						reservados.
 					</Text>
 				</Body>

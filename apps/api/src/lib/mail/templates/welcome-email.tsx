@@ -81,7 +81,7 @@ export function WelcomeEmail({ name, dashboardUrl }: WelcomeEmailProps) {
 										</td>
 										<td className="pl-2.5 align-middle">
 											<Text className="text-base font-bold text-foreground m-0">
-												gabarita<span className="text-primary">.app</span>
+												Corrige <span className="text-success">Go</span>
 											</Text>
 										</td>
 									</tr>
@@ -93,7 +93,7 @@ export function WelcomeEmail({ name, dashboardUrl }: WelcomeEmailProps) {
 							</Text>
 
 							<Text className="text-sm text-muted-foreground text-center leading-relaxed mt-3 mb-0">
-								Sua conta na gabarita.app foi criada com sucesso. Agora você
+								Sua conta no Corrige Go foi criada com sucesso. Agora você
 								pode elaborar provas, diagramar para impressão e corrigir
 								automaticamente com a câmera do celular — tudo em um só lugar.
 							</Text>
@@ -156,10 +156,10 @@ export function WelcomeEmail({ name, dashboardUrl }: WelcomeEmailProps) {
 								<Text className="text-xs text-muted-foreground leading-relaxed m-0">
 									Dúvidas? Responda este e-mail ou fale com a gente em{' '}
 									<Link
-										href="mailto:contato@gabarita.app"
+										href="mailto:contato@corrigego.com.br"
 										className="text-primary font-semibold"
 									>
-										contato@gabarita.app
+										contato@corrigego.com.br
 									</Link>
 									.
 								</Text>
@@ -168,15 +168,15 @@ export function WelcomeEmail({ name, dashboardUrl }: WelcomeEmailProps) {
 					</Container>
 
 					<Text className="text-xs text-muted-foreground text-center mt-6 mb-0">
-						© {new Date().getFullYear()} gabarita.app — Todos os direitos
+						© {new Date().getFullYear()} Corrige Go — Todos os direitos
 						reservados.
 					</Text>
 					<Text className="text-xs text-muted-foreground text-center mt-1 mb-0">
 						<Link
-							href="mailto:contato@gabarita.app"
+							href="mailto:contato@corrigego.com.br"
 							className="text-muted-foreground"
 						>
-							contato@gabarita.app
+							contato@corrigego.com.br
 						</Link>
 					</Text>
 				</Body>

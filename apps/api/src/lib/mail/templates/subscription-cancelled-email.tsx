@@ -42,7 +42,7 @@ export function SubscriptionCancelledEmail({
 				}}
 			>
 				<Head />
-				<Preview>Sua assinatura na gabarita.app foi cancelada</Preview>
+				<Preview>Sua assinatura no Corrige Go foi cancelada</Preview>
 				<Body className="bg-[#eef1f6] font-sans py-10">
 					<Container className="mx-auto max-w-[480px] bg-white rounded-xl border border-solid border-border overflow-hidden">
 						<Section className="bg-primary h-1" />
@@ -63,7 +63,7 @@ export function SubscriptionCancelledEmail({
 										</td>
 										<td className="pl-2.5 align-middle">
 											<Text className="text-base font-bold text-foreground m-0">
-												gabarita<span className="text-primary">.app</span>
+												Corrige <span className="text-success">Go</span>
 											</Text>
 										</td>
 									</tr>
@@ -75,7 +75,7 @@ export function SubscriptionCancelledEmail({
 							</Text>
 
 							<Text className="text-sm text-muted-foreground text-center leading-relaxed mt-3 mb-0">
-								Olá, {name}. Sua assinatura na gabarita.app foi cancelada. Suas
+								Olá, {name}. Sua assinatura no Corrige Go foi cancelada. Suas
 								turmas, provas e correções continuam salvas na sua conta — você
 								pode assinar novamente a qualquer momento.
 							</Text>
@@ -99,7 +99,7 @@ export function SubscriptionCancelledEmail({
 					</Container>
 
 					<Text className="text-xs text-muted-foreground text-center mt-6 mb-0">
-						© {new Date().getFullYear()} gabarita.app — Todos os direitos
+						© {new Date().getFullYear()} Corrige Go — Todos os direitos
 						reservados.
 					</Text>
 				</Body>

@@ -26,7 +26,7 @@ export async function sendWelcomeEmail({ to, name }: SendWelcomeEmailParams) {
 	await resend.emails.send({
 		from: env.MAIL_FROM,
 		to,
-		subject: 'Bem-vindo ao gabarita.app! 🚀',
+		subject: 'Bem-vindo ao Corrige Go! 🚀',
 		react: WelcomeEmail({ name, dashboardUrl: `${env.WEB_URL}/dashboard` }),
 	})
 }
@@ -49,7 +49,7 @@ export async function sendPasswordResetEmail({
 	await resend.emails.send({
 		from: env.MAIL_FROM,
 		to,
-		subject: 'Redefinir sua senha — gabarita.app',
+		subject: 'Redefinir sua senha — Corrige Go',
 		react: ResetPasswordEmail({ name, resetUrl }),
 	})
 }
@@ -72,7 +72,7 @@ export async function sendVerificationEmail({
 	await resend.emails.send({
 		from: env.MAIL_FROM,
 		to,
-		subject: 'Confirme seu e-mail — gabarita.app',
+		subject: 'Confirme seu e-mail — Corrige Go',
 		react: VerifyEmail({ name, verificationUrl }),
 	})
 }
@@ -89,8 +89,8 @@ export async function sendDeleteAccountVerificationEmail({
 	await resend.emails.send({
 		from: env.MAIL_FROM,
 		to,
-		subject: 'Confirme a exclusão da sua conta — gabarita.app',
-		html: `<p>Olá, ${name}.</p><p>Recebemos uma solicitação para excluir permanentemente sua conta no gabarita.app.</p><p>Se você deseja confirmar esta ação, acesse o link abaixo:</p><p><a href="${verificationUrl}">Confirmar exclusão da conta</a></p><p>Se você não solicitou a exclusão, ignore este e-mail.</p>`,
+		subject: 'Confirme a exclusão da sua conta — Corrige Go',
+		html: `<p>Olá, ${name}.</p><p>Recebemos uma solicitação para excluir permanentemente sua conta no Corrige Go.</p><p>Se você deseja confirmar esta ação, acesse o link abaixo:</p><p><a href="${verificationUrl}">Confirmar exclusão da conta</a></p><p>Se você não solicitou a exclusão, ignore este e-mail.</p>`,
 	})
 }
 
@@ -112,7 +112,7 @@ export async function sendTwoFactorOtpEmail({
 	await resend.emails.send({
 		from: env.MAIL_FROM,
 		to,
-		subject: 'Seu código de verificação — gabarita.app',
+		subject: 'Seu código de verificação — Corrige Go',
 		react: TwoFactorOtpEmail({ name, otp }),
 	})
 }
@@ -141,7 +141,7 @@ export async function sendNewLoginEmail({
 	await resend.emails.send({
 		from: env.MAIL_FROM,
 		to,
-		subject: 'Novo login detectado — gabarita.app',
+		subject: 'Novo login detectado — Corrige Go',
 		react: NewLoginEmail({ name, device, ipAddress, dateTime, securityUrl }),
 	})
 }
@@ -162,7 +162,7 @@ export async function sendPaymentFailedEmail({
 	await resend.emails.send({
 		from: env.MAIL_FROM,
 		to,
-		subject: 'Não conseguimos confirmar seu pagamento — gabarita.app',
+		subject: 'Não conseguimos confirmar seu pagamento — Corrige Go',
 		react: PaymentFailedEmail({
 			name,
 			manageUrl: `${env.WEB_URL}/dashboard/configuracoes`,
@@ -195,7 +195,7 @@ export async function sendPaymentReceivedEmail({
 	await resend.emails.send({
 		from: env.MAIL_FROM,
 		to,
-		subject: 'Pagamento confirmado — gabarita.app',
+		subject: 'Pagamento confirmado — Corrige Go',
 		react: PaymentReceivedEmail({
 			name,
 			planName,
@@ -221,7 +221,7 @@ export async function sendSubscriptionCancelledEmail({
 	await resend.emails.send({
 		from: env.MAIL_FROM,
 		to,
-		subject: 'Sua assinatura foi cancelada — gabarita.app',
+		subject: 'Sua assinatura foi cancelada — Corrige Go',
 		react: SubscriptionCancelledEmail({
 			name,
 			manageUrl: `${env.WEB_URL}/dashboard/configuracoes`,
@@ -249,7 +249,7 @@ export async function sendInviteEmail({
 	await resend.emails.send({
 		from: env.MAIL_FROM,
 		to,
-		subject: `Você ganhou ${grantDurationMonths} meses do Pro — gabarita.app`,
+		subject: `Você ganhou ${grantDurationMonths} meses do Pro — Corrige Go`,
 		react: InviteEmail({ inviteUrl, grantDurationMonths, inviteExpiresInDays }),
 	})
 }
@@ -278,7 +278,7 @@ export async function sendAccessGrantReminderEmail({
 	await resend.emails.send({
 		from: env.MAIL_FROM,
 		to,
-		subject: `${subject} — gabarita.app`,
+		subject: `${subject} — Corrige Go`,
 		react: AccessGrantReminderEmail({
 			name,
 			title,

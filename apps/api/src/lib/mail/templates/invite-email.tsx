@@ -44,7 +44,7 @@ export function InviteEmail({
 				}}
 			>
 				<Head />
-				<Preview>{`Você ganhou ${grantDurationMonths} meses do plano Pro na gabarita.app`}</Preview>
+				<Preview>{`Você ganhou ${grantDurationMonths} meses do plano Pro no Corrige Go`}</Preview>
 				<Body className="bg-[#eef1f6] font-sans py-10">
 					<Container className="mx-auto max-w-[480px] bg-white rounded-xl border border-solid border-border overflow-hidden">
 						<Section className="bg-primary h-1" />
@@ -65,7 +65,7 @@ export function InviteEmail({
 										</td>
 										<td className="pl-2.5 align-middle">
 											<Text className="text-base font-bold text-foreground m-0">
-												gabarita<span className="text-primary">.app</span>
+												Corrige <span className="text-success">Go</span>
 											</Text>
 										</td>
 									</tr>
@@ -73,7 +73,7 @@ export function InviteEmail({
 							</table>
 
 							<Text className="text-xl font-bold text-foreground text-center m-0 mt-8">
-								Você foi convidado para a gabarita.app
+								Você foi convidado para o Corrige Go
 							</Text>
 
 							<Text className="text-sm text-muted-foreground text-center leading-relaxed mt-3 mb-0">
@@ -102,7 +102,7 @@ export function InviteEmail({
 					</Container>
 
 					<Text className="text-xs text-muted-foreground text-center mt-6 mb-0">
-						© {new Date().getFullYear()} gabarita.app — Todos os direitos
+						© {new Date().getFullYear()} Corrige Go — Todos os direitos
 						reservados.
 					</Text>
 				</Body>

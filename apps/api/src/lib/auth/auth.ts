@@ -90,7 +90,7 @@ export const auth = betterAuth({
 			adminRoles: ['admin'],
 		}),
 		twoFactor({
-			issuer: 'gabarita.app',
+			issuer: 'Corrige Go',
 			allowPasswordless: true,
 			otpOptions: {
 				sendOTP: async ({ user, otp }) => {

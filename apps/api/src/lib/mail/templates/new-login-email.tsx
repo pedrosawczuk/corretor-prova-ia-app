@@ -49,7 +49,7 @@ export function NewLoginEmail({
 				}}
 			>
 				<Head />
-				<Preview>Detectamos um novo login na sua conta gabarita.app</Preview>
+				<Preview>Detectamos um novo login na sua conta Corrige Go</Preview>
 				<Body className="bg-[#eef1f6] font-sans py-10">
 					<Container className="mx-auto max-w-[480px] bg-white rounded-xl border border-solid border-border overflow-hidden">
 						<Section className="bg-primary h-1" />
@@ -70,7 +70,7 @@ export function NewLoginEmail({
 										</td>
 										<td className="pl-2.5 align-middle">
 											<Text className="text-base font-bold text-foreground m-0">
-												gabarita<span className="text-primary">.app</span>
+												Corrige <span className="text-success">Go</span>
 											</Text>
 										</td>
 									</tr>
@@ -83,7 +83,7 @@ export function NewLoginEmail({
 
 							<Text className="text-sm text-muted-foreground text-center leading-relaxed mt-3 mb-0">
 								Olá, {name}. Identificamos um novo acesso à sua conta na
-								gabarita.app. Confira os detalhes abaixo.
+								Corrige Go. Confira os detalhes abaixo.
 							</Text>
 
 							<Section className="bg-muted rounded-lg px-4 py-4 mt-6">
@@ -149,15 +149,15 @@ export function NewLoginEmail({
 					</Container>
 
 					<Text className="text-xs text-muted-foreground text-center mt-6 mb-0">
-						© {new Date().getFullYear()} gabarita.app — Todos os direitos
+						© {new Date().getFullYear()} Corrige Go — Todos os direitos
 						reservados.
 					</Text>
 					<Text className="text-xs text-muted-foreground text-center mt-1 mb-0">
 						<Link
-							href="mailto:contato@gabarita.app"
+							href="mailto:contato@corrigego.com.br"
 							className="text-muted-foreground"
 						>
-							contato@gabarita.app
+							contato@corrigego.com.br
 						</Link>
 					</Text>
 				</Body>

@@ -61,7 +61,7 @@ export function VerifyEmail({ name, verificationUrl }: VerifyEmailProps) {
 										</td>
 										<td className="pl-2.5 align-middle">
 											<Text className="text-base font-bold text-foreground m-0">
-												gabarita<span className="text-primary">.app</span>
+												Corrige <span className="text-success">Go</span>
 											</Text>
 										</td>
 									</tr>
@@ -73,7 +73,7 @@ export function VerifyEmail({ name, verificationUrl }: VerifyEmailProps) {
 							</Text>
 
 							<Text className="text-sm text-muted-foreground text-center leading-relaxed mt-3 mb-0">
-								Olá, {name}. Falta pouco para ativar sua conta na gabarita.app.
+								Olá, {name}. Falta pouco para ativar sua conta no Corrige Go.
 								Clique no botão abaixo para confirmar seu e-mail.
 							</Text>
 
@@ -105,7 +105,7 @@ export function VerifyEmail({ name, verificationUrl }: VerifyEmailProps) {
 
 							<Section className="bg-[#fffbeb] border border-solid border-[#fde68a] rounded-lg px-4 py-3 mt-6">
 								<Text className="text-xs text-[#92400e] leading-relaxed m-0">
-									Se você não criou uma conta na gabarita.app, ignore este
+									Se você não criou uma conta no Corrige Go, ignore este
 									e-mail.
 								</Text>
 							</Section>
@@ -113,15 +113,15 @@ export function VerifyEmail({ name, verificationUrl }: VerifyEmailProps) {
 					</Container>
 
 					<Text className="text-xs text-muted-foreground text-center mt-6 mb-0">
-						© {new Date().getFullYear()} gabarita.app — Todos os direitos
+						© {new Date().getFullYear()} Corrige Go — Todos os direitos
 						reservados.
 					</Text>
 					<Text className="text-xs text-muted-foreground text-center mt-1 mb-0">
 						<Link
-							href="mailto:contato@gabarita.app"
+							href="mailto:contato@corrigego.com.br"
 							className="text-muted-foreground"
 						>
-							contato@gabarita.app
+							contato@corrigego.com.br
 						</Link>
 					</Text>
 				</Body>

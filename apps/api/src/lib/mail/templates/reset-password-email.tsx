@@ -64,7 +64,7 @@ export function ResetPasswordEmail({
 										</td>
 										<td className="pl-2.5 align-middle">
 											<Text className="text-base font-bold text-foreground m-0">
-												gabarita<span className="text-primary">.app</span>
+												Corrige <span className="text-success">Go</span>
 											</Text>
 										</td>
 									</tr>
@@ -77,7 +77,7 @@ export function ResetPasswordEmail({
 
 							<Text className="text-sm text-muted-foreground text-center leading-relaxed mt-3 mb-0">
 								Olá, {name}. Recebemos uma solicitação para redefinir a senha da
-								sua conta na gabarita.app. Clique no botão abaixo para criar uma
+								sua conta no Corrige Go. Clique no botão abaixo para criar uma
 								nova senha.
 							</Text>
 
@@ -117,15 +117,15 @@ export function ResetPasswordEmail({
 					</Container>
 
 					<Text className="text-xs text-muted-foreground text-center mt-6 mb-0">
-						© {new Date().getFullYear()} gabarita.app — Todos os direitos
+						© {new Date().getFullYear()} Corrige Go — Todos os direitos
 						reservados.
 					</Text>
 					<Text className="text-xs text-muted-foreground text-center mt-1 mb-0">
 						<Link
-							href="mailto:contato@gabarita.app"
+							href="mailto:contato@corrigego.com.br"
 							className="text-muted-foreground"
 						>
-							contato@gabarita.app
+							contato@corrigego.com.br
 						</Link>
 					</Text>
 				</Body>
